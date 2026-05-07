@@ -9,8 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
-
-
 <body class="bg-slate-900 flex items-center justify-center h-screen">
 
     <!-- MARCADOR ROJO -->

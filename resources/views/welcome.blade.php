@@ -14,22 +14,25 @@
     <div class="d-flex flex-grow-1">
         <!-- Este es tu Sidebar -->
         <div id="sidebar" class="bg-dark text-white p-3 flex-shrink-0">
-            <div class="d-flex align-items-center justify-content-between p-2 mb-3"> 
+            <div class="d-flex align-items-center justify-content-between mb-3"> 
                 <div class="d-flex align-items-center">
                     <img src="{{ asset('images/icono.png') }}" alt="Kaiteki Icon" class="img-fluid me-2" style="height: 40px;">
                     <h4 class="m-0 sidebar-text">Kaiteki</h4>
                 </div>
+                <button id="toggleSidebar" class="btn btn-outline-light border-0">
+                    <i class="bi bi-list"></i>
+                </button>
             </div>
             <hr class="sidebar-text">
             <ul class="nav nav-pills flex-column mb-auto">
                 <li class="nav-item" style="margin-top: 15px; margin-bottom: 10px;">
-                    <a href="#" class="nav-link text-white active d-flex align-items-center">
+                    <a href="{{ route('tablero.kumite') }}" class="nav-link text-white active d-flex align-items-center">
                         <img src="{{ asset('images/kumite.png') }}" alt="Kumite" class="me-2" style="height: 24px;">
                         <span class="sidebar-text">Kumite</span>
                     </a>
                 </li>
                 <li class="nav-item" style="margin-top: 10px; margin-bottom: 15px;">
-                    <a href="#" class="nav-link text-white active d-flex align-items-center">
+                    <a href="{{ route('tablero.kata') }}" class="nav-link text-white active d-flex align-items-center">
                         <img src="{{ asset('images/kata.png') }}" alt="Kumite" class="me-2" style="height: 24px;">
                         <span class="sidebar-text">kata</span>
                     </a>

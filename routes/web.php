@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TableroController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,3 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('kumite/tablero', [TableroController::class, 'kumite'])->name('tablero.kumite');
+Route::get('kata/tablero', [TableroController::class, 'kata'])->name('tablero.kata');
+
