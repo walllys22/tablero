@@ -11,37 +11,39 @@
 
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <!-- Main content area (sidebar + actual content) -->
     <div class="d-flex flex-grow-1">
         <!-- Este es tu Sidebar -->
         <div id="sidebar" class="bg-dark text-white p-3 flex-shrink-0">
-            <div class="d-flex align-items-center justify-content-between mb-3"> 
-                <img src="{{ asset('images/icono.png') }}" alt="Kaiteki Icon" class="img-fluid me-2" style="height: 40px;">
-                <h4 class="m-0 sidebar-text">Kaiteki</h4>
-                <button id="toggleSidebar" class="btn btn-outline-light border-0">
-                    <i class="bi bi-list"></i>
-                </button>
+            <div class="d-flex align-items-center justify-content-between p-2 mb-3"> 
+                <div class="d-flex align-items-center">
+                    <img src="{{ asset('images/icono.png') }}" alt="Kaiteki Icon" class="img-fluid me-2" style="height: 40px;">
+                    <h4 class="m-0 sidebar-text">Kaiteki</h4>
+                </div>
             </div>
             <hr class="sidebar-text">
             <ul class="nav nav-pills flex-column mb-auto">
-                <li class="nav-item">
+                <li class="nav-item" style="margin-top: 15px; margin-bottom: 10px;">
                     <a href="#" class="nav-link text-white active d-flex align-items-center">
-                        <i class="bi bi-person-walking me-2"></i> <span class="sidebar-text">Kumite</span>
+                        <img src="{{ asset('images/kumite.png') }}" alt="Kumite" class="me-2" style="height: 24px;">
+                        <span class="sidebar-text">Kumite</span>
                     </a>
                 </li>
-                <li>
-                    <a href="#" class="nav-link text-white d-flex align-items-center">
-                        <i class="bi bi-pennant me-2"></i> <span class="sidebar-text">Kata</span>
+                <li class="nav-item" style="margin-top: 10px; margin-bottom: 15px;">
+                    <a href="#" class="nav-link text-white active d-flex align-items-center">
+                        <img src="{{ asset('images/kata.png') }}" alt="Kumite" class="me-2" style="height: 24px;">
+                        <span class="sidebar-text">kata</span>
                     </a>
                 </li>
             </ul>
         </div>
 
         <!-- Contenido principal -->
-        <div class="p-4 flex-grow-1">
-
-            <div class="mt-4">
-                <img src="{{ asset('images/tablero.png') }}" alt="Tablero de Control" class="img-fluid rounded shadow" style="width: 90%;">
+        <div class="px-4 pb-4 pt-0 flex-grow-1">
+            <div class="mt-0">
+                <img src="{{ asset('images/tablero.png') }}" 
+                    alt="Tablero de Control" 
+                    class="img-fluid rounded shadow" 
+                    style="width: 100%; display: block; margin: 0 auto;">
             </div>
         </div>
     </div>
@@ -56,8 +58,8 @@
     <style>
         #sidebar {
             transition: all 0.3s;
-            min-width: 250px;
-            max-width: 250px;
+            min-width: 200px;
+            max-width: 200px;
         }
         #sidebar.collapsed {
             min-width: 80px;
@@ -73,7 +75,8 @@
             text-align: center;
             padding: 10px 0;
         }
-        #sidebar.collapsed .nav-link i {
+        #sidebar.collapsed .nav-link i,
+        #sidebar.collapsed .nav-link img {
             margin-right: 0;
         }
     </style>
