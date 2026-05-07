@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TableroController;
+use App\Http\Controllers\PersonaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,4 +21,5 @@ Route::get('/', function () {
 
 Route::get('kumite/tablero', [TableroController::class, 'kumite'])->name('tablero.kumite');
 Route::get('kata/tablero', [TableroController::class, 'kata'])->name('tablero.kata');
+Route::get('people', [PersonaController::class, 'index'])->name('people.browse');
 

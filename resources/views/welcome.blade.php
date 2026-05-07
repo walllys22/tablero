@@ -1,94 +1,67 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="{{ asset('images/icono.png') }}">
-    <title>Kaiteki - Eventos</title>
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-</head>
-<body class="d-flex flex-column min-vh-100">
-    <div class="d-flex flex-grow-1">
-        <!-- Este es tu Sidebar -->
-        <div id="sidebar" class="bg-dark text-white p-3 flex-shrink-0">
-            <div class="d-flex align-items-center justify-content-between mb-3"> 
-                <div class="d-flex align-items-center">
-                    <img src="{{ asset('images/icono.png') }}" alt="Kaiteki Icon" class="img-fluid me-2" style="height: 40px;">
-                    <h4 class="m-0 sidebar-text">Kaiteki</h4>
+﻿@extends('layouts.app')
+
+@section('title', 'Dashboard')
+@section('subtitle', 'Resumen general del sistema')
+
+@section('content')
+    <div class="row g-4">
+        <div class="col-12 col-xl-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="h4 mb-3">Bienvenido a Kaiteki</h2>
+                    <p class="text-muted">Aquí puedes ver un resumen rápido de tus registros, competiciones y accesos principales.</p>
+                    <div class="row g-3 mt-4">
+                        <div class="col-sm-4">
+                            <div class="p-4 rounded-3 border bg-white h-100">
+                                <div class="text-uppercase text-muted mb-2">Personas</div>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h3 class="mb-1">128</h3>
+                                        <small class="text-muted">Registros totales</small>
+                                    </div>
+                                    <i class="bi bi-people-fill fs-3 text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="p-4 rounded-3 border bg-white h-100">
+                                <div class="text-uppercase text-muted mb-2">Kumite</div>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h3 class="mb-1">24</h3>
+                                        <small class="text-muted">Combates activos</small>
+                                    </div>
+                                    <i class="bi bi-lightning-charge-fill fs-3 text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="p-4 rounded-3 border bg-white h-100">
+                                <div class="text-uppercase text-muted mb-2">Kata</div>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h3 class="mb-1">12</h3>
+                                        <small class="text-muted">Torneos programados</small>
+                                    </div>
+                                    <i class="bi bi-award-fill fs-3 text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button id="toggleSidebar" class="btn btn-outline-light border-0">
-                    <i class="bi bi-list"></i>
-                </button>
             </div>
-            <hr class="sidebar-text">
-            <ul class="nav nav-pills flex-column mb-auto">
- 
-                <li class="nav-item" style="margin-top: 15px; margin-bottom: 10px;">
-                    <a href="{{ route('tablero.kumite') }}" class="nav-link text-white active d-flex align-items-center">
-                        <img src="{{ asset('images/campeonato.png') }}" alt="Kumite" class="me-2" style="height: 24px;">
-                        <span class="sidebar-text">Campeonato</span>
-                    </a>
-                </li>                
-
-                <li class="nav-item" style="margin-top: 15px; margin-bottom: 10px;">
-                    <a href="{{ route('tablero.kumite') }}" class="nav-link text-white active d-flex align-items-center">
-                        <img src="{{ asset('images/kumite.png') }}" alt="Kumite" class="me-2" style="height: 24px;">
-                        <span class="sidebar-text">Kumite</span>
-                    </a>
-                </li>
-                <li class="nav-item" style="margin-top: 10px; margin-bottom: 15px;">
-                    <a href="{{ route('tablero.kata') }}" class="nav-link text-white active d-flex align-items-center">
-                        <img src="{{ asset('images/kata.png') }}" alt="Kumite" class="me-2" style="height: 24px;">
-                        <span class="sidebar-text">kata</span>
-                    </a>
-                </li>
-            </ul>
         </div>
-
-        <!-- Contenido principal -->
-        <div class="px-4 pb-4 pt-0 flex-grow-1">
-            <div class="mt-0">
-                <img src="{{ asset('images/tablero.png') }}" 
-                    alt="Tablero de Control" 
-                    class="img-fluid rounded shadow" 
-                    style="width: 100%; display: block; margin: 0 auto;">
+        <div class="col-12 col-xl-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h3 class="h5 mb-3">Accesos rápidos</h3>
+                    <div class="d-grid gap-3">
+                        <a href="{{ route('people.browse') }}" class="btn btn-primary">Personas</a>
+                        <a href="{{ route('tablero.kumite') }}" class="btn btn-primary">Kumite</a>
+                        <a href="{{ route('tablero.kata') }}" class="btn btn-primary">Kata</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <!-- Bootstrap 5 JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.getElementById('toggleSidebar').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-        });
-    </script>
-</body>
-    <style>
-        #sidebar {
-            transition: all 0.3s;
-            min-width: 200px;
-            max-width: 200px;
-        }
-        #sidebar.collapsed {
-            min-width: 80px;
-            max-width: 80px;
-        }
-        #sidebar.collapsed .sidebar-text {
-            display: none;
-        }
-        #sidebar .nav-link i {
-            font-size: 1.2rem;
-        }
-        #sidebar.collapsed .nav-link {
-            text-align: center;
-            padding: 10px 0;
-        }
-        #sidebar.collapsed .nav-link i,
-        #sidebar.collapsed .nav-link img {
-            margin-right: 0;
-        }
-    </style>
-</html>
+@endsection
