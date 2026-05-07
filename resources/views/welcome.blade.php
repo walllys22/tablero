@@ -15,7 +15,8 @@
     <div class="d-flex flex-grow-1">
         <!-- Este es tu Sidebar -->
         <div id="sidebar" class="bg-dark text-white p-3 flex-shrink-0">
-            <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center justify-content-between mb-3"> 
+                <img src="{{ asset('images/icono.png') }}" alt="Kaiteki Icon" class="img-fluid me-2" style="height: 40px;">
                 <h4 class="m-0 sidebar-text">Kaiteki</h4>
                 <button id="toggleSidebar" class="btn btn-outline-light border-0">
                     <i class="bi bi-list"></i>
