@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
-<body class="bg-slate-900 flex items-center justify-center h-screen">
+<body class="bg-slate-900 flex flex-wrap items-center justify-center h-screen" style="overflow-x: hidden;">
 
     <!-- MARCADOR ROJO -->
     <div class="marcador-aka">
@@ -23,9 +23,9 @@
         </div>
         <div class="panel-control-rojo">
             <div class="fila">
-                <button class="btn-personalizadoRojo suma" onclick="updateScore('aka', 1)">+ YUKO</button>
-                <button class="btn-personalizadoRojo suma" onclick="updateScore('aka', 2)">+ WAZARI</button>
-                <button class="btn-personalizadoRojo suma" onclick="updateScore('aka', 3)">+ IPPON</button>
+                <button class="btn-personalizadoAzul suma" onclick="updateScore('aka', 1)">+ YUKO</button>
+                <button class="btn-personalizadoAzul suma" onclick="updateScore('aka', 2)">+ WAZARI</button>
+                <button class="btn-personalizadoAzul suma" onclick="updateScore('aka', 3)">+ IPPON</button>
                 <button id="btn-senshu-rojo" class="btn-senshu btn-personalizadosenshurojo" onclick="toggleSenshu('aka')">Senshu</button>
             </div>
             <div class="fila">
@@ -34,10 +34,12 @@
                 <span id="mirrorSpanIpponRojo" class="text-primary" style="color:black; margin-left: 80px;">0</span>
             </div> 
             <div class="fila">
-                <button class="btn-personalizadoRojo resta" onclick="updateScore('aka', -1)">- YUKO</button>
-                <button class="btn-personalizadoRojo resta" onclick="updateScore('aka', -2)">- WAZARI</button>
-                <button class="btn-personalizadoRojo resta" onclick="updateScore('aka', -3)">- IPPON</button>
-                <button id="btn-hantei-rojo" class="btn-personalizadosenshurojo" onclick="logicahanteirojo()">Hantei</button>
+                <button class="btn-personalizadoAzul resta" onclick="updateScore('aka', -1)">- YUKO</button>
+                <button class="btn-personalizadoAzul resta" onclick="updateScore('aka', -2)">- WAZARI</button>
+                <button class="btn-personalizadoAzul resta" onclick="updateScore('aka', -3)">- IPPON</button>
+                <button id="btn-hantei-rojo" class="btn-personalizadosenshurojo" onclick="logicaHantei('aka')">
+                    Hantei
+                </button>Hantei</button>
             </div>
             <div class="fila">
                 <button id="btn-aka-c1" class="btn-falta" onclick="togglePenalty('aka', 1)">C1</button>
@@ -137,7 +139,9 @@
                 <button class="btn-personalizadoAzul resta" onclick="updateScore('ao', -1)">- YUKO</button>
                 <button class="btn-personalizadoAzul resta" onclick="updateScore('ao', -2)">- WAZARI</button>
                 <button class="btn-personalizadoAzul resta" onclick="updateScore('ao', -3)">- IPPON</button>
-                <button id="btn-hantei-azul" class="btn-personalizadosenshuazul" onclick="logicahanteiazul()">
+                <button id="btn-hantei-azul" class="btn-personalizadosenshuazul" onclick="logicaHantei('ao')">
+                    Hantei
+                </button>
                     Hantei
                 </button>
             </div>
@@ -264,9 +268,6 @@
             } else {
                 pauseTimer();
                 
-                const audio = document.getElementById('gong-sound');
-                if (audio) audio.play().catch(e => console.log("Audio play error:", e));
-                
                 setTimeout(() => {
                     Swal.fire({
                         icon: 'info',
@@ -308,7 +309,6 @@
                 '#btnMuestraGanador',
                 '#btnCerrar',
                 '#btnNuevoCombate',
-                '.btn-personalizadoRojo',
                 '.btn-personalizadoAzul',
                 '.btn-senshu',
                 '.btn-falta',
@@ -567,13 +567,16 @@
             }
         }
 
-        function logicahanteiazul() {
-            const btnAo = document.getElementById('btn-hantei-azul');
-            const btnAka = document.getElementById('btn-hantei-rojo');
-            const nombreAo = $('#mirrorSpanAzul').text();
+        function logicaHantei(side) {
+            const mapping = { 'ao': 'azul', 'aka': 'rojo' };
+            const btnCurrent = document.getElementById(`btn-hantei-${mapping[side]}`);
+            const btnOther = document.getElementById(`btn-hantei-${mapping[side === 'ao' ? 'aka' : 'ao']}`);
+            const nombre = side === 'ao' ? $('#mirrorSpanAzul').text() : $('#mirrorSpanRojo').text();
+            const titulo = side === 'ao' ? "GANADOR COMPETIDOR AZUL" : "GANADOR COMPETIDOR ROJO";
+            const fondo = side === 'ao' ? "#004a99" : "#cc0000";
 
             // Verificar si el otro ya es ganador
-            if (btnAka.style.backgroundColor === 'yellow' || window.getComputedStyle(btnAka).backgroundColor === 'rgb(255, 255, 0)') {
+            if (btnOther.style.backgroundColor === 'yellow' || window.getComputedStyle(btnOther).backgroundColor === 'rgb(255, 255, 0)') {
                 Swal.fire({
                     icon: 'warning',
                     title: "SOLO PUEDE HABER UN GANADOR",
@@ -588,42 +591,12 @@
             }
 
             // Toggle: si ya está amarillo, pasa a transparente. Si no, a amarillo y muestra mensaje.
-            if (btnAo.style.backgroundColor === 'yellow' || window.getComputedStyle(btnAo).backgroundColor === 'rgb(255, 255, 0)') {
-                btnAo.style.backgroundColor = 'transparent';
+            if (btnCurrent.style.backgroundColor === 'yellow' || window.getComputedStyle(btnCurrent).backgroundColor === 'rgb(255, 255, 0)') {
+                btnCurrent.style.backgroundColor = 'transparent';
             } else {
-                btnAo.style.backgroundColor = 'yellow';
-                // Fondo azul y letras blancas como se solicitó
-                mostrarModalGanador("GANADOR COMPETIDOR AZUL", nombreAo, "#004a99", "white");
-            }
-        }
-
-        function logicahanteirojo() {
-            const btnAo = document.getElementById('btn-hantei-azul');
-            const btnAka = document.getElementById('btn-hantei-rojo');
-            const nombreAka = $('#mirrorSpanRojo').text();
-
-            // Verificar si el otro ya es ganador
-            if (btnAo.style.backgroundColor === 'yellow' || window.getComputedStyle(btnAo).backgroundColor === 'rgb(255, 255, 0)') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: "SOLO PUEDE HABER UN GANADOR",
-                    toast: true,
-                    position: 'top',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    background: '#FFFF00',
-                });
-                return;
-            }
-
-            // Toggle: si ya está amarillo, pasa a transparente. Si no, a amarillo y muestra mensaje.
-            if (btnAka.style.backgroundColor === 'yellow' || window.getComputedStyle(btnAka).backgroundColor === 'rgb(255, 255, 0)') {
-                btnAka.style.backgroundColor = 'transparent';
-            } else {
-                btnAka.style.backgroundColor = 'yellow';
-                // Fondo rojo y letras blancas
-                mostrarModalGanador("GANADOR COMPETIDOR ROJO", nombreAka, "#cc0000", "white");
+                btnCurrent.style.backgroundColor = 'yellow';
+                // Fondo azul/rojo y letras blancas
+                mostrarModalGanador(titulo, nombre, fondo, "white");
             }
         }
 
@@ -818,12 +791,13 @@
 
     .marcador-ao {
         background-color: #004a99; /* Azul de competencia */
-        width: 450px;
+        width: 380px;
+        max-width: 95vw;
         
         /* --- OPCIÓN DE ALTO --- */
-        min-height: 380px;         /* Ajusta este valor (ej: 300px, 400px) para aumentar el alto */
+        min-height: 325px;         /* Ajusta este valor (ej: 300px, 400px) para aumentar el alto */
         
-        /* --- CENTRADO VERTICAL (Opcional pero recomendado) --- */
+        /* --- CENTRADO VERTICAL (Opcional pero recomendado) ---
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -842,9 +816,10 @@
 
         .marcador-aka {
             background-color: #cc0000; /* Rojo reglamentario AKA */
-            width: 450px;
+            width: 380px;
+            max-width: 95vw;
             /* --- OPCIÓN DE ALTO --- */
-            min-height: 380px;         /* Ajusta este valor (ej: 300px, 400px) para aumentar el alto */
+            min-height: 325px;         /* Ajusta este valor (ej: 300px, 400px) para aumentar el alto */
             /* --- CENTRADO VERTICAL (Opcional pero recomendado) --- */
             display: flex;
             flex-direction: column;
@@ -928,35 +903,7 @@
         pointer-events: auto;
     }
 
-    .btn-personalizadoRojo:active {
-        transform: translateY(2px);
-        box-shadow: inset 2px 2px 5px #bcbcbc, inset -2px -2px 5px #ffffff;
-    }
-
-    /* Botones rojos */
-    .btn-personalizadoRojo {
-        background: linear-gradient(145deg, #eeeeee, #d1d5db);
-        color: #000000 !important; /* Negro puro */
-        font-weight: bold !important; /* Negrilla */
-        border: 1px solid #2f2f30;
-        border-radius: 10px;
-        font-family: sans-serif;
-        text-transform: uppercase;
-        cursor: pointer;
-        min-width: 90px;
-        height: 40px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 3px 3px 6px #bebebe, -2px -2px 5px #ffffff;
-        transition: all 0.1s;
-        /* Aseguramos que el botón sea cliqueable */
-        position: relative;
-        z-index: 5;
-        pointer-events: auto;
-    }
-
-    .btn-personalizadoRojo:active {
+    .btn-personalizadoAzul:active {
         transform: translateY(2px);
         box-shadow: inset 2px 2px 5px #bcbcbc, inset -2px -2px 5px #ffffff;
     }

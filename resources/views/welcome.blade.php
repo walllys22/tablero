@@ -25,6 +25,14 @@
             </div>
             <hr class="sidebar-text">
             <ul class="nav nav-pills flex-column mb-auto">
+ 
+                <li class="nav-item" style="margin-top: 15px; margin-bottom: 10px;">
+                    <a href="{{ route('tablero.kumite') }}" class="nav-link text-white active d-flex align-items-center">
+                        <img src="{{ asset('images/campeonato.png') }}" alt="Kumite" class="me-2" style="height: 24px;">
+                        <span class="sidebar-text">Campeonato</span>
+                    </a>
+                </li>                
+
                 <li class="nav-item" style="margin-top: 15px; margin-bottom: 10px;">
                     <a href="{{ route('tablero.kumite') }}" class="nav-link text-white active d-flex align-items-center">
                         <img src="{{ asset('images/kumite.png') }}" alt="Kumite" class="me-2" style="height: 24px;">
