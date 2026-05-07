@@ -28,7 +28,7 @@
                 <button id="btn-inicio" onclick="iniciarTiempo(35); toggleTimerButtons('inicio')" class="bg-green-600 text-white py-4 rounded-xl font-black text-2xl hover:bg-green-700 transition-transform active:scale-95 shadow-lg uppercase">Inicio</button>
                 <button id="btn-stop" onclick="detenerTiempo()" class="hidden bg-yellow-600 text-white py-4 rounded-xl font-black text-2xl hover:bg-yellow-700 transition-transform active:scale-95 shadow-lg uppercase">Stop</button>
                 <button id="btn-fin" onclick="iniciarTiempo(300); toggleTimerButtons('fin')" class="hidden bg-red-600 text-white py-4 rounded-xl font-black text-2xl hover:bg-red-700 transition-transform active:scale-95 shadow-lg uppercase">Fin</button>
-                <button id="btn-cerrar" onclick="window.history.back()" class="hidden bg-gray-600 text-white py-4 rounded-xl font-black text-2xl hover:bg-gray-700 transition-transform active:scale-95 shadow-lg uppercase">Cerrar</button>
+                <button id="btn-cerrar" onclick="window.history.back()" class="bg-gray-600 text-white py-4 rounded-xl font-black text-2xl hover:bg-gray-700 transition-transform active:scale-95 shadow-lg uppercase">Cerrar</button>
             </div>
         </div>
 
@@ -123,6 +123,7 @@
                 document.getElementById('btn-inicio').classList.add('hidden');
                 document.getElementById('btn-fin').classList.remove('hidden');
                 document.getElementById('btn-stop').classList.add('hidden');
+                document.getElementById('btn-cerrar').classList.add('hidden');
             } else if (estado === 'fin') {
                 document.getElementById('btn-fin').classList.add('hidden');
                 document.getElementById('btn-stop').classList.remove('hidden');
