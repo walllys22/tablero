@@ -29,6 +29,24 @@
         #sidebar .nav-link.active {
             background-color: rgba(255, 255, 255, 0.12);
         }
+        .sidebar-submenu {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 0;
+        }
+        .sidebar-submenu .nav-item {
+            margin-bottom: 0.25rem;
+        }
+        .sidebar-submenu .nav-link {
+            background-color: transparent;
+            color: rgba(255, 255, 255, 0.8);
+            padding-left: 1.5rem;
+            font-size: 0.95rem;
+        }
+        .sidebar-submenu .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+        }
         #sidebar.collapsed .nav-link {
             text-align: center;
             padding: 10px 0;
@@ -71,19 +89,36 @@
             <hr class="sidebar-text">
             <ul class="nav nav-pills flex-column mb-auto">
                 <li class="nav-item" style="margin-top: 15px; margin-bottom: 10px;">
-                    <a href="{{ route('people.browse') }}" class="nav-link text-white {{ request()->routeIs('people.browse') ? 'active' : '' }} d-flex align-items-center">
+                    <a href="{{ route('people.browse') }}" class="nav-link text-white {{ request()->routeIs('people.browse') ? 'active' : '' }} d-flex align-items-center" style="background-color: #0d6efd;">
         
                         <span class="sidebar-text">Persona</span>
                     </a>
                 </li>
                 <li class="nav-item" style="margin-top: 15px; margin-bottom: 10px;">
-                    <a href="{{ route('tablero.kumite') }}" class="nav-link text-white {{ request()->routeIs('tablero.kumite') ? 'active' : '' }} d-flex align-items-center">
+                    <a href="#" id="eventoToggle" class="nav-link text-white d-flex align-items-center justify-content-between" style="background-color: #0d6efd;">
+                        <span class="sidebar-text">Evento</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </a>
+                    <ul class="nav flex-column sidebar-submenu d-none" id="eventoSubmenu">
+                        <li class="nav-item">
+                            <a class="nav-link" style="background-color: #386ebe;">Campeonatos</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" style="background-color: #386ebe;">Modalidades</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" style="background-color: #386ebe;">Categorias</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item" style="margin-top: 15px; margin-bottom: 10px;">
+                    <a href="{{ route('tablero.kumite') }}" class="nav-link text-white {{ request()->routeIs('tablero.kumite') ? 'active' : '' }} d-flex align-items-center" style="background-color: #0d6efd;">
                         <img src="{{ asset('images/kumite.png') }}" alt="Kumite" class="me-2" style="height: 24px;">
                         <span class="sidebar-text">Kumite</span>
                     </a>
                 </li>
                 <li class="nav-item" style="margin-top: 10px; margin-bottom: 15px;">
-                    <a href="{{ route('tablero.kata') }}" class="nav-link text-white {{ request()->routeIs('tablero.kata') ? 'active' : '' }} d-flex align-items-center">
+                    <a href="{{ route('tablero.kata') }}" class="nav-link text-white {{ request()->routeIs('tablero.kata') ? 'active' : '' }} d-flex align-items-center" style="background-color: #0d6efd;">
                         <img src="{{ asset('images/kata.png') }}" alt="Kata" class="me-2" style="height: 24px;">
                         <span class="sidebar-text">Kata</span>
                     </a>
@@ -130,6 +165,14 @@
         });
         document.getElementById('toggleSidebarMobile')?.addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+        document.getElementById('eventoToggle')?.addEventListener('click', function(event) {
+            event.preventDefault();
+            const submenu = document.getElementById('eventoSubmenu');
+            const icon = this.querySelector('i');
+            submenu.classList.toggle('d-none');
+            icon.classList.toggle('bi-chevron-down');
+            icon.classList.toggle('bi-chevron-up');
         });
     </script>
     @stack('scripts')
