@@ -7,2138 +7,866 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --aka: #d60000;
+            --ao: #00549f;
+            --panel-bg: #f8fafc;
+            --page-bg: #0f172a;
+            --yellow: #ffff00;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: var(--page-bg);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        button {
+            min-height: 40px;
+            border: 1px solid #2f2f30;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: transform 0.1s ease, box-shadow 0.15s ease, filter 0.15s ease;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        button:not(:disabled):hover {
+            filter: brightness(1.05);
+        }
+
+        button:not(:disabled):active {
+            transform: translateY(1px);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .kumite-tablero {
+            display: grid;
+            grid-template-columns: minmax(280px, 1fr) minmax(330px, 450px) minmax(280px, 1fr);
+            gap: 12px;
+            width: 100%;
+            height: 100vh;
+            max-height: 100vh;
+            padding: 12px;
+            overflow: hidden;
+        }
+
+        .marcador,
+        .timer-panel {
+            min-height: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .marcador {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+            padding: 12px;
+            border: 4px solid #ffffff;
+            border-radius: 14px;
+            color: #ffffff;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+        }
+
+        .marcador-aka {
+            background: var(--aka);
+        }
+
+        .marcador-ao {
+            background: var(--ao);
+        }
+
+        .pantalla-puntos {
+            display: flex;
+            flex: 1 1 auto;
+            min-height: 0;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .estado-combate {
+            display: block;
+            width: 100%;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .nombre-competidor {
+            display: block;
+            width: 100%;
+            min-height: 24px;
+            color: #0d6efd;
+            font-weight: 900;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .puntos-gigantes {
+            color: inherit;
+            font-family: "Arial Black", Arial, Helvetica, sans-serif;
+            font-size: clamp(8rem, 27vh, 18rem);
+            font-weight: 900;
+            line-height: 0.86;
+            text-align: center;
+            text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
+            transition: transform 0.1s ease;
+        }
+
+        .marcador-aka .puntos-gigantes {
+            color: #ffffff;
+        }
+
+        .marcador-ao .puntos-gigantes {
+            color: #ffffff;
+        }
+
+        .panel-control {
+            display: flex;
+            flex: 0 0 auto;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .fila {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .fila-faltas {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+
+        .contadores-tecnicas {
+            color: #0d6efd;
+            font-size: 1rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .btn-personalizado,
+        .btn-personalizadoAzul,
+        .btn-senshu,
+        .btn-hantei,
+        .btn-falta,
+        .btn-Reloj {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 6px 8px;
+            background: linear-gradient(145deg, #f7f7f7, #d1d5db);
+            color: #000000 !important;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.28), -1px -1px 4px rgba(255, 255, 255, 0.45);
+            line-height: 1;
+        }
+
+        .btn-Reloj {
+            font-size: 1.7rem;
+        }
+
+        .btn-start {
+            background: #16a34a;
+            color: #ffffff !important;
+        }
+
+        .btn-pause {
+            background: #eab308;
+            color: #ffffff !important;
+        }
+
+        .btn-reset {
+            background: #dc2626;
+            color: #ffffff !important;
+        }
+
+        .falta-activa,
+        .senshu-activo,
+        .hantei-activo {
+            background: var(--yellow) !important;
+            color: #000000 !important;
+            border-color: #000000 !important;
+        }
+
+        .proximo-combate {
+            flex: 0 0 auto;
+            width: 100%;
+        }
+
+        .proximo-combate label {
+            margin-bottom: 4px;
+            color: #e5e7eb;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .proximo-combate input {
+            width: 100%;
+            height: 42px;
+            color: #000000 !important;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .timer-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 14px;
+            padding: 12px;
+            border-radius: 14px;
+            background: #ffffff;
+            text-align: center;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+        }
+
+        .timer-display {
+            width: 100%;
+            padding: 34px 8px;
+            border: 8px solid #e5e7eb;
+            border-radius: 10px;
+            background: #f3f4f6;
+            color: #dc2626;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: clamp(4rem, 10vw, 8.5rem);
+            font-weight: 900;
+            line-height: 1;
+            box-shadow: inset 0 4px 16px rgba(15, 23, 42, 0.14);
+        }
+
+        .timer-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .ajuste-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .ajuste-col {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .ajuste-label {
+            min-height: 22px;
+            color: #1f2937;
+            font-size: 1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .senshu-indicador {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            border: 2px solid #000000;
+            border-radius: 50%;
+            background: var(--yellow);
+            color: #000000;
+            font-family: "Arial Black", Arial, Helvetica, sans-serif;
+            font-size: 2.4rem;
+            font-weight: 900;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.35);
+        }
+
+        .overlay-ganador {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.9);
+            text-align: center;
+        }
+
+        .mensaje-contenedor {
+            width: min(70vw, 900px);
+            padding: 48px;
+            border: 10px solid #ff0000;
+            border-radius: 18px;
+            background: #ffffff;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.45);
+        }
+
+        .texto-arriba {
+            margin: 0;
+            color: #ff0000;
+            font-family: "Arial Black", Arial, Helvetica, sans-serif;
+            font-size: clamp(2.6rem, 6vw, 5rem);
+            font-weight: 900;
+        }
+
+        .texto-debajo {
+            margin-top: 18px;
+            color: #000000;
+            font-size: clamp(1.5rem, 3vw, 2.3rem);
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .btn-cerrar-anuncio {
+            width: auto;
+            margin-top: 34px;
+            padding: 14px 38px;
+            background: #333333;
+            color: #ffffff !important;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 1100px) {
+            html,
+            body {
+                overflow: auto;
+            }
+
+            .kumite-tablero {
+                grid-template-columns: 1fr;
+                height: auto;
+                min-height: 100vh;
+                max-height: none;
+                overflow: visible;
+            }
+
+            .marcador,
+            .timer-panel {
+                min-height: 100vh;
+            }
+        }
+    </style>
 </head>
 
-<body class="bg-slate-900 flex flex-wrap items-center justify-center h-screen" style="overflow-x: hidden;">
+<body>
+    <main class="kumite-tablero">
+        <section class="marcador marcador-aka">
+            <div id="contenedor-s-rojo"></div>
 
-    <!-- MARCADOR ROJO -->
-    <div class="marcador-aka">
-        <div id="contenedor-s-rojo"></div>
-        <div class="pantalla-puntos">
-            <span style="color: white;  display: block; text-align: Center; width: 100%;">
-                EN COMBATE
-            </span>
-            <span id="mirrorSpanRojo" class="fw-bold text-primary" style="text-align: Center;">---</span>
-            <div id="puntosRojo" style="text-align: Center;" class="puntos-gigantes">0</div>
-        </div>
-        <div class="panel-control-rojo">
-            <div class="fila">
-                <button class="btn-personalizadoAzul suma" onclick="updateScore('aka', 1)">+ YUKO</button>
-                <button class="btn-personalizadoAzul suma" onclick="updateScore('aka', 2)">+ WAZARI</button>
-                <button class="btn-personalizadoAzul suma" onclick="updateScore('aka', 3)">+ IPPON</button>
-                <button id="btn-senshu-rojo" class="btn-senshu btn-personalizadosenshurojo" onclick="toggleSenshu('aka')">Senshu</button>
+            <div class="pantalla-puntos">
+                <span class="estado-combate">EN COMBATE</span>
+                <span id="mirrorSpanRojo" class="nombre-competidor">---</span>
+                <div id="puntosRojo" class="puntos-gigantes">0</div>
             </div>
-            <div class="fila">
-                <span id="mirrorSpanYukoRojo" class="text-primary" style="color:black; margin-left: 40px;">0</span>
-                <span id="mirrorSpanWazariRojo" class="text-primary" style="color:black; margin-left: 80px;">0</span>
-                <span id="mirrorSpanIpponRojo" class="text-primary" style="color:black; margin-left: 80px;">0</span>
-            </div> 
-            <div class="fila">
-                <button class="btn-personalizadoAzul resta" onclick="updateScore('aka', -1)">- YUKO</button>
-                <button class="btn-personalizadoAzul resta" onclick="updateScore('aka', -2)">- WAZARI</button>
-                <button class="btn-personalizadoAzul resta" onclick="updateScore('aka', -3)">- IPPON</button>
-                <button id="btn-hantei-rojo" class="btn-personalizadosenshurojo" onclick="logicaHantei('aka')">Hantei</button>
+
+            <div class="panel-control">
+                <div class="fila">
+                    <button class="btn-personalizadoAzul suma" onclick="updateScore('aka', 1)">+ Yuko</button>
+                    <button class="btn-personalizadoAzul suma" onclick="updateScore('aka', 2)">+ Wazari</button>
+                    <button class="btn-personalizadoAzul suma" onclick="updateScore('aka', 3)">+ Ippon</button>
+                    <button id="btn-senshu-rojo" class="btn-senshu" onclick="toggleSenshu('aka')">Senshu</button>
+                </div>
+                <div class="fila contadores-tecnicas">
+                    <span id="mirrorSpanYukoRojo">0</span>
+                    <span id="mirrorSpanWazariRojo">0</span>
+                    <span id="mirrorSpanIpponRojo">0</span>
+                    <span></span>
+                </div>
+                <div class="fila">
+                    <button class="btn-personalizadoAzul resta" onclick="updateScore('aka', -1)">- Yuko</button>
+                    <button class="btn-personalizadoAzul resta" onclick="updateScore('aka', -2)">- Wazari</button>
+                    <button class="btn-personalizadoAzul resta" onclick="updateScore('aka', -3)">- Ippon</button>
+                    <button id="btn-hantei-rojo" class="btn-hantei" onclick="logicaHantei('aka')">Hantei</button>
+                </div>
+                <div class="fila fila-faltas">
+                    <button id="btn-aka-c1" class="btn-falta" onclick="togglePenalty('aka', 1)">C1</button>
+                    <button id="btn-aka-c2" class="btn-falta" onclick="togglePenalty('aka', 2)">C2</button>
+                    <button id="btn-aka-c3" class="btn-falta" onclick="togglePenalty('aka', 3)">C3</button>
+                    <button id="btn-aka-hc" class="btn-falta" onclick="togglePenalty('aka', 4)">HC</button>
+                    <button id="btn-aka-c" class="btn-falta" onclick="togglePenalty('aka', 5)">C</button>
+                </div>
             </div>
-            <div class="fila">
-                <button id="btn-aka-c1" class="btn-falta" onclick="togglePenalty('aka', 1)">C1</button>
-                <button id="btn-aka-c2" class="btn-falta" onclick="togglePenalty('aka', 2)">C2</button>
-                <button id="btn-aka-c3" class="btn-falta" onclick="togglePenalty('aka', 3)">C3</button>
-                <button id="btn-aka-hc" class="btn-falta" onclick="togglePenalty('aka', 4)">HC</button>
-                <button id="btn-aka-c" class="btn-falta" onclick="togglePenalty('aka', 5)">C</button>
-            </div>
-        </div>
-        <div style="display: block; width: 100%; clear: both; margin-top: 2rem;">
-            <label for="TxtRojoProximo" class="form-label fw-bold text-secondary">
-                Próximo Combate
-            </label>
-            
-            <div class="shadow-lg" style="width: 100%; display: block;">
-                <input 
-                    type="text" 
-                    id="TxtRojoProximo" 
+
+            <div class="proximo-combate">
+                <label for="TxtRojoProximo">Proximo Combate</label>
+                <input
+                    type="text"
+                    id="TxtRojoProximo"
                     name="TxtRojoProximo"
-                    class="form-control form-control-lg text-black" 
-                    placeholder="Ingrese el próximo combate..."
-                    style="width: 100% !important; min-width: 100% !important; display: block !important; color: #000000 !important; box-sizing: border-box !important;"
+                    class="form-control form-control-lg"
+                    placeholder="Ingrese el proximo combate..."
                 >
-                
                 @error('TxtRojoProximo')
-                    <div class="invalid-feedback d-block">
-                        {{ $message }}
-                    </div>
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
             </div>
-        </div>
-    </div> 
+        </section>
 
-    <div class="bg-white p-2 rounded-3xl shadow-2xl text-center w-full max-w-md">
-        <!-- Pantalla del Temporizador -->
-        <div id="timer-display" class="font-mono mb-10 bg-gray-100 text-red-600 py-12 w-full max-w-5xl mx-auto rounded-3xl shadow-inner border-8 border-gray-200 text-center" 
-            style="font-size: 9rem; line-height: 1;">
-            00:00
-        </div>
-        <!-- Controles de Ejecución -->
-        <div class="grid grid-cols-2 gap-4 mb-8">
-            <button id="btn-start" onclick="startTimer()" class="bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition-colors shadow-md">INICIO</button>
-            <button id="btn-pause" onclick="pauseTimer()" class="hidden bg-yellow-500 text-white py-3 rounded-xl font-bold hover:bg-yellow-600 transition-colors shadow-md">PAUSA</button>
-            <button id="btn-reset" onclick="resetTimer()" class="bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-700 transition-colors shadow-md">RESET</button>
-        </div>
+        <section class="timer-panel">
+            <div id="timer-display" class="timer-display">00:00</div>
 
-        <!-- Controles de Ajuste -->
-        <div class="grid grid-cols-3 gap-6 mb-6">
-            <!-- Minutos -->
-            <div class="flex flex-col gap-3">
-                <span class="text-xl font-bold text-gray-800 uppercase">Minutos</span>
-                <button onclick="adjustTime(60)" class="btn-Reloj ">+</button>
-                <button onclick="adjustTime(-60)" class="btn-Reloj ">-</button>
-            </div>
-            <!-- Segundos -->
-            <div class="flex flex-col gap-3">
-                <span class="text-xl font-bold text-gray-800 uppercase">Segundos</span>
-                <button onclick="adjustTime(1)" class="btn-Reloj ">+</button>
-                <button onclick="adjustTime(-1)" class="btn-Reloj ">-</button>   
-            </div>
-            <!-- botones -->            
-            <div class="flex flex-col gap-3">
-                <span class="text-xl font-bold text-gray-100 uppercase">.</span>
-                <button id="btnMuestraGanador" class="btn-personalizado" onclick="declararGanador()" disabled>GANADOR</button>
-                <button id="btnCerrar" onclick="window.history.back()" class="btn-personalizado">Cerrar</button>
-            </div>
-        </div>
-        <div class="mb-3">
-            <button type="button" id="btnNuevoCombate" onclick="trasladarDatos()" class="btn-personalizado" style="background: #16a34a; color: white;">
-                Nuevo Combate
-            </button>
-        </div>
-    </div>
-    <!-- MARCADOR AZUL -->
-    <div class="marcador-ao">
-        <div id="contenedor-s-azul"></div>
-        <div class="pantalla-puntos">
-            <span style="color: white;  display: block; text-align: Center; width: 100%;">
-                EN COMBATE
-            </span>
-            <span id="mirrorSpanAzul" class="fw-bold text-primary" style="text-align: Center;">---</span>
-            <div id="puntosAzul" style="text-align: Center;" class="puntos-gigantes">0</div>
-        </div>
-        <div class="panel-control">
-            <div class="fila">
-                <button class="btn-personalizadoAzul suma" onclick="updateScore('ao', 1)">+ YUKO</button>
-                <button class="btn-personalizadoAzul suma" onclick="updateScore('ao', 2)">+ WAZARI</button>
-                <button class="btn-personalizadoAzul suma" onclick="updateScore('ao', 3)">+ IPPON</button>
-                <button id="btn-senshu-azul" class="btn-senshu btn-personalizadosenshuazul" onclick="toggleSenshu('ao')">Senshu</button>
-            </div> 
-            <div class="fila">
-                <span id="mirrorSpanYukoAzul" class="text-primary" style="color:black; margin-left: 40px;">0</span>
-                <span id="mirrorSpanWazariAzul" class="text-primary" style="color:black; margin-left: 80px;">0</span>
-                <span id="mirrorSpanIpponAzul" class="text-primary" style="color:black; margin-left: 80px;">0</span>
-            </div> 
-            <div class="fila">
-                <button class="btn-personalizadoAzul resta" onclick="updateScore('ao', -1)">- YUKO</button>
-                <button class="btn-personalizadoAzul resta" onclick="updateScore('ao', -2)">- WAZARI</button>
-                <button class="btn-personalizadoAzul resta" onclick="updateScore('ao', -3)">- IPPON</button>
-                <button id="btn-hantei-azul" class="btn-personalizadosenshuazul" onclick="logicaHantei('ao')">Hantei</button>
+            <div class="timer-grid">
+                <button id="btn-start" onclick="startTimer()" class="btn-start">Inicio</button>
+                <button id="btn-pause" onclick="pauseTimer()" class="btn-pause hidden">Pausa</button>
+                <button id="btn-reset" onclick="resetTimer()" class="btn-reset">Reset</button>
             </div>
 
-            <div class="fila">
-                <button id="btn-ao-c1" class="btn-falta" onclick="togglePenalty('ao', 1)">C1</button>
-                <button id="btn-ao-c2" class="btn-falta" onclick="togglePenalty('ao', 2)">C2</button>
-                <button id="btn-ao-c3" class="btn-falta" onclick="togglePenalty('ao', 3)">C3</button>
-                <button id="btn-ao-hc" class="btn-falta" onclick="togglePenalty('ao', 4)">HC</button>
-                <button id="btn-ao-c" class="btn-falta" onclick="togglePenalty('ao', 5)">C</button>
+            <div class="ajuste-grid">
+                <div class="ajuste-col">
+                    <span class="ajuste-label">Minutos</span>
+                    <button onclick="adjustTime(60)" class="btn-Reloj">+</button>
+                    <button onclick="adjustTime(-60)" class="btn-Reloj">-</button>
+                </div>
+                <div class="ajuste-col">
+                    <span class="ajuste-label">Segundos</span>
+                    <button onclick="adjustTime(1)" class="btn-Reloj">+</button>
+                    <button onclick="adjustTime(-1)" class="btn-Reloj">-</button>
+                </div>
+                <div class="ajuste-col">
+                    <span class="ajuste-label">&nbsp;</span>
+                    <button id="btnMuestraGanador" class="btn-personalizado" onclick="declararGanador()" disabled>Ganador</button>
+                    <button type="button" id="btnNuevoCombate" onclick="trasladarDatos()" class="btn-personalizado">
+                        Nuevo Combate
+                    </button>
+                </div>
             </div>
-        </div>
-        <div style="display: block; width: 100%; clear: both; margin-top: 2rem;">
-            <label for="TxtAzulProximo" class="form-label fw-bold text-secondary">
-                Próximo Combate
-            </label>
-            
-            <div class="shadow-lg" style="width: 100%; display: block;">
-                <input 
-                    type="text" 
-                    id="TxtAzulProximo" 
+            <button id="btnCerrar" onclick="window.history.back()" class="btn-personalizado">Cerrar</button>
+        </section>
+
+        <section class="marcador marcador-ao">
+            <div id="contenedor-s-azul"></div>
+
+            <div class="pantalla-puntos">
+                <span class="estado-combate">EN COMBATE</span>
+                <span id="mirrorSpanAzul" class="nombre-competidor">---</span>
+                <div id="puntosAzul" class="puntos-gigantes">0</div>
+            </div>
+
+            <div class="panel-control">
+                <div class="fila">
+                    <button class="btn-personalizadoAzul suma" onclick="updateScore('ao', 1)">+ Yuko</button>
+                    <button class="btn-personalizadoAzul suma" onclick="updateScore('ao', 2)">+ Wazari</button>
+                    <button class="btn-personalizadoAzul suma" onclick="updateScore('ao', 3)">+ Ippon</button>
+                    <button id="btn-senshu-azul" class="btn-senshu" onclick="toggleSenshu('ao')">Senshu</button>
+                </div>
+                <div class="fila contadores-tecnicas">
+                    <span id="mirrorSpanYukoAzul">0</span>
+                    <span id="mirrorSpanWazariAzul">0</span>
+                    <span id="mirrorSpanIpponAzul">0</span>
+                    <span></span>
+                </div>
+                <div class="fila">
+                    <button class="btn-personalizadoAzul resta" onclick="updateScore('ao', -1)">- Yuko</button>
+                    <button class="btn-personalizadoAzul resta" onclick="updateScore('ao', -2)">- Wazari</button>
+                    <button class="btn-personalizadoAzul resta" onclick="updateScore('ao', -3)">- Ippon</button>
+                    <button id="btn-hantei-azul" class="btn-hantei" onclick="logicaHantei('ao')">Hantei</button>
+                </div>
+                <div class="fila fila-faltas">
+                    <button id="btn-ao-c1" class="btn-falta" onclick="togglePenalty('ao', 1)">C1</button>
+                    <button id="btn-ao-c2" class="btn-falta" onclick="togglePenalty('ao', 2)">C2</button>
+                    <button id="btn-ao-c3" class="btn-falta" onclick="togglePenalty('ao', 3)">C3</button>
+                    <button id="btn-ao-hc" class="btn-falta" onclick="togglePenalty('ao', 4)">HC</button>
+                    <button id="btn-ao-c" class="btn-falta" onclick="togglePenalty('ao', 5)">C</button>
+                </div>
+            </div>
+
+            <div class="proximo-combate">
+                <label for="TxtAzulProximo">Proximo Combate</label>
+                <input
+                    type="text"
+                    id="TxtAzulProximo"
                     name="TxtAzulProximo"
-                    class="form-control form-control-lg text-black" 
-                    placeholder="Ingrese el próximo combate..."
-                    style="width: 100% !important; min-width: 100% !important; display: block !important; color: #000000 !important; box-sizing: border-box !important;">
+                    class="form-control form-control-lg"
+                    placeholder="Ingrese el proximo combate..."
+                >
                 @error('TxtAzulProximo')
-                    <div class="invalid-feedback d-block">
-                        {{ $message }}
-                    </div>
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
             </div>
+        </section>
+    </main>
+
+    <div id="modal-senshu" class="overlay-ganador">
+        <div class="mensaje-contenedor" style="border-color: #ffff00; box-shadow: 0 0 50px rgba(255, 255, 0, 0.5);">
+            <p class="texto-arriba" style="color: #000000;">AVISO</p>
+            <p class="texto-debajo">EL OTRO COMPETIDOR YA TIENE SENSHU</p>
+            <button onclick="cerrarModalSenshu()" class="btn-cerrar-anuncio" style="background-color: #ffff00; color: #000000 !important; border: 2px solid #000000;">Cerrar</button>
         </div>
     </div>
 
-</div>
-
-
-<!-- Modal para aviso de Senshu -->
-<div id="modal-senshu" class="overlay-ganador">
-    <div class="mensaje-contenedor" style="border-color: #ffff00; box-shadow: 0 0 50px rgba(255, 255, 0, 0.5);">
-        <p class="texto-arriba" style="color: #000; font-size: 50px;">AVISO</p>
-        <p class="texto-debajo">EL OTRO COMPETIDOR YA TIENE SENSHU</p>
-        <button onclick="cerrarModalSenshu()" class="btn-cerrar-anuncio" style="background-color: #ffff00; color: black; border: 2px solid black;">Cerrar</button>
+    <div id="modal-ganador" class="overlay-ganador">
+        <div id="contenedor-ganador" class="mensaje-contenedor">
+            <h3 id="texto-ganador-titulo" class="texto-arriba"></h3>
+            <h3 id="texto-ganador-nombre" class="texto-debajo"></h3>
+            <button onclick="cerrarModalGanador()" class="btn-cerrar-anuncio">Cerrar</button>
+        </div>
     </div>
-</div>
 
-<!-- Modal para el Ganador -->
-<div id="modal-ganador" class="overlay-ganador">
-    <div id="contenedor-ganador" class="mensaje-contenedor">
-        <h3 id="texto-ganador-titulo" class="texto-arriba"></h3>
-        <h3 id="texto-ganador-nombre" class="texto-debajo"></h3>
-        <button onclick="cerrarModalGanador()" class="btn-cerrar-anuncio">Cerrar</button>
-    </div>
-</div>
-
-
-<script>
-        // ESTADO GLOBAL
+    <script>
         let timerInterval = null;
         let timerSeconds = 0;
         let scores = { ao: 0, aka: 0 };
         let activeSenshu = null;
+        let autoWinnerTimeout = null;
         let penalties = {
-            ao: [false, false, false, false, false], // C1, C2, C3, HC, C
+            ao: [false, false, false, false, false],
             aka: [false, false, false, false, false]
         };
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Llamamos a la función para que verifique el tiempo al cargar
-            controlarEstadoBoton();
-        });
-
-        document.getElementById('TxtAzulProximo').addEventListener('input', function(e) {
-            // Ejemplo: Convertir a mayúsculas en tiempo real
-            e.target.value = e.target.value.toUpperCase();
-            
-            // Ejemplo: Cambiar el borde dinámicamente si hay contenido
-            if(e.target.value.length > 0) {
-                e.target.classList.add('border-primary');
+        const sideConfig = {
+            ao: {
+                colorName: 'azul',
+                displayId: 'puntosAzul',
+                nameId: 'mirrorSpanAzul',
+                title: 'GANADOR COMPETIDOR AZUL',
+                background: '#004a99'
+            },
+            aka: {
+                colorName: 'rojo',
+                displayId: 'puntosRojo',
+                nameId: 'mirrorSpanRojo',
+                title: 'GANADOR COMPETIDOR ROJO',
+                background: '#cc0000'
             }
+        };
+
+        const penaltyNames = ['C1', 'C2', 'C3', 'HC', 'C'];
+
+        document.addEventListener('DOMContentLoaded', function () {
+            ['TxtAzulProximo', 'TxtRojoProximo'].forEach(function (id) {
+                const input = document.getElementById(id);
+                if (!input) return;
+
+                input.addEventListener('input', function (event) {
+                    event.target.value = event.target.value.toUpperCase();
+                    event.target.classList.toggle('border-primary', event.target.value.length > 0);
+                });
+            });
+
+            updateTimerDisplay();
         });
 
-        document.getElementById('TxtRojoProximo').addEventListener('input', function(e) {
-            // Ejemplo: Convertir a mayúsculas en tiempo real
-            e.target.value = e.target.value.toUpperCase();
-            
-            // Ejemplo: Cambiar el borde dinámicamente si hay contenido
-            if(e.target.value.length > 0) {
-                e.target.classList.add('border-primary');
-            }
-        });
-
-
-        // --- TEMPORIZADOR ---
-        function updateTimerDisplay() {
-            const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
-            const s = (timerSeconds % 60).toString().padStart(2, '0');
-            $('#timer-display').text(`${m}:${s}`);
-            // Centralizamos la llamada aquí para que sea automática ante cualquier cambio
-            controlarEstadoBoton();
-        }
-
-    function startTimer() {
-        if (timerSeconds <= 0) {
+        function showToast(title, icon = 'warning') {
             Swal.fire({
-                icon: 'warning',
-                title: 'EL TIEMPO DEBE SER MAYOR A CERO',
+                icon: icon,
+                title: title,
                 toast: true,
                 position: 'top',
                 showConfirmButton: false,
                 timer: 3000,
                 timerProgressBar: true,
-                background: '#FFFF00',
+                background: '#FFFF00'
             });
-            return;
         }
 
-        if (timerInterval || timerSeconds <= 0) return;
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+            const seconds = (timerSeconds % 60).toString().padStart(2, '0');
+            $('#timer-display').text(`${minutes}:${seconds}`);
+            controlarEstadoBoton();
+        }
 
-        timerInterval = setInterval(() => {
-            if (timerSeconds > 0) {
-                timerSeconds--;
-                updateTimerDisplay();
-            } else {
-                pauseTimer();
-                
-                setTimeout(() => {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'TIEMPO FINALIZADO',
-                        toast: true,
-                        position: 'top', // Muestra el toast en la parte superior y al centro
-                        showConfirmButton: false,
-                        timer: 5000,
-                        timerProgressBar: true,
-                        background: '#FFFF00', // Fondo amarillo claro
-                    });
-                }, 200);
+        function startTimer() {
+            if (timerSeconds <= 0) {
+                showToast('EL TIEMPO DEBE SER MAYOR A CERO');
+                return;
             }
-        }, 1000);
 
-        $('#btn-start').addClass('hidden');
-        $('#btn-pause').removeClass('hidden');
-        toggleControles(true);
-    }
+            if (timerInterval) return;
+
+            timerInterval = setInterval(function () {
+                if (timerSeconds > 0) {
+                    timerSeconds--;
+                    updateTimerDisplay();
+                    return;
+                }
+
+                pauseTimer();
+                showToast('TIEMPO FINALIZADO', 'info');
+            }, 1000);
+
+            $('#btn-start').addClass('hidden');
+            $('#btn-pause').removeClass('hidden');
+            toggleTimerControls(true);
+        }
 
         function pauseTimer() {
             clearInterval(timerInterval);
             timerInterval = null;
             $('#btn-start').removeClass('hidden');
             $('#btn-pause').addClass('hidden');
-            toggleControles(false);
+            toggleTimerControls(false);
         }
 
         function resetTimer() {
+            clearTimeout(autoWinnerTimeout);
+            autoWinnerTimeout = null;
             pauseTimer();
             timerSeconds = 0;
             updateTimerDisplay();
         }
 
-        function toggleControles(disabled) {
-            const selector = [
-                '#btn-reset',
-                '.btn-Reloj',
-                '#btnMuestraGanador',
-                '#btnCerrar',
-                '#btnNuevoCombate',
-                '.btn-personalizadoAzul',
-                '.btn-senshu',
-                '.btn-falta',
-                '.btn-personalizadosenshurojo',
-                '.btn-personalizadosenshuazul'
-            ].join(',');
+        function toggleTimerControls(disabled) {
+            $('#btn-reset, .btn-Reloj, #btnCerrar, #btnNuevoCombate')
+                .prop('disabled', disabled);
 
-            $(selector).prop('disabled', disabled).toggleClass('opacity-50 cursor-not-allowed', disabled);
-            if (!disabled) controlarEstadoBoton();
+            controlarEstadoBoton();
         }
 
-        function adjustTime(val) {
+        function adjustTime(value) {
             if (timerInterval) return;
-            timerSeconds += val;
-            if (timerSeconds < 0) timerSeconds = 0;
+            timerSeconds = Math.max(0, timerSeconds + value);
             updateTimerDisplay();
         }
 
-        // Verifica si existe una diferencia de 8 puntos o más
-        function checkPointDifference() {
-            const ptsAo = scores.ao;
-            const ptsAka = scores.aka;
-            const nombreAo = $('#mirrorSpanAzul').text();
-            const nombreAka = $('#mirrorSpanRojo').text();
+        function updateScore(side, value) {
+            const previousScore = scores[side];
+            scores[side] = Math.max(0, scores[side] + value);
 
-            if (ptsAo >= ptsAka + 8) {
-                pauseTimer(); // Detener el tiempo inmediatamente
-                setTimeout(() => {
-                    mostrarModalGanador("GANADOR COMPETIDOR AZUL", nombreAo, "#004a99", "white");
-                }, 5000); // Esperar 5 segundos
-            } else if (ptsAka >= ptsAo + 8) {
-                pauseTimer(); // Detener el tiempo inmediatamente
-                setTimeout(() => {
-                    mostrarModalGanador("GANADOR COMPETIDOR ROJO", nombreAka, "#cc0000", "white");
-                }, 5000); // Esperar 5 segundos
-            }
-        }
+            if (scores[side] === previousScore && value < 0) return;
 
-        // Función centralizada para mostrar el ganador y pausar el tiempo
-        function mostrarModalGanador(titulo, nombre, fondo, texto) {
-            $('#texto-ganador-titulo').text(titulo).css('color', texto);
-            $('#texto-ganador-nombre').text(nombre).css('color', texto);
-            $('#contenedor-ganador').css({
-                'background-color': fondo,
-                'border-color': texto === 'white' ? 'white' : 'black'
-            });
-            $('#modal-ganador').css('display', 'flex');
-            pauseTimer(); // El combate termina automáticamente al haber ganador
-        }
+            const displayId = sideConfig[side].displayId;
+            $(`#${displayId}`).text(scores[side]).css('transform', 'scale(1.12)');
+            setTimeout(function () {
+                $(`#${displayId}`).css('transform', 'scale(1)');
+            }, 100);
 
-        // --- PUNTUACIÓN ---
-        function updateScore(side, val) {
-            scores[side] += val;
-            if (scores[side] < 0) scores[side] = 0;
-            const displayId = side === 'ao' ? 'puntosAzul' : 'puntosRojo';
-            $(`#${displayId}`).text(scores[side]);
-
-            // Actualizar contadores individuales (Yuko, Wazari, Ippon)
-            const absVal = Math.abs(val);
-            const technique = absVal === 1 ? 'Yuko' : (absVal === 2 ? 'Wazari' : 'Ippon');
-            const sideName = side === 'ao' ? 'Azul' : 'Rojo';
-            const mirrorId = `#mirrorSpan${technique}${sideName}`;
-            
-            let currentMirrorVal = parseInt($(mirrorId).text()) || 0;
-            // Incrementa o decrementa de 1 en 1 según el signo de val
-            currentMirrorVal += (val > 0 ? 1 : -1);
-            if (currentMirrorVal < 0) currentMirrorVal = 0;
-            $(mirrorId).text(currentMirrorVal);
-            
-            // Animación
-            $(`#${displayId}`).css('transform', 'scale(1.2)');
-            setTimeout(() => $(`#${displayId}`).css('transform', 'scale(1)'), 100);
-
-            // Verificar victoria automática por diferencia de 8 puntos
+            updateTechniqueCounter(side, value);
             checkPointDifference();
         }
 
-        // --- SENSHU (VENTAJA) ---
-        function toggleSenshu(side) {
-            const mapping = { 'ao': 'azul', 'aka': 'rojo' };
-            const otherSide = side === 'ao' ? 'aka' : 'ao';
-            const btnOther = document.getElementById(`btn-senshu-${mapping[otherSide]}`);
-            const styleOther = window.getComputedStyle(btnOther);
+        function updateTechniqueCounter(side, value) {
+            const absValue = Math.abs(value);
+            const technique = absValue === 1 ? 'Yuko' : (absValue === 2 ? 'Wazari' : 'Ippon');
+            const sideName = side === 'ao' ? 'Azul' : 'Rojo';
+            const mirrorId = `#mirrorSpan${technique}${sideName}`;
+            const currentValue = parseInt($(mirrorId).text(), 10) || 0;
+            $(mirrorId).text(Math.max(0, currentValue + (value > 0 ? 1 : -1)));
+        }
 
-            // Verificar si el oponente ya tiene el Senshu (su botón NO es transparente)
-            if (styleOther.backgroundColor !== 'rgba(0, 0, 0, 0)' && styleOther.backgroundColor !== 'transparent') {
+        function checkPointDifference() {
+            if (autoWinnerTimeout) return;
+
+            if (scores.ao >= scores.aka + 8) {
+                scheduleAutoWinner('ao');
+            } else if (scores.aka >= scores.ao + 8) {
+                scheduleAutoWinner('aka');
+            }
+        }
+
+        function scheduleAutoWinner(side) {
+            pauseTimer();
+            autoWinnerTimeout = setTimeout(function () {
+                const config = sideConfig[side];
+                mostrarModalGanador(config.title, $(`#${config.nameId}`).text(), config.background, '#ffffff');
+            }, 5000);
+        }
+
+        function toggleSenshu(side) {
+            const config = sideConfig[side];
+
+            if (activeSenshu && activeSenshu !== side) {
                 $('#modal-senshu').css('display', 'flex');
                 return;
             }
-            
+
             if (activeSenshu === side) {
-                // Quitar
                 activeSenshu = null;
-                $(`#btn-senshu-${mapping[side]}`).css('background-color', 'transparent');
-                $(`#contenedor-s-${mapping[side]}`).empty();
-            } else {
-                // Activar
-                activeSenshu = side;
-                $(`#btn-senshu-${mapping[side]}`).css('background-color', 'yellow');
-                $(`#contenedor-s-${mapping[side]}`).html(`
-                    <div style="position: absolute; top: 5px; right: 5px; width: 80px; height: 80px; background-color: yellow; color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Arial Black', sans-serif; font-weight: bold; font-size: 50px; border: 2px solid #000; z-index: 100;">
-                        S
-                    </div>
-                `);
+                $(`#btn-senshu-${config.colorName}`).removeClass('senshu-activo');
+                $(`#contenedor-s-${config.colorName}`).empty();
+                return;
             }
+
+            activeSenshu = side;
+            $(`#btn-senshu-${config.colorName}`).addClass('senshu-activo');
+            $(`#contenedor-s-${config.colorName}`).html('<div class="senshu-indicador">S</div>');
         }
 
         function cerrarModalSenshu() {
             $('#modal-senshu').css('display', 'none');
         }
 
-        // --- PENALIZACIONES (Lógica Jerárquica) ---
         function togglePenalty(side, level) {
             const index = level - 1;
             const sidePenalties = penalties[side];
 
             if (sidePenalties[index]) {
-                // Quitar falta: Solo si la superior no está activa
                 if (index < 4 && sidePenalties[index + 1]) {
-                    const names = ["C1", "C2", "C3", "HC", "C"];
-                    Swal.fire({
-                        icon: 'warning',
-                        title: `PRIMERO DEBE QUITAR ${names[index+1]}`,
-                        toast: true,
-                        position: 'top',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        background: '#FFFF00',
-                    });
+                    showToast(`PRIMERO DEBE QUITAR ${penaltyNames[index + 1]}`);
                     return;
                 }
+
                 sidePenalties[index] = false;
             } else {
-                // Poner falta
-                if (level === 4) { // HC Especial: Activa todas las anteriores
-                    for(let i=0; i<4; i++) sidePenalties[i] = true;
-                } else {
-                    // Regla: No puedes poner C2 sin C1
-                    if (index > 0 && !sidePenalties[index - 1]) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: "DEBE MARCAR LA PENALIZACIÓN ANTERIOR PRIMERO",
-                            toast: true,
-                            position: 'top',
-                            showConfirmButton: false,
-                            timer: 3000,
-                            timerProgressBar: true,
-                            background: '#FFFF00',
-                        });
-                        return;
+                if (level === 4) {
+                    for (let i = 0; i < 4; i++) {
+                        sidePenalties[i] = true;
                     }
+                } else if (index > 0 && !sidePenalties[index - 1]) {
+                    showToast('DEBE MARCAR LA PENALIZACION ANTERIOR PRIMERO');
+                    return;
+                } else {
                     sidePenalties[index] = true;
                 }
             }
+
             renderPenalties(side);
         }
 
         function renderPenalties(side) {
-            penalties[side].forEach((active, i) => {
-                const suffix = ["c1", "c2", "c3", "hc", "c"][i];
-                const btnId = `#btn-${side}-${suffix}`;
-                if (active) {
-                    $(btnId).addClass('falta-activa');
-                } else {
-                    $(btnId).removeClass('falta-activa');
-                }
+            penalties[side].forEach(function (active, index) {
+                const suffix = ['c1', 'c2', 'c3', 'hc', 'c'][index];
+                $(`#btn-${side}-${suffix}`).toggleClass('falta-activa', active);
             });
         }
 
-        // --- LÓGICA DE GANADOR ---
         function declararGanador() {
-            const ptsAo = parseInt($('#puntosAzul').text()) || 0;
-            const ptsAka = parseInt($('#puntosRojo').text()) || 0;
-            const nombreAo = $('#mirrorSpanAzul').text();
-            const nombreAka = $('#mirrorSpanRojo').text();
+            const winner = resolveWinner();
 
-            // 1. Comparación por Puntos
-            if (ptsAo > ptsAka) {
-                mostrarModalGanador("GANADOR COMPETIDOR AZUL", nombreAo, "#004a99", "white");
-            } else if (ptsAka > ptsAo) {
-                mostrarModalGanador("GANADOR COMPETIDOR ROJO", nombreAka, "#cc0000", "white");
-            } else {
-                // 2. Empate en puntos -> Verificar Senshu
-                if (activeSenshu === 'ao') {
-                    mostrarModalGanador("GANADOR COMPETIDOR AZUL", nombreAo, "#004a99", "white");
-                } else if (activeSenshu === 'aka') {
-                    mostrarModalGanador("GANADOR COMPETIDOR ROJO", nombreAka, "#cc0000", "white");
-                } else {
-                    // 3. No hay Senshu -> Verificar Ippon
-                    const ipponAo = parseInt($('#mirrorSpanIpponAzul').text()) || 0;
-                    const ipponAka = parseInt($('#mirrorSpanIpponRojo').text()) || 0;
+            if (winner === 'hantei') {
+                mostrarModalGanador('DECISION DE HANTEI', 'DE LOS JUECES', '#ffffcc', '#000000');
+                return;
+            }
 
-                    if (ipponAo > ipponAka) {
-                        mostrarModalGanador("GANADOR COMPETIDOR AZUL", nombreAo, "#004a99", "white");
-                    } else if (ipponAka > ipponAo) {
-                        mostrarModalGanador("GANADOR COMPETIDOR ROJO", nombreAka, "#cc0000", "white");
-                    } else {
-                        // 4. Ippon igual -> Verificar Wazari
-                        const wazariAo = parseInt($('#mirrorSpanWazariAzul').text()) || 0;
-                        const wazariAka = parseInt($('#mirrorSpanWazariRojo').text()) || 0;
+            const config = sideConfig[winner];
+            mostrarModalGanador(config.title, $(`#${config.nameId}`).text(), config.background, '#ffffff');
+        }
 
-                        if (wazariAo > wazariAka) {
-                            mostrarModalGanador("GANADOR COMPETIDOR AZUL", nombreAo, "#004a99", "white");
-                        } else if (wazariAka > wazariAo) {
-                            mostrarModalGanador("GANADOR COMPETIDOR ROJO", nombreAka, "#cc0000", "white");
-                        } else {
-                            // 5. Wazari igual -> Verificar Yuko
-                            const yukoAo = parseInt($('#mirrorSpanYukoAzul').text()) || 0;
-                            const yukoAka = parseInt($('#mirrorSpanYukoRojo').text()) || 0;
+        function resolveWinner() {
+            if (scores.ao !== scores.aka) {
+                return scores.ao > scores.aka ? 'ao' : 'aka';
+            }
 
-                            if (yukoAo > yukoAka) {
-                                mostrarModalGanador("GANADOR COMPETIDOR AZUL", nombreAo, "#004a99", "white");
-                            } else if (yukoAka > yukoAo) {
-                                mostrarModalGanador("GANADOR COMPETIDOR ROJO", nombreAka, "#cc0000", "white");
-                            } else {
-                                // 6. Todo igual -> Hantei
-                                mostrarModalGanador("DECISIÓN DE HANTEI", "DE LOS JUECES", "#ffffcc", "black");
-                            }
-                        }
-                    }
+            if (activeSenshu) return activeSenshu;
+
+            for (const technique of ['Ippon', 'Wazari', 'Yuko']) {
+                const aoValue = parseInt($(`#mirrorSpan${technique}Azul`).text(), 10) || 0;
+                const akaValue = parseInt($(`#mirrorSpan${technique}Rojo`).text(), 10) || 0;
+
+                if (aoValue !== akaValue) {
+                    return aoValue > akaValue ? 'ao' : 'aka';
                 }
             }
+
+            return 'hantei';
+        }
+
+        function mostrarModalGanador(titulo, nombre, fondo, texto) {
+            $('#texto-ganador-titulo').text(titulo).css('color', texto);
+            $('#texto-ganador-nombre').text(nombre).css('color', texto);
+            $('#contenedor-ganador').css({
+                'background-color': fondo,
+                'border-color': texto === '#ffffff' ? '#ffffff' : '#000000'
+            });
+            $('#modal-ganador').css('display', 'flex');
+            pauseTimer();
         }
 
         function cerrarModalGanador() {
             $('#modal-ganador').css('display', 'none');
         }
 
-        function controlarEstadoBoton() {
-            const btnNuevo = document.getElementById('btnNuevoCombate');
-            const btnGanador = document.getElementById('btnMuestraGanador');
-            const timerDisplay = document.getElementById('timer-display');
-
-            if (!btnNuevo || !timerDisplay) return;
-
-            const isTimeZero = timerDisplay.textContent.trim() === "00:00";
-            const isPaused = timerInterval === null;
-
-            if (isTimeZero) {
-                // Habilitar Nuevo Combate
-                btnNuevo.disabled = false;
-                btnNuevo.style.background = "#16a34a";
-            } else {
-                // Deshabilitar Nuevo Combate
-                btnNuevo.disabled = true;
-                btnNuevo.style.background = "#dc2626";
-            }
-            btnNuevo.style.color = "white";
-
-            // Habilitar botón Ganador si el tiempo es 00:00 O si el cronómetro está en pausa
-            if (btnGanador) {
-                const habilitar = isTimeZero || isPaused;
-                btnGanador.disabled = !habilitar;
-                btnGanador.style.opacity = habilitar ? "1" : "0.5";
-            }
-        }
-
         function logicaHantei(side) {
-            const mapping = { 'ao': 'azul', 'aka': 'rojo' };
-            const btnCurrent = document.getElementById(`btn-hantei-${mapping[side]}`);
-            const btnOther = document.getElementById(`btn-hantei-${mapping[side === 'ao' ? 'aka' : 'ao']}`);
-            const nombre = side === 'ao' ? $('#mirrorSpanAzul').text() : $('#mirrorSpanRojo').text();
-            const titulo = side === 'ao' ? "GANADOR COMPETIDOR AZUL" : "GANADOR COMPETIDOR ROJO";
-            const fondo = side === 'ao' ? "#004a99" : "#cc0000";
+            const config = sideConfig[side];
+            const otherSide = side === 'ao' ? 'aka' : 'ao';
+            const currentButton = $(`#btn-hantei-${config.colorName}`);
+            const otherButton = $(`#btn-hantei-${sideConfig[otherSide].colorName}`);
 
-            // Verificar si el otro ya es ganador
-            if (btnOther.style.backgroundColor === 'yellow' || window.getComputedStyle(btnOther).backgroundColor === 'rgb(255, 255, 0)') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: "SOLO PUEDE HABER UN GANADOR",
-                    toast: true,
-                    position: 'top',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    background: '#FFFF00',
-                });
+            if (otherButton.hasClass('hantei-activo')) {
+                showToast('SOLO PUEDE HABER UN GANADOR');
                 return;
             }
 
-            // Toggle: si ya está amarillo, pasa a transparente. Si no, a amarillo y muestra mensaje.
-            if (btnCurrent.style.backgroundColor === 'yellow' || window.getComputedStyle(btnCurrent).backgroundColor === 'rgb(255, 255, 0)') {
-                btnCurrent.style.backgroundColor = 'transparent';
-            } else {
-                btnCurrent.style.backgroundColor = 'yellow';
-                // Fondo azul/rojo y letras blancas
-                mostrarModalGanador(titulo, nombre, fondo, "white");
+            if (currentButton.hasClass('hantei-activo')) {
+                currentButton.removeClass('hantei-activo');
+                return;
             }
+
+            currentButton.addClass('hantei-activo');
+            mostrarModalGanador(config.title, $(`#${config.nameId}`).text(), config.background, '#ffffff');
         }
 
         function trasladarDatos() {
-            const timerDisplay = document.getElementById('timer-display');
             const inputAzul = document.getElementById('TxtAzulProximo');
-            const spanAzul = document.getElementById('mirrorSpanAzul');
             const inputRojo = document.getElementById('TxtRojoProximo');
-            const spanRojo = document.getElementById('mirrorSpanRojo');
-            const puntosAzul = document.getElementById('puntosAzul');
-            const puntosRojo = document.getElementById('puntosRojo');
-
-            if (!inputAzul || !inputRojo || !spanAzul || !spanRojo) {
-                console.error("Error: IDs no encontrados.");
-                return;
-            }
-
             const nombreAzul = inputAzul.value.trim();
             const nombreRojo = inputRojo.value.trim();
 
-            if (nombreAzul === "" || nombreRojo === "") {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Por favor, ingresa los nombres de ambos competidores.',
-                    toast: true,
-                    position: 'top',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    background: '#FFFF00',
-                });
+            if (!nombreAzul || !nombreRojo) {
+                showToast('POR FAVOR, INGRESA LOS NOMBRES DE AMBOS COMPETIDORES.');
                 return;
             }
 
-            // 1. Trasladar nombres
-            spanAzul.textContent = nombreAzul;
-            spanRojo.textContent = nombreRojo;
+            $('#mirrorSpanAzul').text(nombreAzul);
+            $('#mirrorSpanRojo').text(nombreRojo);
 
-            // 2. Resetear marcadores
-            if (puntosAzul) puntosAzul.textContent = "0";
-            if (puntosRojo) puntosRojo.textContent = "0";
             scores = { ao: 0, aka: 0 };
-
-            // Resetear contadores de técnicas individuales
-            const mirrorIds = ['YukoAzul', 'WazariAzul', 'IpponAzul', 'YukoRojo', 'WazariRojo', 'IpponRojo'];
-            mirrorIds.forEach(id => $(`#mirrorSpan${id}`).text('0'));
-
-            // 3. Resetear faltas
             penalties = {
                 ao: [false, false, false, false, false],
                 aka: [false, false, false, false, false]
             };
+            activeSenshu = null;
+            clearTimeout(autoWinnerTimeout);
+            autoWinnerTimeout = null;
+
+            $('#puntosAzul, #puntosRojo').text('0');
+            $('#mirrorSpanYukoAzul, #mirrorSpanWazariAzul, #mirrorSpanIpponAzul, #mirrorSpanYukoRojo, #mirrorSpanWazariRojo, #mirrorSpanIpponRojo').text('0');
+            $('#btn-senshu-azul, #btn-senshu-rojo').removeClass('senshu-activo');
+            $('#btn-hantei-azul, #btn-hantei-rojo').removeClass('hantei-activo');
+            $('#contenedor-s-azul, #contenedor-s-rojo').empty();
             renderPenalties('ao');
             renderPenalties('aka');
 
-            // 4. Quitar Senshu
-            activeSenshu = null;
-            $('#btn-senshu-azul, #btn-senshu-rojo').css('background-color', 'transparent');
-            $('#contenedor-s-azul, #contenedor-s-rojo').empty();
-
-            // 5. Resetear botones de Hantei
-            $('#btn-hantei-azul, #btn-hantei-rojo').css('background-color', 'transparent');
-
-            inputAzul.value = "";
-            inputRojo.value = "";
+            inputAzul.value = '';
+            inputRojo.value = '';
+            inputAzul.classList.remove('border-primary');
+            inputRojo.classList.remove('border-primary');
             inputAzul.focus();
         }
 
-        $(document).ready(() => {
-            updateTimerDisplay();
-        });
+        function controlarEstadoBoton() {
+            const btnNuevo = document.getElementById('btnNuevoCombate');
+            const btnGanador = document.getElementById('btnMuestraGanador');
+            const isTimeZero = timerSeconds === 0;
+            const isPaused = timerInterval === null;
+
+            if (btnNuevo && !timerInterval) {
+                btnNuevo.disabled = !isTimeZero;
+                btnNuevo.style.background = isTimeZero ? '#16a34a' : '#dc2626';
+                btnNuevo.style.color = '#ffffff';
+            }
+
+            if (btnGanador) {
+                btnGanador.disabled = !(isTimeZero || isPaused);
+            }
+        }
     </script>
 </body>
 </html>
-<style>
-    .hidden {
-        display: none !important;
-    }
-
-    .bg-slate-900 {
-        background-color: #0f172a;
-    }
-
-    .bg-white {
-        background-color: #ffffff;
-    }
-
-    .bg-gray-100 {
-        background-color: #f3f4f6;
-    }
-
-    .bg-green-600 {
-        background-color: #16a34a;
-    }
-
-    .bg-yellow-500 {
-        background-color: #eab308;
-    }
-
-    .bg-red-600 {
-        background-color: #dc2626;
-    }
-
-    .text-white {
-        color: #ffffff;
-    }
-
-    .text-red-600 {
-        color: #dc2626;
-    }
-
-    .text-gray-800 {
-        color: #1f2937;
-    }
-
-    .text-gray-100 {
-        color: #f3f4f6;
-    }
-
-    .flex {
-        display: flex;
-    }
-
-    .flex-wrap {
-        flex-wrap: wrap;
-    }
-
-    .flex-col {
-        flex-direction: column;
-    }
-
-    .items-center {
-        align-items: center;
-    }
-
-    .justify-center {
-        justify-content: center;
-    }
-
-    .grid {
-        display: grid;
-    }
-
-    .grid-cols-2 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .grid-cols-3 {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .gap-3 {
-        gap: 0.75rem;
-    }
-
-    .gap-4 {
-        gap: 1rem;
-    }
-
-    .gap-6 {
-        gap: 1.5rem;
-    }
-
-    .w-full {
-        width: 100%;
-    }
-
-    .max-w-md {
-        max-width: 28rem;
-    }
-
-    .max-w-5xl {
-        max-width: 64rem;
-    }
-
-    .h-screen {
-        min-height: 100vh;
-    }
-
-    .mx-auto {
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .mb-3 {
-        margin-bottom: 0.75rem;
-    }
-
-    .mb-6 {
-        margin-bottom: 1.5rem;
-    }
-
-    .mb-8 {
-        margin-bottom: 2rem;
-    }
-
-    .mb-10 {
-        margin-bottom: 2.5rem;
-    }
-
-    .p-2 {
-        padding: 0.5rem;
-    }
-
-    .py-3 {
-        padding-top: 0.75rem;
-        padding-bottom: 0.75rem;
-    }
-
-    .py-12 {
-        padding-top: 3rem;
-        padding-bottom: 3rem;
-    }
-
-    .rounded-xl,
-    .rounded-3xl {
-        border-radius: 0.5rem;
-    }
-
-    .shadow-md,
-    .shadow-inner,
-    .shadow-2xl {
-        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
-    }
-
-    .border-8 {
-        border: 8px solid;
-    }
-
-    .border-gray-200 {
-        border-color: #e5e7eb;
-    }
-
-    .font-mono {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    }
-
-    .font-bold {
-        font-weight: 700;
-    }
-
-    .text-xl {
-        font-size: 1.25rem;
-    }
-
-    .uppercase {
-        text-transform: uppercase;
-    }
-
-    .circulo-s {
-        /* Reutilizado de tu lógica de Senshu */
-    }
-
-    .contenedor-botones {
-        display: flex !important;          /* Activa el modo flexible obligatoriamente */
-        flex-direction: row !important;    /* Fuerza a que los hijos estén en FILA, no columna */
-        justify-content: space-between !important; /* Separa uno a cada extremo */
-        align-items: center;               /* Los alinea verticalmente */
-        width: 100%;                       /* Ocupa todo el ancho de la pantalla */
-        box-sizing: border-box;
-        padding: 10px 20px;                /* Espacio para que no toquen los bordes */
-    }
-
-    .btn-personalizado {
-        display: inline-block;             /* Asegura que el botón no ocupe toda la línea */
-        margin: 0;                         /* Quita márgenes que puedan empujarlos */
-    }
-    /* Capa de fondo oscuro que cubre toda la pantalla */
-    .overlay-ganador {
-        /* ESTA LÍNEA ES LA QUE CORRIGE EL ERROR */
-        display: none; 
-        
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.9);
-        z-index: 9999;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-    }
-
-    /* Caja blanca que contiene el texto (Media pantalla) */
-    .mensaje-contenedor {
-        background-color: white;
-        padding: 60px;
-        border: 10px solid #ff0000; /* Borde rojo grueso */
-        border-radius: 20px;
-        width: 70%; /* Ocupa gran parte de la pantalla */
-        box-shadow: 0 0 50px rgba(255, 0, 0, 0.5);
-    }
-
-    .texto-arriba {
-        color: #ff0000; /* Rojo */
-        font-size: 80px; /* Tamaño gigante */
-        font-weight: 900;
-        margin: 0;
-        font-family: 'Arial Black', sans-serif;
-    }
-
-    .texto-debajo {
-        color: #000000; /* Negro */
-        font-size: 30px; /* Tamaño grande */
-        font-weight: bold;
-        margin-top: 20px;
-        text-transform: uppercase;
-    }
-
-    /* Estilo del botón de cerrar */
-    .btn-cerrar-anuncio {
-        margin-top: 40px;
-        padding: 15px 40px;
-        font-size: 20px;
-        font-weight: bold;
-        color: white;
-        background-color: #333;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .btn-cerrar-anuncio:hover {
-        background-color: #000;
-    }
-
-/* Btotnes de falta */
-    .btn-falta {
-        width: 20px;
-        color: #1a1a1a; /* Negro casi puro para mejor contraste */
-        
-        /* Borde suave con un toque de profundidad */
-        border: 1px solid #9ca3af; 
-        border-radius: 10px; /* Bordes un poco más curvos son más elegantes */
-        
-        font-weight: 600;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        text-transform: uppercase; /* Da un aire más profesional/deportivo */
-        letter-spacing: 0.5px;
-        
-        cursor: pointer;
-        padding: 10px 10px;
-        min-width: 70px;
-        height: 40px;
-        
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        
-        /* Sombra suave para que el botón "flote" sobre el marcador */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: all 0.2s ease-in-out;
-    }
-
-    /* Clase para el estado activo (amarillo) */
-    .falta-activa {
-       background-color: #ffff00 !important; /* Amarillo */
-        color: black; /* Asegura que la letra siga siendo negra */
-    }
-
-    .marcador-ao {
-        background-color: #004a99; /* Azul de competencia */
-        width: 380px;
-        max-width: 95vw;
-        
-        /* --- OPCIÓN DE ALTO --- */
-        min-height: 325px;         /* Ajusta este valor (ej: 300px, 400px) para aumentar el alto */
-        
-        /* --- CENTRADO VERTICAL (Opcional pero recomendado) ---
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        
-        border-radius: 15px;
-        padding: 15px;
-        color: white;
-        font-family: 'Arial Black', sans-serif;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        border: 4px solid #ffffff;
-        text-align: center;
-        position: relative;
-        /* Cambié display inline-block por flex para manejar mejor el alto */
-    }
-
-        .marcador-aka {
-            background-color: #cc0000; /* Rojo reglamentario AKA */
-            width: 380px;
-            max-width: 95vw;
-            /* --- OPCIÓN DE ALTO --- */
-            min-height: 325px;         /* Ajusta este valor (ej: 300px, 400px) para aumentar el alto */
-            /* --- CENTRADO VERTICAL (Opcional pero recomendado) --- */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            
-            border-radius: 15px;
-            padding: 15px;
-            color: white;
-            font-family: 'Arial Black', sans-serif;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 4px solid #ffffff;
-            text-align: center;
-            position: relative;
-        }
-
-    .etiqueta-ao {
-        font-size: 1.5rem;
-        letter-spacing: 3px;
-        margin-bottom: -10px;
-    }
-
-    .puntos-gigantes {
-        font-size: 300px; /* Tamaño grande para legibilidad */
-        line-height: 1;
-        margin: 10px 0;
-        text-shadow: 4px 4px 0px rgba(0,0,0,0.3);
-    }
-
-    /* Contenedor principal */
-    .panel-control {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin-top: 15px;
-    }
-    
-    .panel-control-rojo {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin-top: 15px;
-    }
-
-
-    .contenedor-botones {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin-top: 15px;
-    }
-
-    /* Filas de botones */
-    .fila {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-
-    /* Botones Azules */
-    .btn-personalizadoAzul {
-        background: linear-gradient(145deg, #eeeeee, #d1d5db);
-        color: #000000 !important; /* Negro puro */
-        font-weight: bold !important; /* Negrilla */
-        border: 1px solid #2f2f30;
-        border-radius: 10px;
-        font-family: sans-serif;
-        text-transform: uppercase;
-        cursor: pointer;
-        min-width: 90px;
-        height: 40px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 3px 3px 6px #bebebe, -2px -2px 5px #ffffff;
-        transition: all 0.1s;
-        /* Aseguramos que el botón sea cliqueable */
-        position: relative;
-        z-index: 5;
-        pointer-events: auto;
-    }
-
-    .btn-personalizadoAzul:active {
-        transform: translateY(2px);
-        box-shadow: inset 2px 2px 5px #bcbcbc, inset -2px -2px 5px #ffffff;
-    }
-
-    /* Estilo Base: Fondo Gris, Letra Negra, Borde Suave Negro */
-    .btn-personalizado {
-        /* Degradado sutil para dar volumen (de gris claro a un poco más oscuro) */
-        background: linear-gradient(145deg, #eeeeee, #d1d5db);
-        color: #1a1a1a; /* Negro casi puro para mejor contraste */
-        
-        /* Borde suave con un toque de profundidad */
-        border: 1px solid #9ca3af; 
-        border-radius: 10px; /* Bordes un poco más curvos son más elegantes */
-        
-        font-weight: 500;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        text-transform: uppercase; /* Da un aire más profesional/deportivo */
-        letter-spacing: 0.5px;
-        
-        cursor: pointer;
-        padding: 5px 5px;
-        min-width: 100px;
-        height: 40px;
-        
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        
-        /* Sombra suave para que el botón "flote" sobre el marcador */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: all 0.2s ease-in-out;
-    }
-
-
-    /* Boton Senshu Azul */
-    .btn-personalizadosenshuazul {
-        width: 20px;
-        color: #1a1a1a; /* Negro casi puro para mejor contraste */
-        
-        /* Borde suave con un toque de profundidad */
-        border: 1px solid #9ca3af; 
-        border-radius: 10px; /* Bordes un poco más curvos son más elegantes */
-        
-        font-weight: 600;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        text-transform: uppercase; /* Da un aire más profesional/deportivo */
-        letter-spacing: 0.5px;
-        
-        cursor: pointer;
-        padding: 10px 10px;
-        min-width: 90px;
-        height: 40px;
-        
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        
-        /* Sombra suave para que el botón "flote" sobre el marcador */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: all 0.2s ease-in-out;
-    }
-
-
-    /* Estilos para cuando el botón está "activo" (gris y borde negro) */
-    .btn-personalizado.activo {
-        background-color: #9ca3af; /* bg-gray-400 equivalent */
-        border-color: black;
-    }
-
-
-    /* Estilo Base: Fondo Gris, Letra Negra, Borde Suave Negro */
-    .btn-Reloj {
-        /* Degradado sutil para dar volumen (de gris claro a un poco más oscuro) */
-        background: linear-gradient(145deg, #eeeeee, #d1d5db);
-        color: #1a1a1a; /* Negro casi puro para mejor contraste */
-        
-        /* Borde suave con un toque de profundidad */
-        border: 1px solid #9ca3af; 
-        border-radius: 10px; /* Bordes un poco más curvos son más elegantes */
-        
-        font-size: 30px; /* Tamaño grande para legibilidad */
-        font-weight: 600;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        text-transform: uppercase; /* Da un aire más profesional/deportivo */
-        letter-spacing: 0.5px;
-        
-        cursor: pointer;
-        padding: 10px 10px;
-        min-width: 40px;
-        height: 40px;
-        
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        
-        /* Sombra suave para que el botón "flote" sobre el marcador */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: all 0.2s ease-in-out;
-    }
-
-    /* Efecto al pasar el mouse (Hover) */
-    .btn-personalizado:hover {
-        background: linear-gradient(145deg, #d1d5db, #eeeeee); /* Invierte el degradado */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        transform: translateY(-1px); /* Elevación ligera */
-    }
-
-    /* Efecto al hacer clic (Active) */
-    .btn-personalizado:active {
-        transform: translateY(1px); /* Se hunde ligeramente */
-        box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-
-    .btn-personalizado:hover {
-        background-color: #9ca3af; /* Gris más oscuro al pasar el mouse */
-    }
-
-    /* Estado Activo (Para Senshu o Faltas marcadas) */
-    .bg-amarillo {
-        background-color: #facc15 !important;
-        border-color: #000 !important;
-    }
-
-
-    .btn-punto {
-        padding: 15px 5px;
-        border: none;
-        border-radius: 8px;
-        font-weight: bold;
-        font-size: 0.85rem;
-        cursor: pointer;
-        color: white;
-        transition: transform 0.1s, filter 0.2s;
-    }
-
-    /* Colores de botones */
-    .suma {
-        background-color: #5d5d5e; /* Verde para sumar */
-        border-bottom: 4px solid #5d5d5e;
-    }
-
-    .resta {
-        background-color: #5d5d5e; /* Rojo para restar */
-        border-bottom: 4px solid #5d5d5e;
-    }
-
-    .etiqueta-aka {
-        font-size: 1.5rem;
-        letter-spacing: 3px;
-        margin-bottom: -10px;
-    }
-
-    .puntos-gigantes {
-        font-size: 280px; /* Tamaño máximo para visibilidad */
-        line-height: 0.9;
-        margin: 10px 0;
-        font-weight: 890;
-        text-shadow: 3px 3px 0px rgba(0,0,0,0.2);
-        transition: transform 0.1s ease;
-    }
-
-
-    .panel-control-aka {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin-top: 15px;
-    }
-
-    .btn-aka {
-        padding: 18px 5px;
-        border: none;
-        border-radius: 10px;
-        font-weight: bold;
-        font-size: 0.8rem;
-        cursor: pointer;
-        color: white;
-        text-transform: uppercase;
-        transition: all 0.2s;
-    }
-
-    /* Estilos por función del botón */
-    .btn-sumar {
-        background-color: #5d5d5e; /* Gris neutro */
-        border-bottom: 5px solid #5d5d5e; /* Gris neutro */
-    }
-
-    .btn-restar {
-        background-color: #5d5d5e; /* Gris oscuro para restar (corrección) */
-        border-bottom: 5px solid #5d5d5e;
-    }
-
-    /* Efectos de interacción */
-    .btn-aka:active {
-        transform: translateY(4px);
-        border-bottom-width: 1px;
-    }
-
-    .btn-aka:hover {
-        filter: brightness(1.2);
-    }
-
-    .display-segundos {
-        background-color: #374151; /* Gris oscuro elegante (tipo pizarra) */
-        color: #ffffff;            /* Letras blancas para alto contraste */
-        padding: 10px 20px;
-        border-radius: 8px;        /* Borde suave como tus botones */
-        font-family: 'Courier New', Courier, monospace; /* Fuente tipo digital */
-        font-size: 3rem;           /* Tamaño grande (ajustable) */
-        font-weight: 800;
-        display: inline-block;
-        min-width: 120px;
-        text-align: center;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); /* Sombra interna para profundidad */
-        border: 2px solid #1f2937;
-    }
-
-    .etiqueta-segundos {
-        display: block;
-        font-size: 0.8rem;
-        color: #9ca3af; /* Gris claro para el texto pequeño superior */
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        margin-bottom: 4px;
-        font-weight: bold;
-    }
-
-    /* Clase para el estado activo (Fondo Amarillo) */
-    .senshu-activo {
-        background-color: #ffff00 !important;
-    }
-
-    .texto-negro-bold {
-        /* Color Negro Puro (Hexadecimal absoluto) */
-        color: #000000 !important; 
-        
-        /* Grosor Extra (Negrillas fuertes) */
-        font-weight: 900 !important; 
-        
-        /* Tamaño Grande (Ajustado a 50px) */
-        font-size: 50px !important; 
-        
-        /* Tipografía sin remates para mayor claridad */
-        font-family: 'Arial Black', Gadget, sans-serif; 
-        
-        /* Ajustes de espacio */
-        margin: 0; 
-        padding: 0;
-        line-height: 1;
-        
-        /* Opcional: Suavizado de fuente para pantallas modernas */
-        -webkit-font-smoothing: antialiased;
-    }
-
-    .btn-cerrar {
-        margin-top: 30px;
-        padding: 10px 25px;
-        
-        /* Estilo 3D Gris */
-        background: linear-gradient(145deg, #ffffff, #d1d5db);
-        color: #000000;
-        font-weight: bold;
-        font-size: 16px;
-        text-transform: uppercase;
-        
-        border: 2px solid #000000;
-        border-radius: 8px;
-        cursor: pointer;
-        
-        /* Efectos */
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-        transition: all 0.1s ease;
-    }
-
-    /* Efecto de clic (se hunde) */
-    .btn-cerrar:active {
-        transform: translateY(2px);
-        box-shadow: inset 1px 1px 3px rgba(0,0,0,0.4);
-    }
-
-    /* Estilo para centrar el contenido del mensaje */
-    .overlay-ganador {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.85); /* Fondo oscuro */
-        z-index: 1000;
-        display: none; /* Se activa con logicaC() */
-        justify-content: center;
-        align-items: center;
-    }
-
-        .btn-personalizadosenshurojo {
-        width: 20px;
-        color: #1a1a1a; /* Negro casi puro para mejor contraste */
-        
-        /* Borde suave con un toque de profundidad */
-        border: 1px solid #9ca3af; 
-        border-radius: 10px; /* Bordes un poco más curvos son más elegantes */
-        
-        font-weight: 600;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        text-transform: uppercase; /* Da un aire más profesional/deportivo */
-        letter-spacing: 0.5px;
-        
-        cursor: pointer;
-        padding: 10px 10px;
-        min-width: 90px;
-        height: 40px;
-        
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        
-        /* Sombra suave para que el botón "flote" sobre el marcador */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: all 0.2s ease-in-out;
-    }
-
-    .input-bajo-relieve {
-        background-color: #CCEEFF; /* Celeste */
-        color: #000000;            /* Letras negras */
-        font-weight: bold;         /* Tipo Bold */
-        border: none;
-        padding: 10px 10px;
-        border-radius: 8px;
-        
-        /* Efecto Bajo Relieve (Sombra interna) */
-        box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2), 
-                    inset -2px -2px 5px rgba(255, 255, 255, 0.5);
-        
-        outline: none;
-        transition: all 0.3s ease;
-    }
-
-    /* Efecto cuando el usuario hace clic para escribir */
-    .input-bajo-relieve:focus {
-        box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.3), 
-                    0 0 5px rgba(0, 123, 255, 0.2);
-        background-color: #7cbcfc;
-    }
-
-
-</style>
-
-
-
-
-
-<script>
-
-/* ******************** controla puntos rojo ******************** */
-    let puntajeAo = 0; 
-
-    function cambiarPuntos(valor) {
-        // 1. Verificamos que el clic entra a la función
-        console.log("Pulsado botón con valor: " + valor);
-
-        // 2. Buscamos el display
-        const display = document.getElementById('puntosAzul');
-        
-        // 3. Calculamos el puntaje
-        puntajeAo += valor;
-        if (puntajeAo < 0) puntajeAo = 0;
-
-        // 4. Actualizamos la pantalla solo si el elemento existe
-        if (display) {
-            display.innerText = puntajeAo;
-            
-            // Animación rápida de latido
-            display.style.transform = "scale(1.2)";
-            setTimeout(() => {
-                display.style.transform = "scale(1)";
-            }, 100);
-        } else {
-            console.error("Error: No encuentro el ID 'puntosAzul' en el HTML");
-        }
-    }
-
-
-
-/* ******************** controla puntos rojo ******************** */
-    let puntajeRojo = 0; 
-
-    function gestionarPuntosAka(valor) {
-        // 1. Verificamos que el clic entra a la función
-        console.log("Pulsado botón con valor: " + valor);
-
-        // 2. Buscamos el display
-        const display = document.getElementById('puntosRojo');
-        
-        // 3. Calculamos el puntaje
-        puntajeRojo += valor;
-        if (puntajeRojo < 0) puntajeRojo = 0;
-
-        // 4. Actualizamos la pantalla solo si el elemento existe
-        if (display) {
-            display.innerText = puntajeRojo;
-            
-            // Animación rápida de latido
-            display.style.transform = "scale(1.2)";
-            setTimeout(() => {
-                display.style.transform = "scale(1)";
-            }, 100);
-        } else {
-            console.error("Error: No encuentro el ID 'puntosRojo' en el HTML");
-        }
-    }
-
-    /* ******************** Chuy 1 Azul ******************** */
-    function logicaC1() {
-        const btnC1 = document.getElementById('btn-c1-azul');
-        const btnC2 = document.getElementById('btn-c2-azul');
-
-        // Función para verificar si un botón tiene el fondo amarillo
-        const esAmarillo = (el) => el && el.classList.contains('falta-activa');
-
-        // CASO A: El botón C1 ya está en amarillo (queremos quitarlo)
-        if (esAmarillo(btnC1)) {
-            // Regla: Si C2 está amarillo, no se puede quitar C1
-            if (esAmarillo(btnC2)) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: "PRIMERO DEBE QUITAR EL CHUY 2",
-                    toast: true,
-                    position: 'top',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    background: '#FFFF00',
-                });
-            } else {
-                // Si C2 está transparente, permitimos quitar el fondo amarillo
-                btnC1.classList.remove('falta-activa');
-            }
-        } 
-        // CASO B: El botón C1 está transparente (queremos activarlo)
-        else {
-            btnC1.classList.add('falta-activa');
-        }
-    }
-    /* ******************** Chuy 2 Azul ******************** */
-    function logicaC2() {
-        const btnC1 = document.getElementById('btn-c1-azul');
-        const btnC2 = document.getElementById('btn-c2-azul');
-        const btnC3 = document.getElementById('btn-c3-azul');
-
-        // Función auxiliar para saber si un botón está "activo" (amarillo)
-        const esAmarillo = (el) => el && el.classList.contains('falta-activa');
-
-        // CASO A: El botón C2 ya está en amarillo (queremos quitarlo)
-        if (esAmarillo(btnC2)) {
-            // Regla: Si C3 está amarillo, no se puede quitar C2
-            if (esAmarillo(btnC3)) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: "PRIMERO DEBE QUITAR EL CHUY 3",
-                    toast: true,
-                    position: 'top',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    background: '#FFFF00',
-                });
-            } else {
-                // Si C3 está transparente, entonces sí podemos quitar C2
-                btnC2.classList.remove('falta-activa');
-            }
-        } 
-        // CASO B: El botón C2 está transparente (queremos activarlo)
-        else {
-            // Regla: Solo se activa si C1 ya tiene el fondo amarillo
-            if (esAmarillo(btnC1)) {
-                btnC2.classList.add('falta-activa');
-            } else {
-                // Opcional: podrías poner un alert aquí indicando que falta el C1
-                console.log("Debe marcar C1 primero");
-            }
-        }
-    }
-
-        /* ******************** Chuy 3 Azul ******************** */
-    function logicaC3() {
-        const btnC2 = document.getElementById('btn-c2-azul');
-        const btnC3 = document.getElementById('btn-c3-azul');
-        const btnHC = document.getElementById('btn-hc-azul');
-
-        // Función para verificar si un botón tiene la clase de fondo amarillo
-        const esAmarillo = (el) => el && el.classList.contains('falta-activa');
-
-        // CASO A: El botón C3 ya está en amarillo (queremos quitarlo / ponerlo transparente)
-        if (esAmarillo(btnC3)) {
-            // Regla: Si HC está amarillo, no se puede quitar C3
-            if (esAmarillo(btnHC)) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: "PRIMERO DEBE QUITAR EL HANSOKU CHUY",
-                    toast: true,
-                    position: 'top',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    background: '#FFFF00',
-                });
-            } else {
-                // Si HC está transparente, permitimos volver a transparente
-                btnC3.classList.remove('falta-activa');
-            }
-        } 
-        // CASO B: El botón C3 está transparente (queremos activarlo / ponerlo amarillo)
-        else {
-            // Regla: Solo se activa si C2 ya tiene el fondo amarillo
-            if (esAmarillo(btnC2)) {
-                btnC3.classList.add('falta-activa');
-            } else {
-                // Mensaje opcional en consola para el usuario
-                console.log("Debe marcar C2 primero");
-            }
-        }
-    }
-
-    /* ******************** Hansoku Chuy Azul ******************** */    
-    // Variable global para recordar qué botones activó el HC en su último clic
-/*    let botonesActivadosPorHC = any[]; */
-
-    function logicaHC() {
-        const btnC1 = document.getElementById('btn-c1-azul');
-        const btnC2 = document.getElementById('btn-c2-azul');
-        const btnC3 = document.getElementById('btn-c3-azul');
-        const btnHC = document.getElementById('btn-hc-azul');
-        const btnC  = document.getElementById('btn-c-azul');
-
-        const esAmarillo = (el) => el && el.classList.contains('falta-activa');
-
-        // CASO A: El botón HC ya está en amarillo (Queremos desactivar)
-        if (esAmarillo(btnHC)) {
-            // REGLA: Solo si el botón C (Hansoku) está transparente
-            if (esAmarillo(btnC)) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: "PRIMERO DEBE QUITAR EL HANSOKU",
-                    toast: true,
-                    position: 'top',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    background: '#FFFF00',
-                });
-            } else {
-                // REGLA ESPECIAL: Solo volvemos a transparente los botones 
-                // que el HC encendió en el paso anterior.
-                botonesActivadosPorHC.forEach(boton => {
-                    if (boton) boton.classList.remove('falta-activa');
-                });
-                // Limpiamos el recuerdo para la próxima vez
-                botonesActivadosPorHC = [];
-            }
-        } 
-        // CASO B: El botón HC está transparente (Queremos activar)
-        else {
-            const grupoFaltas = [btnC1, btnC2, btnC3, btnHC];
-            botonesActivadosPorHC = []; // Reiniciamos la lista de seguimiento
-
-            grupoFaltas.forEach(boton => {
-                if (boton && !esAmarillo(boton)) {
-                    // Si está transparente, lo encendemos y lo guardamos en la lista
-                    boton.classList.add('falta-activa');
-                    botonesActivadosPorHC.push(boton);
-                }
-            });
-        }
-    }
-
-    /* ******************** Hansoku Chuy Azul ******************** */    
-    function logicaC() {
-        const btnC = document.getElementById('btn-c-azul');
-        const btnHC = document.getElementById('btn-hc-azul');
-
-        // 1. Verificamos si el botón HC ya está en amarillo (falta-activa)
-        const hcEsAmarillo = btnHC.classList.contains('falta-activa');
-        const cYaEsAmarillo = btnC.classList.contains('falta-activa');
-
-        if (!cYaEsAmarillo) {
-            // REGLA: Solo se activa C si HC ya es amarillo
-            if (hcEsAmarillo) {
-                btnC.classList.add('falta-activa');
-                console.log("Falta C marcada correctamente.");
-            } else {
-                Swal.fire({
-                    icon: 'warning',
-                    title: "DEBE MARCAR PRIMERO EL HANSOKU CHUI (HC)",
-                    toast: true,
-                    position: 'top',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    background: '#FFFF00',
-                });
-            }
-        } else {
-            // Si ya es amarillo, al hacer clic vuelve a su color original (transparente/blanco)
-            btnC.classList.remove('falta-activa');
-            btnC.style.backgroundColor = "transparent";
-        }
-    }
-
-
-    function kumiteSystem() {
-        return {
-            senshu: null, 
-
-            setSenshu(competidor) {
-                // Si el competidor ya lo tiene, se quita (Toggle)
-                if (this.senshu === competidor) {
-                    this.senshu = null;
-                    return;
-                }
-
-                // Si el otro lo tiene, error
-                if (this.senshu !== null && this.senshu !== competidor) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: "EL OTRO COMPETIDOR YA TIENE EL SENSHU",
-                        toast: true,
-                        position: 'top',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        background: '#FFFF00',
-                    });
-                    return;
-                }
-
-                // Si nadie lo tiene, se asigna
-                this.senshu = competidor;
-            }
-        }
-    }
-
-    /* ******************** Senshu Azul ******************** */   
-
-    function logicaSenshuAzul() {
-        const btnAzul = document.getElementById('btn-senshu-azul');
-        const btnRojo = document.getElementById('btn-senshu-rojo');
-        const contenedorSAzul = document.getElementById('contenedor-s-azul');
-
-        // Colores para comparar (El navegador suele devolver RGB)
-        const AMARILLO = "rgb(255, 255, 0)";
-        const TRANSPARENTE = "rgba(0, 0, 0, 0)";
-
-        // 1. Obtener estilos actuales
-        const estiloAzul = window.getComputedStyle(btnAzul).backgroundColor;
-        const estiloRojo = window.getComputedStyle(btnRojo).backgroundColor;
-
-        // CASO A: El botón azul ya está amarillo (QUITAR SENSHU)
-        if (estiloAzul === AMARILLO || btnAzul.style.backgroundColor === "yellow") {
-            btnAzul.style.backgroundColor = "transparent";
-            contenedorSAzul.innerHTML = ""; // Quitamos la S
-            return; // Salimos de la función
-        }
-
-        // CASO B: El competidor Rojo ya tiene Senshu (ERROR)
-        if (estiloRojo === AMARILLO || btnRojo.style.backgroundColor === "yellow") {
-            Swal.fire({
-                icon: 'warning',
-                title: "EL OTRO COMPETIDOR YA TINE SENSHU, NO SE PUEDE DAR SENSHU A LOS DOS COMPETIDORES",
-                toast: true,
-                position: 'top',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true,
-                background: '#FFFF00',
-            });
-            btnAzul.style.backgroundColor = "transparent";
-            return;
-        }
-
-        // CASO C: El azul no lo tiene y el rojo está transparente (ACTIVAR)
-        // Cambiamos fondo del botón
-        btnAzul.style.backgroundColor = "yellow";
-
-        // Creamos la letra S circular en la parte superior derecha de .marcador-ao
-        contenedorSAzul.innerHTML = `
-            <div id="circulo-s-azul" style="
-                position: absolute;
-                top: 5px;
-                right: 5px;
-                width: 80px;
-                height: 80px;
-                background-color: yellow;
-                color: black;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-family: 'Arial Black', sans-serif;
-                font-weight: bold;
-                font-size: 50px;
-                border: 2px solid #000;
-                box-shadow: 0 0 5px rgba(0,0,0,0.5);
-                z-index: 100;
-            ">
-                S
-            </div>
-        `;
-    }
-
-    function logicaSenshuRojo() {
-        const btnRojo = document.getElementById('btn-senshu-rojo');
-        const btnAzul = document.getElementById('btn-senshu-azul');
-        const contenedorSRojo = document.getElementById('contenedor-s-rojo');
-
-        // Definición de colores para comparación
-        const AMARILLO = "rgb(255, 255, 0)";
-
-        // 1. Obtener estilos actuales (Calculados por el navegador)
-        const estiloRojo = window.getComputedStyle(btnRojo).backgroundColor;
-        const estiloAzul = window.getComputedStyle(btnAzul).backgroundColor;
-
-        // --- CASO 1: El botón rojo YA tiene senshu (QUITARLO) ---
-        if (estiloRojo === AMARILLO || btnRojo.style.backgroundColor === "yellow") {
-            btnRojo.style.backgroundColor = "transparent";
-            contenedorSRojo.innerHTML = ""; // Quita la imagen circular con la S
-            return; // Detiene la ejecución
-        }
-
-        // --- CASO 2: El competidor AZUL ya tiene senshu (ERROR) ---
-        if (estiloAzul === AMARILLO || btnAzul.style.backgroundColor === "yellow") {
-            Swal.fire({
-                icon: 'warning',
-                title: "EL OTRO COMPETIDOR YA TINE SENSHU, NO SE PUEDE DAR SENSHU A LOS DOS COMPETIDORES",
-                toast: true,
-                position: 'top',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true,
-                background: '#FFFF00',
-            });
-            btnRojo.style.backgroundColor = "transparent";
-            return; // Detiene la ejecución
-        }
-
-        // --- CASO 3: Nadie tiene senshu (ACTIVAR PARA ROJO) ---
-        // Cambiar fondo del botón a amarillo
-        btnRojo.style.backgroundColor = "yellow";
-
-        // Crear la "S" circular en la parte superior derecha de .marcador-aka
-        contenedorSRojo.innerHTML = `
-            <div id="circulo-s-rojo" style="
-                position: absolute;
-                top: 5px;
-                right: 15px;
-                width: 80px;
-                height: 80px;
-                background-color: yellow;
-                color: black;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-family: 'Arial Black', sans-serif;
-                font-weight: bold;
-                font-size: 50px;
-                border: 2px solid #000;
-                z-index: 100;
-            ">
-                S
-            </div>
-        `;
-    }
-    /* ******************** Chuy 1 Rojo ******************** */
-    function logicaC1aka() {
-        const btnC1aka = document.getElementById('btn-c1-rojo');
-        const btnC2aka = document.getElementById('btn-c2-rojo');
-
-        // Función para verificar si un botón tiene el fondo amarillo
-        const esAmarillo = (el) => el && el.classList.contains('falta-activa');
-
-        // CASO A: El botón C1 ya está en amarillo (queremos quitarlo)
-        if (esAmarillo(btnC1aka)) {
-            // Regla: Si C2 está amarillo, no se puede quitar C1
-            if (esAmarillo(btnC2aka)) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: "PRIMERO DEBE QUITAR EL CHUY 2",
-                    toast: true,
-                    position: 'top',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    background: '#FFFF00',
-                });
-            } else {
-                // Si C2 está transparente, permitimos quitar el fondo amarillo
-                btnC1aka.classList.remove('falta-activa');
-            }
-        } 
-        // CASO B: El botón C1 está transparente (queremos activarlo)
-        else {
-            btnC1aka.classList.add('falta-activa');
-        }
-    }
-
-    /* ******************** Chuy 2 Rojo ******************** */
-    function logicaC2aka() {
-        const btnC1aka = document.getElementById('btn-c1-rojo');
-        const btnC2aka = document.getElementById('btn-c2-rojo');
-        const btnC3aka = document.getElementById('btn-c3-rojo');
-
-        // Función auxiliar para saber si un botón está "activo" (amarillo)
-        const esAmarillo = (el) => el && el.classList.contains('falta-activa');
-
-        // CASO A: El botón C2 ya está en amarillo (queremos quitarlo)
-        if (esAmarillo(btnC2aka)) {
-            // Regla: Si C3 está amarillo, no se puede quitar C2
-            if (esAmarillo(btnC3aka)) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: "PRIMERO DEBE QUITAR EL CHUY 3",
-                    toast: true,
-                    position: 'top',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    background: '#FFFF00',
-                });
-            } else {
-                // Si C3 está transparente, entonces sí podemos quitar C2
-                btnC2aka.classList.remove('falta-activa');
-            }
-        } 
-        // CASO B: El botón C2 está transparente (queremos activarlo)
-        else {
-            // Regla: Solo se activa si C1 ya tiene el fondo amarillo
-            if (esAmarillo(btnC1aka)) {
-                btnC2aka.classList.add('falta-activa');
-            } else {
-                // Opcional: podrías poner un alert aquí indicando que falta el C1
-                console.log("Debe Marcar C1 Primero");
-            }
-        }
-    }
-
-    /* ******************** Chuy 3 Rojo ******************** */
-    function logicaC3aka() {
-        const btnC2aka = document.getElementById('btn-c2-rojo');
-        const btnC3aka = document.getElementById('btn-c3-rojo');
-        const btnHCaka = document.getElementById('btn-hc-rojo');
-
-        // Función para verificar si un botón tiene la clase de fondo amarillo
-        const esAmarillo = (el) => el && el.classList.contains('falta-activa');
-
-        // CASO A: El botón C3 ya está en amarillo (queremos quitarlo / ponerlo transparente)
-        if (esAmarillo(btnC3aka)) {
-            // Regla: Si HC está amarillo, no se puede quitar C3
-            if (esAmarillo(btnHCaka)) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: "PRIMERO DEBE QUITAR EL HANSOKU CHUY",
-                    toast: true,
-                    position: 'top',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    background: '#FFFF00',
-                });
-            } else {
-                // Si HC está transparente, permitimos volver a transparente
-                btnC3aka.classList.remove('falta-activa');
-            }
-        } 
-        // CASO B: El botón C3 está transparente (queremos activarlo / ponerlo amarillo)
-        else {
-            // Regla: Solo se activa si C2 ya tiene el fondo amarillo
-            if (esAmarillo(btnC2aka)) {
-                btnC3aka.classList.add('falta-activa');
-            } else {
-                // Mensaje opcional en consola para el usuario
-                console.log("Debe marcar C2 primero");
-            }
-        }
-    }
-
-    // Variable global para recordar qué botones activó el HC en su último clic
-    let botonesActivadosPorHCaka  = [];
-
-    /* ******************** Hansoku Chuy Rojo ******************** */    
-    // Variable global para recordar qué botones activó el HC en su último clic
-/*    let botonesActivadosPorHC = any[]; */
-
-    function logicaHCaka() {
-        const btnC1aka = document.getElementById('btn-c1-rojo');
-        const btnC2aka = document.getElementById('btn-c2-rojo');
-        const btnC3aka = document.getElementById('btn-c3-rojo');
-        const btnHCaka = document.getElementById('btn-hc-rojo');
-        const btnCaka  = document.getElementById('btn-c-rojo');
-
-        const esAmarillo = (el) => el && el.classList.contains('falta-activa');
-
-        // CASO A: El botón HC ya está en amarillo (Queremos desactivar)
-        if (esAmarillo(btnHCaka )) {
-            // REGLA: Solo si el botón C (Hansoku) está transparente
-            if (esAmarillo(btnCaka )) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: "PRIMERO DEBE QUITAR EL HANSOKU",
-                    toast: true,
-                    position: 'top',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    background: '#FFFF00',
-                });
-            } else {
-                // REGLA ESPECIAL: Solo volvemos a transparente los botones 
-                // que el HC encendió en el paso anterior.
-                botonesActivadosPorHCaka .forEach(boton => {
-                    if (boton) boton.classList.remove('falta-activa');
-                });
-                // Limpiamos el recuerdo para la próxima vez
-                botonesActivadosPorHCaka  = [];
-            }
-        } 
-        // CASO B: El botón HC está transparente (Queremos activar)
-        else {
-            const grupoFaltas = [btnC1aka , btnC2aka , btnC3aka , btnHCaka ];
-            botonesActivadosPorHCaka  = []; // Reiniciamos la lista de seguimiento
-
-            grupoFaltas.forEach(boton => {
-                if (boton && !esAmarillo(boton)) {
-                    // Si está transparente, lo encendemos y lo guardamos en la lista
-                    boton.classList.add('falta-activa');
-                    botonesActivadosPorHCaka .push(boton);
-                }
-            });
-        }
-    }
-
-    /* ******************** Hansoku Chuy Rojo ******************** */    
-    function logicaCaka() {
-        const btnCaka = document.getElementById('btn-c-rojo');
-        const btnHCaka = document.getElementById('btn-hc-rojo');
-
-        // 1. Verificamos si el botón HC ya está en amarillo (falta-activa)
-        const hcEsAmarillo = btnHCaka.classList.contains('falta-activa');
-        const cYaEsAmarillo = btnCaka.classList.contains('falta-activa');
-
-        if (!cYaEsAmarillo) {
-            // REGLA: Solo se activa C si HC ya es amarillo
-            if (hcEsAmarillo) {
-                btnCaka.classList.add('falta-activa');
-                console.log("Falta C marcada correctamente.");
-            } else {
-                Swal.fire({
-                    icon: 'warning',
-                    title: "DEBE MARCAR PRIMERO EL HANSOKU CHUI (HC)",
-                    toast: true,
-                    position: 'top',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    background: '#FFFF00',
-                });
-            }
-        } else {
-            // Si ya es amarillo, al hacer clic vuelve a su color original (transparente/blanco)
-            btnCaka.classList.remove('falta-activa');
-            btnCaka.style.backgroundColor = "transparent";
-        }
-    }
-
-    function trasladarDatos() {
-        const timerDisplay = document.getElementById('timer-display');
-        
-        const inputAzul = document.getElementById('TxtAzulProximo');
-        const spanAzul = document.getElementById('mirrorSpanAzul');
-        const inputRojo = document.getElementById('TxtRojoProximo');
-        const spanRojo = document.getElementById('mirrorSpanRojo');
-        
-        // Referencias para resetear puntos
-        const puntosAzul = document.getElementById('puntosAzul');
-        const puntosRojo = document.getElementById('puntosRojo');
-
-        if (!inputAzul || !inputRojo || !spanAzul || !spanRojo) {
-            console.error("Error: IDs no encontrados.");
-            return;
-        }
-
-        const nombreAzul = inputAzul.value.trim();
-        const nombreRojo = inputRojo.value.trim();
-
-        if (nombreAzul === "" || nombreRojo === "") {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Por favor, ingresa los nombres de ambos competidores.',
-                toast: true,
-                position: 'top',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true,
-                background: '#FFFF00',
-            });
-            return;
-        }
-
-        // 1. Trasladar nombres
-        spanAzul.textContent = nombreAzul;
-        spanRojo.textContent = nombreRojo;
-
-        // 2. Resetear marcadores de puntos a 0
-        if (puntosAzul) puntosAzul.textContent = "0";
-        if (puntosRojo) puntosRojo.textContent = "0";
-        scores = { ao: 0, aka: 0 };
-
-        // Resetear contadores de técnicas individuales
-        const mirrorIds = ['YukoAzul', 'WazariAzul', 'IpponAzul', 'YukoRojo', 'WazariRojo', 'IpponRojo'];
-        mirrorIds.forEach(id => $(`#mirrorSpan${id}`).text('0'));
-
-        // 3. Resetear faltas (volver a transparente y limpiar estado)
-        penalties = {
-            ao: [false, false, false, false, false],
-            aka: [false, false, false, false, false]
-        };
-        renderPenalties('ao');
-        renderPenalties('aka');
-
-        // 4. Quitar Senshu (ventaja)
-        activeSenshu = null;
-        $('#btn-senshu-azul, #btn-senshu-rojo').css('background-color', 'transparent');
-        $('#contenedor-s-azul, #contenedor-s-rojo').empty();
-
-        // 5. Limpiar inputs y devolver foco
-        inputAzul.value = "";
-        inputRojo.value = "";
-        inputAzul.focus();
-        
-        console.log("Nuevo combate iniciado. Marcadores reseteados.");
-    }
-
-
-
-    // Esta función debe llamarse cada vez que el tiempo cambie
-    function controlarEstadoBoton() {
-        const btnNuevo = document.getElementById('btnNuevoCombate');
-        const btnGanador = document.getElementById('btnMuestraGanador');
-        const timerDisplay = document.getElementById('timer-display');
-
-        if (!btnNuevo || !timerDisplay) return;
-
-        const isTimeZero = timerDisplay.textContent.trim() === "00:00";
-        const isPaused = timerInterval === null;
-
-        if (isTimeZero) {
-            // Habilitar Nuevo Combate
-            btnNuevo.disabled = false;
-            btnNuevo.style.background = "#16a34a"; // Verde
-        } else {
-            // Deshabilitar Nuevo Combate
-            btnNuevo.disabled = true;
-            btnNuevo.style.background = "#dc2626"; // Rojo
-        }
-        btnNuevo.style.color = "white";
-
-        // Habilitar botón Ganador si el tiempo es 00:00 O si el cronómetro está en pausa
-        if (btnGanador) {
-            const habilitar = isTimeZero || isPaused;
-            btnGanador.disabled = !habilitar;
-            btnGanador.style.opacity = habilitar ? "1" : "0.5";
-        }
-    }
-</script>
