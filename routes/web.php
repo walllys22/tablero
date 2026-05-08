@@ -22,9 +22,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/people', [PersonaController::class, 'index'])->name('people.browse');
-Route::get('/people/ajax/list', [PersonaController::class, 'ajaxList'])->name('people.ajax.list');
-
 Route::get('/kumite/tablero', [TableroController::class, 'kumite'])->name('tablero.kumite');
 
 Route::get('/kata/tablero', [TableroController::class, 'kata'])->name('tablero.kata');
@@ -34,6 +31,13 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/people', [PersonaController::class, 'index'])->name('people.browse');
+    Route::get('/people/ajax/list', [PersonaController::class, 'ajaxList'])->name('people.ajax.list');
+    Route::post('/people', [PersonaController::class, 'store'])->name('people.store');
+    Route::patch('/people/{persona}', [PersonaController::class, 'update'])->name('people.update');
+    Route::patch('/people/{persona}/estado', [PersonaController::class, 'toggleStatus'])->name('people.toggle-status');
+    Route::delete('/people/{persona}', [PersonaController::class, 'destroy'])->name('people.destroy');
+
     Route::get('/torneos', [TorneoController::class, 'index'])->name('torneos.index');
     Route::get('/torneos/ajax/list', [TorneoController::class, 'ajaxList'])->name('torneos.ajax.list');
     Route::post('/torneos', [TorneoController::class, 'store'])->name('torneos.store');

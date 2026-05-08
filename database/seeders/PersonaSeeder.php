@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Persona;
 use Illuminate\Database\Seeder;
 
 class PersonaSeeder extends Seeder
@@ -12,6 +12,19 @@ class PersonaSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        Persona::updateOrCreate(
+            ['ci' => '12345678'],
+            [
+                'first_name' => 'Walter Landivar Limpias',
+                'birth_date' => '1985-01-01',
+                'email' => 'walter@example.com',
+                'country_code' => '591',
+                'phone' => '70000000',
+                'address' => 'Bolivia',
+                'gender' => 'Masculino',
+                'sangre' => 'O+',
+                'status' => 1,
+            ]
+        );
     }
 }

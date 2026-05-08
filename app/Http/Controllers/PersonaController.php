@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\persona;
-use App\Http\Requests\StorepersonaRequest;
-use App\Http\Requests\UpdatepersonaRequest;
+use App\Http\Requests\StorePersonaRequest;
+use App\Http\Requests\UpdatePersonaRequest;
+use App\Models\Persona;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PersonaController extends Controller
 {
@@ -23,13 +24,15 @@ class PersonaController extends Controller
         $paginate = in_array($paginate, [10, 25, 50, 100], true) ? $paginate : 10;
         $search = trim((string) $request->input('search', ''));
 
-        $data = persona::query()
+        $data = Persona::query()
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('ci', 'like', "%{$search}%")
                         ->orWhere('first_name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%");
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere('gender', 'like', "%{$search}%")
+                        ->orWhere('sangre', 'like', "%{$search}%");
                 });
             })
             ->orderByDesc('id')
@@ -50,15 +53,26 @@ class PersonaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StorepersonaRequest $request)
+    public function store(StorePersonaRequest $request)
     {
-        //
+        $data = $request->validated();
+        $data['status'] = $request->has('status') ? 1 : 0;
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('personas', 'public');
+        }
+
+        Persona::create($data);
+
+        return redirect()
+            ->route('people.browse')
+            ->with('status', 'Persona creada correctamente.');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(persona $persona)
+    public function show(Persona $persona)
     {
         //
     }
@@ -66,7 +80,7 @@ class PersonaController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(persona $persona)
+    public function edit(Persona $persona)
     {
         //
     }
@@ -74,16 +88,48 @@ class PersonaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdatepersonaRequest $request, persona $persona)
+    public function update(UpdatePersonaRequest $request, Persona $persona)
     {
-        //
+        $data = $request->validated();
+        $data['status'] = $request->has('status') ? 1 : 0;
+
+        if ($request->hasFile('image')) {
+            if ($persona->image) {
+                Storage::disk('public')->delete($persona->image);
+            }
+
+            $data['image'] = $request->file('image')->store('personas', 'public');
+        } else {
+            unset($data['image']);
+        }
+
+        $persona->update($data);
+
+        return redirect()
+            ->route('people.browse')
+            ->with('status', 'Persona actualizada correctamente.');
+    }
+
+    public function toggleStatus(Persona $persona)
+    {
+        $persona->update([
+            'status' => $persona->status == 1 ? 0 : 1,
+        ]);
+
+        return redirect()
+            ->route('people.browse')
+            ->with('status', 'Estado de la persona actualizado correctamente.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(persona $persona)
+    public function destroy(Persona $persona)
     {
-        //
+        $persona->delete();
+
+        return redirect()
+            ->route('people.browse')
+            ->with('status', 'Persona eliminada correctamente.');
     }
 }

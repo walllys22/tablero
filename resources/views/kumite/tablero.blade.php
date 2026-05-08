@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kumite Temporizador</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/icono.png') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -128,7 +129,7 @@
         .puntos-gigantes {
             color: inherit;
             font-family: "Arial Black", Arial, Helvetica, sans-serif;
-            font-size: clamp(8rem, 27vh, 18rem);
+            font-size: clamp(10rem, 32vh, 22rem);
             font-weight: 900;
             line-height: 0.86;
             text-align: center;
@@ -155,7 +156,7 @@
         .fila {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 8px;
+            gap: 6px;
             align-items: center;
             width: 100%;
         }
@@ -190,6 +191,27 @@
 
         .btn-Reloj {
             font-size: 1.7rem;
+        }
+
+        .marcador .btn-personalizadoAzul,
+        .marcador .btn-senshu,
+        .marcador .btn-hantei,
+        .marcador .btn-falta {
+            min-height: 32px;
+            padding: 4px 6px;
+            border-radius: 7px;
+            font-size: 0.78rem;
+        }
+
+        .btn-cerrar-tablero {
+            background: #ffff00 !important;
+            color: #000000 !important;
+            border-color: #000000 !important;
+        }
+
+        .btn-nuevo-combate {
+            background: linear-gradient(145deg, #f7f7f7, #d1d5db) !important;
+            color: #000000 !important;
         }
 
         .btn-start {
@@ -245,6 +267,13 @@
             background: #ffffff;
             text-align: center;
             box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+        }
+
+        .timer-panel-brand {
+            font-size: 13px;
+            font-family: 'Calibri', sans-serif;
+            font-weight: bold;
+            margin-top: -10px;
         }
 
         .timer-display {
@@ -430,6 +459,7 @@
         </section>
 
         <section class="timer-panel">
+            <span class="timer-panel-brand">Kaiteki - Torneos</span>
             <div id="timer-display" class="timer-display">00:00</div>
 
             <div class="timer-grid">
@@ -452,12 +482,12 @@
                 <div class="ajuste-col">
                     <span class="ajuste-label">&nbsp;</span>
                     <button id="btnMuestraGanador" class="btn-personalizado" onclick="declararGanador()" disabled>Ganador</button>
-                    <button type="button" id="btnNuevoCombate" onclick="trasladarDatos()" class="btn-personalizado">
+                    <button type="button" id="btnNuevoCombate" onclick="trasladarDatos()" class="btn-personalizado btn-nuevo-combate">
                         Nuevo Combate
                     </button>
                 </div>
             </div>
-            <button id="btnCerrar" onclick="window.history.back()" class="btn-personalizado">Cerrar</button>
+            <button id="btnCerrar" onclick="window.history.back()" class="btn-personalizado btn-cerrar-tablero">Cerrar</button>
         </section>
 
         <section class="marcador marcador-ao">
@@ -859,8 +889,7 @@
 
             if (btnNuevo && !timerInterval) {
                 btnNuevo.disabled = !isTimeZero;
-                btnNuevo.style.background = isTimeZero ? '#16a34a' : '#dc2626';
-                btnNuevo.style.color = '#ffffff';
+                btnNuevo.style.color = '#000000';
             }
 
             if (btnGanador) {

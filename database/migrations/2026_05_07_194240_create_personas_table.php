@@ -13,17 +13,17 @@ return new class extends Migration
     {
         Schema::create('personas', function (Blueprint $table) {
             $table->id();
-            $table->string('ci')->nullable();
-            $table->string('first_name')->nullable();
+            $table->string('ci')->nullable()->index();
+            $table->string('first_name')->index();
             $table->date('birth_date')->nullable();
-            $table->string('email')->nullable();
-            $table->string('country_code')->nullable();
-            $table->string('phone')->nullable();
+            $table->string('email')->nullable()->index();
+            $table->string('country_code', 10)->nullable();
+            $table->string('phone', 50)->nullable();
             $table->text('address')->nullable();
-            $table->string('gender')->nullable();
-            $table->string('sangre')->nullable();
-            $table->string('image',600)->nullable();      
-            $table->smallInteger('status')->default(1);
+            $table->string('gender', 50)->nullable();
+            $table->string('sangre', 20)->nullable();
+            $table->string('image', 600)->nullable();
+            $table->boolean('status')->default(true)->index();
             $table->softDeletes();
             $table->timestamps();
         });

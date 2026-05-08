@@ -2,9 +2,8 @@
 
 namespace App\Policies;
 
+use App\Models\Persona;
 use App\Models\User;
-use App\Models\persona;
-use Illuminate\Auth\Access\Response;
 
 class PersonaPolicy
 {
@@ -13,15 +12,15 @@ class PersonaPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, persona $persona): bool
+    public function view(User $user, Persona $persona): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -29,38 +28,38 @@ class PersonaPolicy
      */
     public function create(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, persona $persona): bool
+    public function update(User $user, Persona $persona): bool
     {
-        //
+        return true;
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, persona $persona): bool
+    public function delete(User $user, Persona $persona): bool
     {
-        //
+        return true;
     }
 
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, persona $persona): bool
+    public function restore(User $user, Persona $persona): bool
     {
-        //
+        return true;
     }
 
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, persona $persona): bool
+    public function forceDelete(User $user, Persona $persona): bool
     {
-        //
+        return true;
     }
 }
