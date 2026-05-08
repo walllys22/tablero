@@ -109,6 +109,17 @@ class TorneoController extends Controller
             ->with('status', 'Torneo actualizado correctamente.');
     }
 
+    public function toggleStatus(Torneo $torneo)
+    {
+        $torneo->update([
+            'status' => $torneo->status == 1 ? 0 : 1,
+        ]);
+
+        return redirect()
+            ->route('torneos.index')
+            ->with('status', 'Estado del torneo actualizado correctamente.');
+    }
+
     /**
      * Remove the specified resource from storage.
      */

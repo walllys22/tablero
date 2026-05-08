@@ -37,6 +37,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/torneos/ajax/list', [TorneoController::class, 'ajaxList'])->name('torneos.ajax.list');
     Route::post('/torneos', [TorneoController::class, 'store'])->name('torneos.store');
     Route::patch('/torneos/{torneo}', [TorneoController::class, 'update'])->name('torneos.update');
+    Route::patch('/torneos/{torneo}/estado', [TorneoController::class, 'toggleStatus'])->name('torneos.toggle-status');
     Route::delete('/torneos/{torneo}', [TorneoController::class, 'destroy'])->name('torneos.destroy');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -46,10 +46,23 @@
                             @if ($item->status == 1)
                                 <label class="label label-success">Activo</label>
                             @else
-                                <label class="label label-warning">Inactivo</label>
+                                <label class="label label-danger">Inactivo</label>
                             @endif
                         </td>
                         <td style="vertical-align: middle; width: 14%" class="no-sort no-click bread-actions text-end">
+                            @if ($item->status == 1)
+                                <button type="button" title="Inactivar" data-bs-toggle="modal" data-bs-target="#modal-status-{{ $item->id }}" class="btn btn-sm btn-warning text-white">
+                                    <i class="bi bi-toggle-on"></i>
+                                </button>
+                            @else
+                                <form method="POST" action="{{ route('torneos.toggle-status', $item) }}" class="d-inline">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" title="Activar" class="btn btn-sm btn-warning text-white">
+                                        <i class="bi bi-toggle-off"></i>
+                                    </button>
+                                </form>
+                            @endif
                             <button type="button" title="Editar" data-bs-toggle="modal" data-bs-target="#modal-edit-{{ $item->id }}" class="btn btn-sm btn-info text-white">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
@@ -90,6 +103,31 @@
 </div>
 
 @foreach ($data as $item)
+    @if ($item->status == 1)
+        <div class="modal fade" id="modal-status-{{ $item->id }}" tabindex="-1" aria-labelledby="modalStatusLabel{{ $item->id }}" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <form method="POST" action="{{ route('torneos.toggle-status', $item) }}">
+                    @csrf
+                    @method('PATCH')
+
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title" id="modalStatusLabel{{ $item->id }}">Alerta</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            Esta seguro de desactivar el campeonato
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="submit" class="btn btn-danger">Si</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
     <div class="modal fade" id="modal-edit-{{ $item->id }}" tabindex="-1" aria-labelledby="modalEditLabel{{ $item->id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <form method="POST" action="{{ route('torneos.update', $item) }}" enctype="multipart/form-data">
