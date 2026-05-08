@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\PersonaController;
+use App\Http\Controllers\ModalidadController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TableroController;
 use App\Http\Controllers\TorneoController;
@@ -39,6 +40,8 @@ Route::middleware('auth')->group(function () {
     Route::patch('/torneos/{torneo}', [TorneoController::class, 'update'])->name('torneos.update');
     Route::patch('/torneos/{torneo}/estado', [TorneoController::class, 'toggleStatus'])->name('torneos.toggle-status');
     Route::delete('/torneos/{torneo}', [TorneoController::class, 'destroy'])->name('torneos.destroy');
+    Route::get('/torneos/{torneo}/modalidades', [ModalidadController::class, 'index'])->name('modalidades.index');
+    Route::get('/torneos/{torneo}/modalidades/ajax/list', [ModalidadController::class, 'ajaxList'])->name('modalidades.ajax.list');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

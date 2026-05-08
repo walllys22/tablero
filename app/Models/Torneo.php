@@ -25,4 +25,9 @@ class Torneo extends Model
         'fecha_fin' => 'date',
         'status' => 'integer',
     ];
+
+    public function modalidades()
+    {
+        return $this->hasMany(Modalidad::class);
+    }
 }

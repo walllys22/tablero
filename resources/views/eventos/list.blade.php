@@ -50,6 +50,9 @@
                             @endif
                         </td>
                         <td style="vertical-align: middle; width: 14%" class="no-sort no-click bread-actions text-end">
+                            <a href="{{ route('modalidades.index', $item) }}" title="Modalidades" class="btn btn-sm btn-primary">
+                                <i class="bi bi-list-check"></i>
+                            </a>
                             @if ($item->status == 1)
                                 <button type="button" title="Inactivar" data-bs-toggle="modal" data-bs-target="#modal-status-{{ $item->id }}" class="btn btn-sm btn-warning text-white">
                                     <i class="bi bi-toggle-on"></i>
