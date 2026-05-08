@@ -8,37 +8,47 @@
             'icon' => 'fa-solid fa-file-lines',
             'active' => request()->routeIs('torneos.*') || request()->routeIs('modalidades.*'),
             'children' => [
-                ['label' => 'Torneos', 'icon' => 'bi-trophy', 'route' => 'torneos.index', 'active' => request()->routeIs('torneos.*')],
-                ['label' => 'Modalidades', 'icon' => 'bi-list-check', 'modal' => 'modal-modalidades-sidebar', 'active' => request()->routeIs('modalidades.*')],
-                ['label' => 'Listado Katas', 'icon' => 'bi-journal-text', 'route' => 'dashboard', 'active' => false],
-                ['label' => 'Personas', 'icon' => 'bi-people', 'route' => 'people.browse', 'active' => request()->routeIs('people.*')],
+                ['label' => 'Torneos', 'icon' => 'fa-solid fa-trophy', 'route' => 'torneos.index', 'active' => request()->routeIs('torneos.*')],
+                ['label' => 'Modalidades', 'icon' => 'fa-brands fa-markdown', 'modal' => 'modal-modalidades-sidebar', 'active' => request()->routeIs('modalidades.*')],
+                ['label' => 'Listado Katas', 'icon' => 'fa-solid fa-clipboard-list', 'route' => 'dashboard', 'active' => false],
+                ['label' => 'Personas', 'icon' => 'fa-solid fa-people-group', 'route' => 'people.browse', 'active' => request()->routeIs('people.*')],
             ],
         ],
-        
+
         // Opcion Registro con submenu para Organizacion y Competidores
         [
             'label' => 'Registro',
-            'icon' => 'bi-clipboard-plus',
+            'icon' => 'fa-solid fa-address-card',
             'active' => request()->is('registro*'),
             'children' => [
-                ['label' => 'Jueces', 'icon' => 'bi-gavel', 'route' => 'dashboard', 'active' => false],
-                ['label' => 'Organización', 'icon' => 'bi-building', 'route' => 'dashboard', 'active' => false],
-                ['label' => 'Competidores', 'icon' => 'bi-person-badge', 'route' => 'dashboard', 'active' => false],
+                ['label' => 'Jueces', 'icon' => 'fa-solid fa-user-tie', 'route' => 'dashboard', 'active' => false],
+                ['label' => 'Organización', 'icon' => 'fa-solid fa-torii-gate', 'route' => 'dashboard', 'active' => false],
+                ['label' => 'Competidores', 'icon' => 'fa-solid fa-image-portrait', 'route' => 'dashboard', 'active' => false],
             ],
         ],
 
         // Opcion Eventos con submenu para Tablero Kumite y Tablero Kata
         [
             'label' => 'Eventos',
-            'icon' => 'bi-calendar-event',
+            'icon' => 'fa-solid fa-calendar-days',
             'active' => request()->routeIs('tablero.*'),
             'children' => [
-                ['label' => 'Tablero Kumite', 'icon' => 'bi-stopwatch', 'route' => 'tablero.kumite', 'active' => request()->routeIs('tablero.kumite')],
-                ['label' => 'Tablero Kata', 'icon' => 'bi-qr-code', 'route' => 'tablero.kata', 'active' => request()->routeIs('tablero.kata')],
+                ['label' => 'Tablero Kumite', 'icon' => 'fa-solid fa-keyboard', 'route' => 'tablero.kumite', 'active' => request()->routeIs('tablero.kumite')],
+                ['label' => 'Tablero Kata', 'icon' => 'fa-solid fa-chalkboard', 'route' => 'tablero.kata', 'active' => request()->routeIs('tablero.kata')],
             ],
         ],
 
-        ['label' => 'Perfil', 'icon' => 'bi-person-lines-fill', 'route' => 'profile.edit', 'active' => request()->routeIs('profile.*')],
+        // Opcion Usuario con submenu para Roles y Usuarios
+        [
+            'label' => 'Usuario',
+            'icon' => 'fa-solid fa-user-gear',
+            'active' => request()->is('usuarios*') || request()->is('roles*'),
+            'children' => [
+                ['label' => 'Roles', 'icon' => 'fa-solid fa-user-shield', 'route' => 'dashboard', 'active' => false],
+                ['label' => 'Usuarios', 'icon' => 'fa-solid fa-users', 'route' => 'dashboard', 'active' => false],
+            ],
+        ],
+
         ['label' => 'Limpiar Cache', 'icon' => 'bi-brush', 'route' => 'cache.clear', 'method' => 'POST', 'active' => false],
     ];
 @endphp

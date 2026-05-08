@@ -1,9 +1,12 @@
 <x-app-layout>
     <x-slot name="header">
-        <h1 class="h3 mb-1">Perfil</h1>
-        <p class="text-muted mb-0">Administra los datos de acceso de tu cuenta.</p>
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="h3 mb-1">Perfil - {{$user->name}} - {{ $user->email }}</h3>
+            <a href="{{ route('dashboard') }}" class="btn btn-warning shadow-sm">
+                <i class="bi bi-x-lg"></i> Cerrar
+            </a>
+        </div>
     </x-slot>
-
     <div class="container">
         <div class="row g-4">
             <div class="col-lg-6">
