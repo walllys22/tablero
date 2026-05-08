@@ -4,6 +4,7 @@
             <thead>
                 <tr>
                     <th style="text-align: center">Torneo</th>
+                    <th style="text-align: center">Responsable</th>
                     <th style="text-align: center">Lugar</th>
                     <th style="text-align: center">Fecha inicio</th>
                     <th style="text-align: center">Fecha fin</th>
@@ -19,6 +20,7 @@
                             : asset('images/icono.png');
                         $logoVersion = optional($item->updated_at)->timestamp ?? $item->id;
                         $logoPreviewUrl = $item->logo ? $logoUrl . '?v=' . $logoVersion : $logoUrl;
+                        $responsableWhatsapp = preg_replace('/\D+/', '', $item->persona->phone ?? '');
                     @endphp
 
                     <tr>
@@ -32,6 +34,31 @@
                                     <small class="text-muted">ID: {{ $item->id }}</small>
                                 </div>
                             </div>
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            @if ($item->persona)
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <strong>{{ $item->persona->first_name }}</strong>
+                                    @if ($item->persona->phone)
+                                        <span style="font-weight: bold; font-size: 13px; white-space: nowrap;">{{ $item->persona->phone }}</span>
+                                    @else
+                                        <span class="text-muted" style="font-style: italic;">Sin telefono</span>
+                                    @endif
+                                    @if ($responsableWhatsapp)
+                                        <a href="https://wa.me/{{ $responsableWhatsapp }}?text=Hola {{ urlencode($item->persona->first_name) }}" target="_blank" class="label label-success" style="margin-top: 5px; padding: 3px 8px; font-size: 10px; text-decoration: none; cursor: pointer;">
+                                            WhatsApp
+                                        </a>
+                                    @endif
+                                    @if ($item->persona->email)
+                                        <small style="margin-top: 5px; display: block;">{{ $item->persona->email }}</small>
+                                    @endif
+                                    @if ($item->persona->address)
+                                        <small class="text-muted" style="margin-top: 4px; display: block;">{{ $item->persona->address }}</small>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="text-muted">Sin responsable</span>
+                            @endif
                         </td>
                         <td style="text-align: center; vertical-align: middle;">
                             {{ $item->lugar ?: 'Sin lugar' }}
@@ -57,7 +84,8 @@
                                 <label class="label label-danger">Inactivo</label>
                             @endif
                         </td>
-                        <td style="vertical-align: middle; width: 14%" class="no-sort no-click bread-actions text-end">
+                        <td style="vertical-align: middle; width: 14%" class="no-sort no-click bread-actions text-end p-2">
+                            <div class="d-flex flex-wrap justify-content-end gap-1">
                             <a href="{{ route('modalidades.index', ['torneo' => $item, 'return' => 'torneos']) }}" title="Modalidades" class="btn btn-sm btn-primary">
                                 <i class="bi bi-list-check"></i>
                             </a>
@@ -86,11 +114,12 @@
                             <a href="#" onclick="event.preventDefault(); deleteItem('{{ route('torneos.destroy', $item) }}')" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete" class="btn btn-sm btn-danger delete">
                                 <i class="bi bi-trash"></i>
                             </a>
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6">
+                        <td colspan="7">
                             <h5 class="text-center eventos-empty">
                                 <img src="{{ asset('images/empty.png') }}" width="120" alt="Sin resultados">
                                 <br><br>
@@ -178,14 +207,21 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-4">
-                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
-                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Lugar</div>
-                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->lugar ?: 'Sin lugar' }}</div>
+                                    <div class="col-md-4">
+                                        <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                            <div class="fw-bold" style="font-size: 12px; line-height: 1;">Lugar</div>
+                                            <div class="fw-semibold" style="font-size: 14px;">{{ $item->lugar ?: 'Sin lugar' }}</div>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="col-md-6">
+                                    <div class="col-md-12">
+                                        <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                            <div class="fw-bold" style="font-size: 12px; line-height: 1;">Responsable</div>
+                                            <div class="fw-semibold" style="font-size: 14px;">{{ $item->persona ? $item->persona->first_name : 'Sin responsable' }}</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
                                     <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
                                         <div class="fw-bold" style="font-size: 12px; line-height: 1;">Fecha inicio</div>
                                         <div class="fw-semibold" style="font-size: 14px;">{{ $item->fecha_inicio ? $item->fecha_inicio->format('d/m/Y') : 'Sin fecha' }}</div>
@@ -259,6 +295,23 @@
                                             <input type="text" name="lugar" id="lugar_edit_{{ $item->id }}" value="{{ old('editing_torneo') == $item->id ? old('lugar') : $item->lugar }}" class="form-control @if(old('editing_torneo') == $item->id) @error('lugar') is-invalid @enderror @endif" maxlength="255">
                                             @if (old('editing_torneo') == $item->id)
                                                 @error('lugar')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            @endif
+                                        </div>
+
+                                        <div class="col-md-12">
+                                            <label for="persona_edit_{{ $item->id }}" class="form-label mb-1">Responsable</label>
+                                            <select name="persona_id" id="persona_edit_{{ $item->id }}" class="form-select @if(old('editing_torneo') == $item->id) @error('persona_id') is-invalid @enderror @endif" required>
+                                                <option value="">Seleccione</option>
+                                                @foreach ($personas as $persona)
+                                                    <option value="{{ $persona->id }}" {{ (old('editing_torneo') == $item->id ? old('persona_id') : $item->persona_id) == $persona->id ? 'selected' : '' }}>
+                                                        {{ $persona->first_name }}{{ $persona->ci ? ' - CI ' . $persona->ci : '' }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @if (old('editing_torneo') == $item->id)
+                                                @error('persona_id')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             @endif

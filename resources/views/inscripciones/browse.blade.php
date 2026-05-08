@@ -31,9 +31,6 @@
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-create-organizacion">
                                     <i class="bi bi-building-add"></i> Organizacion
                                 </button>
-                                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-create-competidor" {{ $organizacionesInscritas->isEmpty() || $modalidades->isEmpty() ? 'disabled' : '' }}>
-                                    <i class="bi bi-person-plus"></i> Competidor
-                                </button>
                                 <a href="{{ route('torneos.index') }}" class="btn btn-warning text-white">
                                     <i class="bi bi-x-lg"></i> Cerrar
                                 </a>
@@ -95,17 +92,25 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="nombre_organizacion" class="form-label">Organizacion</label>
-                            <input type="text" name="nombre" id="nombre_organizacion" value="{{ old('creating_organizacion') ? old('nombre') : '' }}" class="form-control @if(old('creating_organizacion')) @error('nombre') is-invalid @enderror @endif" required>
+                            <label for="organizacion_id" class="form-label">Organizacion</label>
+                            <select name="organizacion_id" id="organizacion_id" class="form-select @if(old('creating_organizacion')) @error('organizacion_id') is-invalid @enderror @endif" required>
+                                <option value="">Seleccione</option>
+                                @foreach ($organizaciones as $organizacion)
+                                    <option value="{{ $organizacion->id }}" data-responsable="{{ $organizacion->persona ? $organizacion->persona->first_name : 'Sin responsable' }}" {{ old('organizacion_id') == $organizacion->id ? 'selected' : '' }}>
+                                        {{ $organizacion->nombre }}{{ $organizacion->persona ? ' - ' . $organizacion->persona->first_name : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
                             @if (old('creating_organizacion'))
-                                @error('nombre')
+                                @error('organizacion_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             @endif
+                            <small class="text-muted d-block mt-1">Responsable: <span id="responsable-organizacion-preview">Seleccione una organizacion</span></small>
                         </div>
                         <div>
                             <label for="costo_organizacion" class="form-label">Costo</label>
-                            <input type="number" name="costo" id="costo_organizacion" value="{{ old('creating_organizacion') ? old('costo') : '0' }}" class="form-control @if(old('creating_organizacion')) @error('costo') is-invalid @enderror @endif" min="0" step="0.01" required>
+                            <input type="number" name="costo" id="costo_organizacion" value="{{ old('creating_organizacion') ? old('costo') : '200' }}" class="form-control @if(old('creating_organizacion')) @error('costo') is-invalid @enderror @endif" min="0" step="0.01" required>
                             @if (old('creating_organizacion'))
                                 @error('costo')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -256,7 +261,9 @@
 
             $('.js-modalidad-check').on('change', syncModalidadCosts);
             $('.js-modalidad-costo').on('input', updateCompetidorTotal);
+            $('#organizacion_id').on('change', updateResponsableOrganizacion);
             syncModalidadCosts();
+            updateResponsableOrganizacion();
         });
 
         function list(page = 1) {
@@ -296,6 +303,17 @@
             });
 
             updateCompetidorTotal();
+        }
+
+        function openCompetidorModal(inscripcionOrganizacionId) {
+            $('#inscripcion_organizacion_id').val(inscripcionOrganizacionId);
+            new bootstrap.Modal(document.getElementById('modal-create-competidor')).show();
+        }
+
+        function updateResponsableOrganizacion() {
+            let selected = $('#organizacion_id option:selected');
+            let responsable = selected.data('responsable') || 'Seleccione una organizacion';
+            $('#responsable-organizacion-preview').text(responsable);
         }
 
         @if ($errors->any())

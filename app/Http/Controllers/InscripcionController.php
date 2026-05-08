@@ -16,7 +16,12 @@ class InscripcionController extends Controller
 {
     public function index(Torneo $torneo)
     {
+        $torneo->load('persona');
         $personas = Persona::where('status', 1)->orderBy('first_name')->get();
+        $organizaciones = Organizacion::with('persona')
+            ->where('status', 1)
+            ->orderBy('nombre')
+            ->get();
         $modalidades = $torneo->modalidades()
             ->with('categoria')
             ->leftJoin('categorias', 'categorias.id', '=', 'modalidades.categoria_id')
@@ -26,23 +31,24 @@ class InscripcionController extends Controller
             ->select('modalidades.*')
             ->get();
         $organizacionesInscritas = $torneo->inscripcionOrganizaciones()
-            ->with('organizacion')
+            ->with('organizacion.persona')
             ->join('organizaciones', 'organizaciones.id', '=', 'inscripcion_organizaciones.organizacion_id')
             ->orderBy('organizaciones.nombre')
             ->select('inscripcion_organizaciones.*')
             ->get();
 
-        return view('inscripciones.browse', compact('torneo', 'personas', 'modalidades', 'organizacionesInscritas'));
+        return view('inscripciones.browse', compact('torneo', 'personas', 'organizaciones', 'modalidades', 'organizacionesInscritas'));
     }
 
     public function ajaxList(Request $request, Torneo $torneo)
     {
+        $torneo->load('persona');
         $paginate = (int) $request->input('paginate', 10);
         $paginate = in_array($paginate, [10, 25, 50, 100], true) ? $paginate : 10;
         $search = trim((string) $request->input('search', ''));
 
         $organizaciones = $torneo->inscripcionOrganizaciones()
-            ->with(['organizacion', 'competidores.persona', 'competidores.modalidades.modalidad'])
+            ->with(['organizacion.persona', 'competidores.persona', 'competidores.modalidades.modalidad.categoria'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
                     $query->whereHas('organizacion', function ($query) use ($search) {
@@ -63,33 +69,29 @@ class InscripcionController extends Controller
     public function storeOrganizacion(Request $request, Torneo $torneo)
     {
         $data = $request->validate([
-            'nombre' => ['required', 'string', 'max:255'],
+            'organizacion_id' => ['required', Rule::exists('organizaciones', 'id')],
             'costo' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
         ]);
 
-        $organizacion = Organizacion::firstOrCreate(
-            ['nombre' => trim($data['nombre'])],
-            ['status' => 1]
-        );
-
         $exists = InscripcionOrganizacion::where('torneo_id', $torneo->id)
-            ->where('organizacion_id', $organizacion->id)
+            ->where('organizacion_id', $data['organizacion_id'])
             ->exists();
 
         if ($exists) {
             return back()
-                ->withErrors(['nombre' => 'La organizacion ya esta inscrita en este campeonato.'])
+                ->withErrors(['organizacion_id' => 'La organizacion ya esta inscrita en este campeonato.'])
                 ->withInput(['creating_organizacion' => 1] + $data);
         }
 
-        $torneo->inscripcionOrganizaciones()->create([
-            'organizacion_id' => $organizacion->id,
+        $inscripcion = $torneo->inscripcionOrganizaciones()->create([
+            'organizacion_id' => $data['organizacion_id'],
             'costo' => $data['costo'],
         ]);
 
         return redirect()
             ->route('inscripciones.index', $torneo)
-            ->with('status', 'Organizacion inscrita correctamente.');
+            ->with('status', 'Organizacion inscrita correctamente.')
+            ->with('recibo_inscripcion_id', $inscripcion->id);
     }
 
     public function storeCompetidor(Request $request, Torneo $torneo)

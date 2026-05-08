@@ -71,7 +71,7 @@
 
     <div class="modal fade" id="modal-create" tabindex="-1" aria-labelledby="modalCreateLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <form method="POST" action="{{ route('organizaciones.store') }}">
+            <form method="POST" action="{{ route('organizaciones.store') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-content">
                     <div class="modal-header bg-primary text-white">
@@ -88,6 +88,20 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 @endif
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="logo" class="form-label">Logo</label>
+                                <input type="file" name="logo" id="logo" class="form-control @if(!old('editing_organizacion')) @error('logo') is-invalid @enderror @endif" accept="image/jpeg,image/png,image/webp" onchange="previewOrganizacionLogo(this, 'logo_preview_create')">
+                                @if (!old('editing_organizacion'))
+                                    @error('logo')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+
+                            <div class="col-md-2 text-center">
+                                <img id="logo_preview_create" src="{{ asset('images/icono.png') }}" alt="Logo organizacion" style="width: 72px; height: 72px; object-fit: contain; border: 1px solid #ced4da; background: #f8f9fa;">
                             </div>
 
                             <div class="col-md-4">
@@ -198,6 +212,17 @@
 
         function deleteItem(url) {
             $('#delete_form').attr('action', url);
+        }
+
+        function previewOrganizacionLogo(input, previewId) {
+            let file = input.files && input.files[0];
+            let preview = document.getElementById(previewId);
+
+            if (!file || !preview) {
+                return;
+            }
+
+            preview.src = URL.createObjectURL(file);
         }
 
         @if ($errors->any())

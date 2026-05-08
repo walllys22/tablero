@@ -15,6 +15,7 @@ class Torneo extends Model
         'fecha_inicio',
         'fecha_fin',
         'nombre',
+        'persona_id',
         'lugar',
         'logo',
         'status',
@@ -29,6 +30,11 @@ class Torneo extends Model
     public function modalidades()
     {
         return $this->hasMany(Modalidad::class);
+    }
+
+    public function persona()
+    {
+        return $this->belongsTo(Persona::class);
     }
 
     public function categorias()

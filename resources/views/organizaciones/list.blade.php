@@ -13,12 +13,25 @@
             </thead>
             <tbody>
                 @forelse ($data as $item)
+                    @php
+                        $logoUrl = $item->logo
+                            ? asset('storage/' . ltrim($item->logo, '/'))
+                            : asset('images/icono.png');
+                        $logoVersion = optional($item->updated_at)->timestamp ?? $item->id;
+                        $logoPreviewUrl = $item->logo ? $logoUrl . '?v=' . $logoVersion : $logoUrl;
+                    @endphp
                     <tr>
                         <td style="text-align: center; vertical-align: middle;">
                             {{ $item->id }}
                         </td>
                         <td style="vertical-align: middle;">
-                            <strong>{{ $item->nombre }}</strong>
+                            <div class="eventos-name-cell">
+                                <img src="{{ $logoPreviewUrl }}" alt="{{ $item->nombre ?: 'Organizacion' }}" class="image-expandable eventos-logo" style="object-fit: contain; background: #f8f9fa;" onerror="this.src='{{ asset('images/icono.png') }}'">
+                                <div>
+                                    <strong>{{ $item->nombre }}</strong><br>
+                                    <small class="text-muted">ID: {{ $item->id }}</small>
+                                </div>
+                            </div>
                         </td>
                         <td style="vertical-align: middle;">
                             @if ($item->persona)
@@ -95,6 +108,14 @@
 </div>
 
 @foreach ($data as $item)
+    @php
+        $logoUrl = $item->logo
+            ? asset('storage/' . ltrim($item->logo, '/'))
+            : asset('images/icono.png');
+        $logoVersion = optional($item->updated_at)->timestamp ?? $item->id;
+        $logoPreviewUrl = $item->logo ? $logoUrl . '?v=' . $logoVersion : $logoUrl;
+    @endphp
+
     @if ($item->status == 1)
         <div class="modal fade" id="modal-status-{{ $item->id }}" tabindex="-1" aria-labelledby="modalStatusLabel{{ $item->id }}" aria-hidden="true">
             <div class="modal-dialog modal-sm">
@@ -130,8 +151,15 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body p-2" style="background: #eeeeee;">
-                    <div class="row g-2">
-                        <div class="col-md-6">
+                    <div class="d-flex gap-2 align-items-stretch flex-column flex-md-row">
+                        <div class="flex-shrink-0 text-center px-3 py-2" style="width: 150px; min-height: 150px; border-radius: 18px; background: #f8f8f8;">
+                            <img src="{{ $logoPreviewUrl }}" alt="{{ $item->nombre ?: 'Logo organizacion' }}" style="width: 112px; height: 112px; object-fit: contain; border: 1px solid #333; background: #ffffff;" onerror="this.src='{{ asset('images/icono.png') }}'">
+                            <div class="mt-2 fw-semibold" style="font-size: 13px;">Logo</div>
+                        </div>
+
+                        <div class="flex-grow-1">
+                            <div class="row g-2">
+                                <div class="col-md-6">
                             <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
                                 <div class="fw-bold" style="font-size: 12px; line-height: 1;">Organizacion</div>
                                 <div class="fw-semibold" style="font-size: 14px;">{{ $item->nombre }}</div>
@@ -161,6 +189,8 @@
                                 <div class="fw-semibold" style="font-size: 14px;">{{ $item->created_at ? $item->created_at->format('d/m/Y') : 'No registrada' }}</div>
                             </div>
                         </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer py-2" style="background: #eeeeee; border-top: 0;">
@@ -172,7 +202,7 @@
 
     <div class="modal fade" id="modal-edit-{{ $item->id }}" tabindex="-1" aria-labelledby="modalEditLabel{{ $item->id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <form method="POST" action="{{ route('organizaciones.update', $item) }}">
+            <form method="POST" action="{{ route('organizaciones.update', $item) }}" enctype="multipart/form-data">
                 @csrf
                 @method('PATCH')
                 <input type="hidden" name="editing_organizacion" value="{{ $item->id }}">
@@ -192,6 +222,18 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 @endif
+                            </div>
+                            <div class="col-md-4">
+                                <label for="logo_edit_{{ $item->id }}" class="form-label">Logo</label>
+                                <input type="file" name="logo" id="logo_edit_{{ $item->id }}" class="form-control @if(old('editing_organizacion') == $item->id) @error('logo') is-invalid @enderror @endif" accept="image/jpeg,image/png,image/webp" onchange="previewOrganizacionLogo(this, 'logo_preview_edit_{{ $item->id }}')">
+                                @if (old('editing_organizacion') == $item->id)
+                                    @error('logo')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <img id="logo_preview_edit_{{ $item->id }}" src="{{ $logoPreviewUrl }}" alt="{{ $item->nombre ?: 'Logo organizacion' }}" style="width: 72px; height: 72px; object-fit: contain; border: 1px solid #ced4da; background: #f8f9fa;" onerror="this.src='{{ asset('images/icono.png') }}'">
                             </div>
                             <div class="col-md-4">
                                 <label for="persona_edit_{{ $item->id }}" class="form-label">Persona</label>
@@ -248,4 +290,15 @@
             }
         @endif
     });
+
+    function previewOrganizacionLogo(input, previewId) {
+        let file = input.files && input.files[0];
+        let preview = document.getElementById(previewId);
+
+        if (!file || !preview) {
+            return;
+        }
+
+        preview.src = URL.createObjectURL(file);
+    }
 </script>

@@ -99,6 +99,33 @@
                             </div>
 
                             <div class="col-md-6">
+                                <label for="persona_id" class="form-label">Responsable</label>
+                                <select name="persona_id" id="persona_id" class="form-select @error('persona_id') is-invalid @enderror" required>
+                                    <option value="">Seleccione</option>
+                                    @foreach ($personas as $persona)
+                                        <option value="{{ $persona->id }}" data-phone="{{ $persona->phone }}" data-email="{{ $persona->email }}" data-address="{{ $persona->address }}" {{ old('persona_id') == $persona->id ? 'selected' : '' }}>
+                                            {{ $persona->first_name }}{{ $persona->ci ? ' - CI ' . $persona->ci : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('persona_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Contacto</label>
+                                <div class="text-center px-3 py-2" style="min-height: 110px; border: 1px solid #dee2e6; border-radius: 6px; background: #f8f9fa;">
+                                    <div id="responsable-phone" class="fw-bold" style="font-size: 13px;">No registrado</div>
+                                    <a id="responsable-whatsapp" href="#" target="_blank" class="label label-success d-none" style="margin-top: 5px; padding: 3px 8px; font-size: 10px; text-decoration: none; cursor: pointer;">
+                                        WhatsApp
+                                    </a>
+                                    <div id="responsable-email" class="mt-1" style="font-size: 13px;">No registrado</div>
+                                    <div id="responsable-address" class="text-muted mt-1" style="font-size: 13px;">No registrada</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
                                 <label for="fecha_inicio" class="form-label">Fecha inicio</label>
                                 <input type="date" name="fecha_inicio" id="fecha_inicio" value="{{ old('fecha_inicio') }}" min="{{ now()->format('Y-m-d') }}" class="form-control @error('fecha_inicio') is-invalid @enderror">
                                 @error('fecha_inicio')
@@ -194,6 +221,9 @@
             $('#fecha_inicio').on('change', function () {
                 $('#fecha_fin').attr('min', this.value || '{{ now()->format('Y-m-d') }}');
             });
+
+            $('#persona_id').on('change', updateResponsableContacto);
+            updateResponsableContacto();
         });
 
         function list(page = 1) {
@@ -228,6 +258,28 @@
             }
 
             preview.src = URL.createObjectURL(file);
+        }
+
+        function updateResponsableContacto() {
+            let selected = $('#persona_id option:selected');
+            let phone = selected.data('phone') || '';
+            let email = selected.data('email') || '';
+            let address = selected.data('address') || '';
+            let whatsappPhone = String(phone).replace(/\D+/g, '');
+
+            $('#responsable-phone').text(phone || 'No registrado');
+            $('#responsable-email').text(email || 'No registrado');
+            $('#responsable-address').text(address || 'No registrada');
+
+            if (whatsappPhone) {
+                $('#responsable-whatsapp')
+                    .removeClass('d-none')
+                    .attr('href', `https://wa.me/${whatsappPhone}?text=Hola`);
+            } else {
+                $('#responsable-whatsapp')
+                    .addClass('d-none')
+                    .attr('href', '#');
+            }
         }
 
         @if ($errors->any())

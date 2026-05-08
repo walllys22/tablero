@@ -40,4 +40,9 @@ class Persona extends Model
     {
         return $this->hasMany(Organizacion::class);
     }
+
+    public function torneos()
+    {
+        return $this->hasMany(Torneo::class);
+    }
 }

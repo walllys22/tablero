@@ -58,7 +58,7 @@ class OrganizacionController extends Controller
         $data = $request->validate([
             'nombre' => ['required', 'string', 'max:255', 'unique:organizaciones,nombre'],
             'persona_id' => ['required', Rule::exists('personas', 'id')],
-            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'status' => ['nullable'],
         ]);
 
@@ -85,7 +85,7 @@ class OrganizacionController extends Controller
                 Rule::unique('organizaciones', 'nombre')->ignore($organizacion->id),
             ],
             'persona_id' => ['required', Rule::exists('personas', 'id')],
-            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'status' => ['nullable'],
             'editing_organizacion' => ['nullable'],
         ]);

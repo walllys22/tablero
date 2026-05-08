@@ -6,12 +6,13 @@
         [
             'label' => 'Administracion',
             'icon' => 'fa-solid fa-file-lines',
-            'active' => request()->routeIs('torneos.*') || request()->routeIs('modalidades.*'),
+            'active' => request()->routeIs('torneos.*') || request()->routeIs('modalidades.*') || request()->routeIs('organizaciones.*'),
             'children' => [
                 ['label' => 'Torneos', 'icon' => 'fa-solid fa-trophy', 'route' => 'torneos.index', 'active' => request()->routeIs('torneos.*')],
                 ['label' => 'Modalidades', 'icon' => 'fa-brands fa-markdown', 'modal' => 'modal-modalidades-sidebar', 'active' => request()->routeIs('modalidades.*')],
                 ['label' => 'Listado Katas', 'icon' => 'fa-solid fa-clipboard-list', 'route' => 'dashboard', 'active' => false],
                 ['label' => 'Personas', 'icon' => 'fa-solid fa-people-group', 'route' => 'people.browse', 'active' => request()->routeIs('people.*')],
+                ['label' => 'Organizacion', 'icon' => 'fa-solid fa-torii-gate', 'route' => 'organizaciones.index', 'active' => request()->routeIs('organizaciones.*')],
             ],
         ],
 
@@ -19,10 +20,9 @@
         [
             'label' => 'Registro',
             'icon' => 'fa-solid fa-address-card',
-            'active' => request()->is('registro*') || request()->routeIs('inscripciones.*') || request()->routeIs('organizaciones.*'),
+            'active' => request()->is('registro*') || request()->routeIs('inscripciones.*'),
             'children' => [
                 ['label' => 'Jueces', 'icon' => 'fa-solid fa-user-tie', 'route' => 'dashboard', 'active' => false],
-                ['label' => 'Organizacion', 'icon' => 'fa-solid fa-torii-gate', 'route' => 'organizaciones.index', 'active' => request()->routeIs('organizaciones.*')],
                 ['label' => 'Inscripciones', 'icon' => 'fa-solid fa-address-book', 'modal' => 'modal-inscripciones-sidebar', 'active' => request()->routeIs('inscripciones.*')],
                 ['label' => 'Competidores', 'icon' => 'fa-solid fa-image-portrait', 'route' => 'dashboard', 'active' => false],
             ],

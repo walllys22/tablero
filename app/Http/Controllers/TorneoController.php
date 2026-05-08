@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTorneoRequest;
 use App\Http\Requests\UpdateTorneoRequest;
+use App\Models\Persona;
 use App\Models\Torneo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -16,7 +17,11 @@ class TorneoController extends Controller
      */
     public function index()
     {
-        return view('eventos.browse');
+        $personas = Persona::where('status', 1)
+            ->orderBy('first_name')
+            ->get();
+
+        return view('eventos.browse', compact('personas'));
     }
 
     public function ajaxList(Request $request)
@@ -26,21 +31,30 @@ class TorneoController extends Controller
         $paginate = in_array($paginate, [10, 25, 50, 100], true) ? $paginate : 10;
 
         $data = Torneo::query()
+            ->with('persona')
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('id', $search)
                         ->orWhere('nombre', 'like', "%{$search}%")
                         ->orWhere('lugar', 'like', "%{$search}%")
                         ->orWhere('fecha_inicio', 'like', "%{$search}%")
-                        ->orWhere('fecha_fin', 'like', "%{$search}%");
+                        ->orWhere('fecha_fin', 'like', "%{$search}%")
+                        ->orWhereHas('persona', function ($query) use ($search) {
+                            $query->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('ci', 'like', "%{$search}%");
+                        });
                 });
             })
             ->orderByDesc('id')
             ->paginate($paginate)
             ->withQueryString();
 
+        $personas = Persona::where('status', 1)
+            ->orderBy('first_name')
+            ->get();
+
         return response()
-            ->view('eventos.list', compact('data'))
+            ->view('eventos.list', compact('data', 'personas'))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');

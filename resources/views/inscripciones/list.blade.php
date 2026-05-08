@@ -8,6 +8,7 @@
                     <th style="text-align: center">Competidores</th>
                     <th style="text-align: center">Total competidores</th>
                     <th style="text-align: center">Total general</th>
+                    <th style="text-align: center">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -53,10 +54,18 @@
                         <td style="text-align: center; vertical-align: top;">
                             <label class="label label-success">{{ number_format((float) $totalGeneral, 2) }}</label>
                         </td>
+                        <td style="text-align: center; vertical-align: top;">
+                            <button type="button" class="btn btn-sm btn-primary" title="Recibo" data-bs-toggle="modal" data-bs-target="#modal-recibo-organizacion-{{ $inscripcion->id }}">
+                                <i class="bi bi-receipt"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-success" title="Agregar competidor" onclick="openCompetidorModal('{{ $inscripcion->id }}')">
+                                <i class="bi bi-person-plus"></i>
+                            </button>
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5">
+                        <td colspan="6">
                             <h5 class="text-center eventos-empty">
                                 <img src="{{ asset('images/empty.png') }}" width="120" alt="Sin resultados">
                                 <br><br>
@@ -85,6 +94,75 @@
     </div>
 </div>
 
+@foreach ($organizaciones as $inscripcion)
+    <div class="modal fade" id="modal-recibo-organizacion-{{ $inscripcion->id }}" tabindex="-1" aria-labelledby="modalReciboOrganizacionLabel{{ $inscripcion->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold" id="modalReciboOrganizacionLabel{{ $inscripcion->id }}">Recibo de pago</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="recibo-organizacion-{{ $inscripcion->id }}" class="p-4 border bg-white">
+                        <div class="text-center mb-4">
+                            <h4 class="mb-1">Recibo de Pago</h4>
+                            <div class="fw-bold">Concepto: Inscripcion al campeonato</div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <div class="fw-bold">Campeonato</div>
+                                <div>{{ $torneo->nombre ?: 'Torneo sin nombre' }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="fw-bold">Fecha</div>
+                                <div>{{ now()->format('d/m/Y') }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="fw-bold">Responsable del campeonato</div>
+                                <div>{{ $torneo->persona ? $torneo->persona->first_name : 'No registrado' }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="fw-bold">Organizacion</div>
+                                <div>{{ $inscripcion->organizacion->nombre }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="fw-bold">Responsable de la organizacion</div>
+                                <div>{{ $inscripcion->organizacion->persona ? $inscripcion->organizacion->persona->first_name : 'No registrado' }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="fw-bold">Monto pagado</div>
+                                <div class="fs-5 fw-bold">{{ number_format((float) $inscripcion->costo, 2) }} Bs.</div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-5">
+                            <div class="col-6 text-center">
+                                <div style="border-top: 1px solid #000; padding-top: 6px;">Responsable campeonato</div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <div style="border-top: 1px solid #000; padding-top: 6px;">
+                                    {{ $inscripcion->organizacion->persona ? $inscripcion->organizacion->persona->first_name : 'No registrado' }}
+                                </div>
+                                <div>
+                                    {{ $inscripcion->organizacion->nombre }}
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="printReciboOrganizacion('recibo-organizacion-{{ $inscripcion->id }}')">
+                        <i class="bi bi-printer"></i> Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
+
 <script>
     $(document).ready(function () {
         $('.page-link').click(function (event) {
@@ -96,5 +174,32 @@
                 list(url.searchParams.get('page') || 1);
             }
         });
+
+        @if (session('recibo_inscripcion_id'))
+            let reciboModal = document.getElementById('modal-recibo-organizacion-{{ session('recibo_inscripcion_id') }}');
+            if (reciboModal) {
+                new bootstrap.Modal(reciboModal).show();
+            }
+        @endif
     });
+
+    function printReciboOrganizacion(elementId) {
+        let content = document.getElementById(elementId).innerHTML;
+        let printWindow = window.open('', '_blank', 'width=900,height=700');
+
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Recibo de pago</title>
+                    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                </head>
+                <body class="p-4">${content}</body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    }
 </script>
