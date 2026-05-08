@@ -161,15 +161,19 @@ button.sidebar-link {
     position: fixed;
     right: 0;
     bottom: 0;
-    left: 0;
+    left: 260px;
     z-index: 1030;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    min-height: 68px;
-    padding: 0.35rem 0.5rem calc(0.35rem + env(safe-area-inset-bottom));
+    min-height: 0;
+    padding: 2px;
     background: #ffffff;
     border-top: 1px solid #e5e7eb;
     box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.bottom-bar .site-footer-right {
+    font-size: 10px;
+    line-height: 1;
+    padding: 2px;
 }
 
 .bottom-link {
@@ -374,6 +378,10 @@ button.sidebar-link {
 }
 
 @media (max-width: 767.98px) {
+    .bottom-bar {
+        left: 0;
+    }
+
     .app-main {
         padding: 1rem 1rem 5.5rem;
     }

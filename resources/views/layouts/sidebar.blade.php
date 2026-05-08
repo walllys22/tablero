@@ -55,17 +55,6 @@
         </nav>
     </div>
 
-    @auth
-        <div class="sidebar-user">
-            <div class="sidebar-avatar">
-                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-            </div>
-            <div class="min-w-0">
-                <strong>{{ Auth::user()->name }}</strong>
-                <small>{{ Auth::user()->email }}</small>
-            </div>
-        </div>
-    @endauth
 </aside>
 
 <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
