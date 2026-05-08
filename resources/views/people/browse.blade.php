@@ -6,11 +6,11 @@
     <div class="container-fluid py-4">
         <div class="row mb-3">
             <div class="col-12">
-                <div class="panel panel-bordered">
-                    <div class="panel-body p-0">
+                <div class="card shadow-sm">
+                    <div class="card-body p-0">
                         <div class="row g-0 align-items-center">
                             <div class="col-md-8 px-3 py-3">
-                                <h1 class="page-title text-dark">
+                                <h1 class="h3 mb-0 text-dark">
                                     <i class="bi bi-person"></i> Datos Personales
                                 </h1>
                             </div>
@@ -30,12 +30,12 @@
 
         <div class="row">
             <div class="col-12">
-                <div class="panel panel-bordered">
-                    <div class="panel-body">
+                <div class="card shadow-sm">
+                    <div class="card-body">
                         <div class="row mb-3">
                             <div class="col-sm-9">
                                 <div class="dataTables_length" id="dataTable_length">
-                                    <label>Mostrar <select id="select-paginate" class="form-control form-select form-select-sm">
+                                    <label class="d-flex align-items-center gap-2">Mostrar <select id="select-paginate" class="form-select form-select-sm w-auto">
                                         <option value="10">10</option>
                                         <option value="25">25</option>
                                         <option value="50">50</option>
@@ -78,8 +78,6 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ url('js/main.js') }}"></script>
-    <script src="{{ asset('js/btn-submit.js') }}"></script>
     <script>
         var countPage = 10, order = 'id', typeOrder = 'desc';
         var timeout = null;
@@ -106,11 +104,9 @@
         });
 
         function list(page = 1){
-            if ($.fn.loading) {
-                $('#div-results').loading({message: 'Cargando...'});
-            }
+            $('#div-results').html('<div class="col-12 text-center text-muted py-5">Cargando...</div>');
 
-            let url = '{{ url("admin/people/ajax/list") }}';
+            let url = '{{ route("people.ajax.list") }}';
             let search = $('#input-search').val() ? $('#input-search').val() : '';
 
             $.ajax({
@@ -118,9 +114,9 @@
                 type: 'get',
                 success: function(result){
                     $("#div-results").html(result);
-                    if ($.fn.loading) {
-                        $('#div-results').loading('toggle');
-                    }
+                },
+                error: function(){
+                    $("#div-results").html('<div class="col-12"><div class="alert alert-danger mb-0">No se pudo cargar la lista.</div></div>');
                 }
             });
         }

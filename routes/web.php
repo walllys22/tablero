@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\TableroController;
 use App\Http\Controllers\PersonaController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TableroController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,7 +20,21 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('kumite/tablero', [TableroController::class, 'kumite'])->name('tablero.kumite');
-Route::get('kata/tablero', [TableroController::class, 'kata'])->name('tablero.kata');
-Route::get('people', [PersonaController::class, 'index'])->name('people.browse');
+Route::get('/people', [PersonaController::class, 'index'])->name('people.browse');
+Route::get('/people/ajax/list', [PersonaController::class, 'ajaxList'])->name('people.ajax.list');
 
+Route::get('/kumite/tablero', [TableroController::class, 'kumite'])->name('tablero.kumite');
+
+Route::get('/kata/tablero', [TableroController::class, 'kata'])->name('tablero.kata');
+
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+require __DIR__.'/auth.php';

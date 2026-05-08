@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\persona;
 use App\Http\Requests\StorepersonaRequest;
 use App\Http\Requests\UpdatepersonaRequest;
+use Illuminate\Http\Request;
 
 class PersonaController extends Controller
 {
@@ -14,6 +15,28 @@ class PersonaController extends Controller
     public function index()
     {
         return view('people.browse');
+    }
+
+    public function ajaxList(Request $request)
+    {
+        $paginate = (int) $request->input('paginate', 10);
+        $paginate = in_array($paginate, [10, 25, 50, 100], true) ? $paginate : 10;
+        $search = trim((string) $request->input('search', ''));
+
+        $data = persona::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('ci', 'like', "%{$search}%")
+                        ->orWhere('first_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                });
+            })
+            ->orderByDesc('id')
+            ->paginate($paginate)
+            ->withQueryString();
+
+        return view('people.list', compact('data'));
     }
 
     /**

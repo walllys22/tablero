@@ -11,7 +11,7 @@ class UpdatepersonaRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,17 @@ class UpdatepersonaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'ci' => ['nullable', 'string', 'max:255'],
+            'first_name' => ['nullable', 'string', 'max:255'],
+            'birth_date' => ['nullable', 'date'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'country_code' => ['nullable', 'string', 'max:10'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'address' => ['nullable', 'string'],
+            'gender' => ['nullable', 'string', 'max:50'],
+            'sangre' => ['nullable', 'string', 'max:20'],
+            'image' => ['nullable', 'string', 'max:600'],
+            'status' => ['nullable', 'integer', 'in:0,1'],
         ];
     }
 }

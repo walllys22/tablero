@@ -18,17 +18,12 @@
                     if($item->image){
                         $image = asset('storage/' . str_replace('.avif', '', $item->image) . '-cropped.webp');
                     }
-                    $image = asset('images/default.jpg');
-                    if($item->image){
-                        $image = asset('storage/' . str_replace('.avif', '', $item->image) . '-cropped.webp');
-                    }
                     $now = \Carbon\Carbon::now();
-                    $birthday = new \Carbon\Carbon($item->birth_date);
-                    $age = $birthday->diffInYears($now);
+                    $age = $item->birth_date ? \Carbon\Carbon::parse($item->birth_date)->diffInYears($now) : null;
                 @endphp
                 <tr>
                     <td style="text-align: center">
-                        <strong>{{ $item->documentType }}</strong><br>
+                        <strong>CI</strong><br>
                         <span>{{ $item->ci ?: 'Sin documento' }}</span>
                     </td>
                     <td>
@@ -36,11 +31,7 @@
                             <img src="{{ $image }}" alt="{{ $item->first_name }}" class="image-expandable" style="width: 60px; height: 60px; border-radius: 30px; margin-right: 10px; object-fit: cover;">
                             <div>
                                 <strong>{{ strtoupper($item->first_name) }}</strong><br>
-                                @if($item->dojo)
-                                    <span class="label label-primary">{{ $item->dojo->nombre }}</span>
-                                @else
-                                    <span class="text-muted">Sin dojo asignado</span>
-                                @endif
+                                <span class="text-muted">Sin dojo asignado</span>
                             </div>
                         </div>
                     </td>
@@ -68,7 +59,7 @@
                                     <span class="fi fi-{{ $flag }}" title="{{ $countryName }}" style="margin-right: 3px; box-shadow: 1px 1px 3px rgba(0,0,0,0.2);"></span> +{{ $code }} {{ $item->phone }}
                                 </span>
                                 <a href="https://wa.me/{{ $code }}{{ $item->phone }}?text=Hola {{ $item->first_name }}" target="_blank" class="label label-success" style="margin-top: 5px; padding: 3px 8px; font-size: 10px; text-decoration: none; cursor: pointer;">
-                                    <i class="voyager-paper-plane"></i> WhatsApp
+                                    WhatsApp
                                 </a>
                                 @if($item->email)
                                     <small style="margin-top: 5px; display: block;">{{ $item->email }}</small>
@@ -97,21 +88,7 @@
                         
                     </td>
                     <td style="width: 18%" class="no-sort no-click bread-actions text-right">
-                        @if (auth()->user()->hasPermission('read_people'))
-                            <a href="{{ route('voyager.people.show', ['id' => $item->id]) }}" title="Ver" class="btn btn-sm btn-warning view">
-                                <i class="voyager-eye"></i> <span class="hidden-xs hidden-sm"></span>
-                            </a>
-                        @endif
-                        @if (auth()->user()->hasPermission('edit_people'))
-                            <a href="{{ route('voyager.people.edit', ['id' => $item->id]) }}" title="Editar" class="btn btn-sm btn-primary edit">
-                                <i class="voyager-edit"></i> <span class="hidden-xs hidden-sm"></span>
-                            </a>
-                        @endif
-                        @if (auth()->user()->hasPermission('delete_people'))
-                            <a href="#" onclick="deleteItem('{{ route('voyager.people.destroy', ['id' => $item->id]) }}')" title="Eliminar" data-toggle="modal" data-target="#modal-delete" class="btn btn-sm btn-danger delete">
-                                <i class="voyager-trash"></i> <span class="hidden-xs hidden-sm"></span>
-                            </a>
-                        @endif
+                        <span class="text-muted">Sin acciones</span>
                     </td>
                 </tr>
                 @empty

@@ -4,65 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tablero Kata</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
-<body class="bg-gray-100 h-screen flex flex-col overflow-hidden">
+<body class="kata-board">
+    <main class="kata-main">
+        <section class="competitor-panel competitor-blue">
+            <span class="competitor-state">EN COMPETENCIA</span>
+            <span class="competitor-name">-----*-----</span>
+        </section>
 
-    <!-- Contenedores Superiores -->
-    <div class="flex-1 flex w-full">
-        <!-- Lado Izquierdo (AZUL) -->
-        <div class="flex-1 bg-blue-700 flex flex-col items-center justify-center border-r-8 border-white">
-            <span class="text-white text-5xl font-black mb-6 uppercase tracking-widest text-center">EN COMPETENCIA</span>
-            <span class="text-white text-7xl font-bold text-center">-----*-----</span>
-        </div>
-
-        <!-- Centro (Temporizador) -->
-        <div class="w-1/3 bg-white flex flex-col items-center justify-center">
-            <div id="container-timer" class="bg-yellow-400 w-full py-16 rounded-3xl shadow-xl border-4 border-gray-200 text-center mb-10">
-                <span id="timer-display" class="text-9xl font-mono font-bold text-gray-900">00:00</span>
+        <section class="timer-panel">
+            <div id="container-timer" class="timer-display-wrap">
+                <span id="timer-display">00:00</span>
             </div>
-            <div class="grid grid-cols-2 gap-4 w-full px-4">
-                <button id="btn-inicio" onclick="iniciarTiempo(35); toggleTimerButtons('inicio')" class="bg-green-600 text-white py-4 rounded-xl font-black text-2xl hover:bg-green-700 transition-transform active:scale-95 shadow-lg uppercase">Inicio</button>
-                <button id="btn-stop" onclick="detenerTiempo()" class="hidden bg-yellow-600 text-white py-4 rounded-xl font-black text-2xl hover:bg-yellow-700 transition-transform active:scale-95 shadow-lg uppercase">Stop</button>
-                <button id="btn-fin" onclick="iniciarTiempo(300); toggleTimerButtons('fin')" class="hidden bg-red-600 text-white py-4 rounded-xl font-black text-2xl hover:bg-red-700 transition-transform active:scale-95 shadow-lg uppercase">Fin</button>
-                <button id="btn-cerrar" onclick="window.history.back()" class="bg-gray-600 text-white py-4 rounded-xl font-black text-2xl hover:bg-gray-700 transition-transform active:scale-95 shadow-lg uppercase">Cerrar</button>
+            <div class="timer-actions">
+                <button id="btn-inicio" onclick="iniciarTiempo(35); toggleTimerButtons('inicio')" class="btn btn-success btn-lg fw-bold text-uppercase">Inicio</button>
+                <button id="btn-stop" onclick="detenerTiempo()" class="btn btn-warning btn-lg fw-bold text-uppercase d-none">Stop</button>
+                <button id="btn-fin" onclick="iniciarTiempo(300); toggleTimerButtons('fin')" class="btn btn-danger btn-lg fw-bold text-uppercase d-none">Fin</button>
+                <button id="btn-cerrar" onclick="window.history.back()" class="btn btn-secondary btn-lg fw-bold text-uppercase">Cerrar</button>
             </div>
-        </div>
+        </section>
 
-        <!-- Lado Derecho (ROJO) -->
-        <div class="flex-1 bg-red-700 flex flex-col items-center justify-center border-l-8 border-white">
-            <span class="text-white text-5xl font-black mb-6 uppercase tracking-widest text-center">EN COMPETENCIA</span>
-            <span class="text-white text-7xl font-bold text-center">-----*-----</span>
-        </div>
-    </div>
+        <section class="competitor-panel competitor-red">
+            <span class="competitor-state">EN COMPETENCIA</span>
+            <span class="competitor-name">-----*-----</span>
+        </section>
+    </main>
 
-    <!-- Contenedor Inferior (15% de alto) -->
-    <div class="h-[20%] w-full bg-white border-t-8 border-gray-300 flex items-center justify-around px-8">
+    <section class="judges-panel">
         @for ($i = 1; $i <= 5; $i++)
-        <div class="flex flex-col items-center">
-            <div class="flex items-center gap-3 mb-2">
-                <span class="font-black text-gray-800 text-xl uppercase">JUEZ {{ $i }}</span>
-                <button onclick="generarQR({{ $i }})" class="bg-slate-800 text-white p-2 rounded-lg hover:bg-black transition-colors shadow-md">
-                    <i class="fas fa-qrcode"></i>
-                </button>
+            <div class="judge-box">
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                    <span class="fw-black text-uppercase">JUEZ {{ $i }}</span>
+                    <button onclick="generarQR({{ $i }})" class="btn btn-dark btn-sm" aria-label="Generar QR juez {{ $i }}">
+                        <i class="fas fa-qrcode"></i>
+                    </button>
+                </div>
+                <div class="d-flex gap-2">
+                    <input type="number" step="0.1" min="0" max="10" onfocus="this.select()" class="score-input score-blue" placeholder="0.0">
+                    <input type="number" step="0.1" min="0" max="10" onfocus="this.select()" class="score-input score-red" placeholder="0.0">
+                </div>
             </div>
-            <div class="flex gap-2">
-                <input type="number" step="0.1" min="0" max="10" onfocus="this.select()" class="w-20 bg-blue-700 border-2 border-blue-800 text-center py-2 rounded-xl text-xl font-bold text-white shadow-inner focus:outline-none focus:ring-4 focus:ring-blue-400/50 transition-all" placeholder="0.0">
-                <input type="number" step="0.1" min="0" max="10" onfocus="this.select()" class="w-20 bg-red-700 border-2 border-red-800 text-center py-2 rounded-xl text-xl font-bold text-white shadow-inner focus:outline-none focus:ring-4 focus:ring-red-400/50 transition-all" placeholder="0.0">
-            </div>
-        </div>
         @endfor
-    </div>
+    </section>
 
-    <!-- Modal para mostrar el QR -->
-    <div id="modal-qr" class="fixed inset-0 bg-black/90 hidden z-50 flex flex-col items-center justify-center">
-        <div class="bg-white p-10 rounded-[40px] shadow-2xl flex flex-col items-center">
-            <h2 id="qr-title" class="text-3xl font-black text-gray-900 mb-8 uppercase italic">Acceso Juez</h2>
-            <div id="qrcode" class="p-4 bg-white border-4 border-gray-100 rounded-xl"></div>
-            <button onclick="cerrarModal()" class="mt-10 bg-red-600 text-white px-12 py-3 rounded-full font-black text-xl hover:bg-red-700 shadow-xl transition-all">CERRAR</button>
+    <div id="modal-qr" class="qr-modal d-none">
+        <div class="qr-card">
+            <h2 id="qr-title" class="h3 fw-black text-uppercase fst-italic mb-4">Acceso Juez</h2>
+            <div id="qrcode" class="qr-box"></div>
+            <button onclick="cerrarModal()" class="btn btn-danger btn-lg fw-bold mt-4 px-5">CERRAR</button>
         </div>
     </div>
 
@@ -71,7 +64,6 @@
         let tiempoRestante = 0;
         let qrcodeObject = null;
 
-        // Inicializar objeto QR al cargar
         $(document).ready(function() {
             qrcodeObject = new QRCode(document.getElementById("qrcode"), {
                 width: 300,
@@ -83,22 +75,19 @@
         });
 
         function iniciarTiempo(segundos) {
-            // Detener cualquier intervalo previo
             clearInterval(timerInterval);
-            
             tiempoRestante = segundos;
             actualizarDisplay(tiempoRestante);
 
             timerInterval = setInterval(() => {
                 if (tiempoRestante <= 0) {
                     clearInterval(timerInterval);
-                    
-                    // Si terminó el tiempo de inicio (35s), pasar automáticamente al tiempo de fin (300s)
+
                     if (segundos === 35) {
                         toggleTimerButtons('fin');
                         iniciarTiempo(300);
                     } else {
-                        document.getElementById('btn-cerrar').classList.remove('hidden');
+                        document.getElementById('btn-cerrar').classList.remove('d-none');
                     }
                     return;
                 }
@@ -109,7 +98,7 @@
 
         function detenerTiempo() {
             clearInterval(timerInterval);
-            document.getElementById('btn-cerrar').classList.remove('hidden');
+            document.getElementById('btn-cerrar').classList.remove('d-none');
         }
 
         function actualizarDisplay(segundos) {
@@ -120,49 +109,201 @@
 
         function toggleTimerButtons(estado) {
             if (estado === 'inicio') {
-                document.getElementById('btn-inicio').classList.add('hidden');
-                document.getElementById('btn-fin').classList.remove('hidden');
-                document.getElementById('btn-stop').classList.add('hidden');
-                document.getElementById('btn-cerrar').classList.add('hidden');
+                document.getElementById('btn-inicio').classList.add('d-none');
+                document.getElementById('btn-fin').classList.remove('d-none');
+                document.getElementById('btn-stop').classList.add('d-none');
+                document.getElementById('btn-cerrar').classList.add('d-none');
             } else if (estado === 'fin') {
-                document.getElementById('btn-fin').classList.add('hidden');
-                document.getElementById('btn-stop').classList.remove('hidden');
-                document.getElementById('btn-cerrar').classList.add('hidden');
+                document.getElementById('btn-fin').classList.add('d-none');
+                document.getElementById('btn-stop').classList.remove('d-none');
+                document.getElementById('btn-cerrar').classList.add('d-none');
             }
         }
 
         function generarQR(juezId) {
             const modal = document.getElementById('modal-qr');
             const titulo = document.getElementById('qr-title');
-            
+
             titulo.innerText = `JUEZ ${juezId}`;
-            
-            // Generar contenido único para el QR (ejemplo con ID y marca de tiempo)
             const urlAcceso = `${window.location.origin}/calificar/juez/${juezId}?t=${Date.now()}`;
-            
+
             qrcodeObject.clear();
             qrcodeObject.makeCode(urlAcceso);
-            
-            modal.classList.remove('hidden');
+            modal.classList.remove('d-none');
         }
 
         function cerrarModal() {
-            document.getElementById('modal-qr').classList.add('hidden');
+            document.getElementById('modal-qr').classList.add('d-none');
         }
 
-        // Cerrar modal al presionar Escape
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') cerrarModal();
         });
     </script>
 
     <style>
-        #timer-display { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+        .kata-board {
+            height: 100vh;
+            overflow: hidden;
+            background: #f3f4f6;
+        }
 
-        /* Ocultar flechas de control en inputs numéricos */
+        .kata-main {
+            height: 80vh;
+            display: grid;
+            grid-template-columns: 1fr minmax(320px, 34vw) 1fr;
+        }
+
+        .competitor-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            text-align: center;
+            border-color: #ffffff;
+            border-style: solid;
+        }
+
+        .competitor-blue {
+            background: #0d47a1;
+            border-width: 0 8px 0 0;
+        }
+
+        .competitor-red {
+            background: #b71c1c;
+            border-width: 0 0 0 8px;
+        }
+
+        .competitor-state {
+            font-size: clamp(1.6rem, 3vw, 3rem);
+            font-weight: 900;
+            letter-spacing: 0.08em;
+        }
+
+        .competitor-name {
+            font-size: clamp(2rem, 4vw, 4.5rem);
+            font-weight: 800;
+        }
+
+        .timer-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2rem;
+            padding: 1.5rem;
+            background: #ffffff;
+        }
+
+        .timer-display-wrap {
+            width: 100%;
+            padding: 3rem 1rem;
+            text-align: center;
+            background: #ffc107;
+            border: 4px solid #e5e7eb;
+            border-radius: 0.5rem;
+            box-shadow: inset 0 2px 12px rgba(15, 23, 42, 0.18);
+        }
+
+        #timer-display {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: clamp(4rem, 7vw, 8rem);
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .timer-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .judges-panel {
+            height: 20vh;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            gap: 1rem;
+            padding: 1rem 2rem;
+            background: #ffffff;
+            border-top: 8px solid #d1d5db;
+        }
+
+        .score-input {
+            width: 5rem;
+            padding: 0.5rem;
+            border: 2px solid transparent;
+            border-radius: 0.5rem;
+            text-align: center;
+            color: #ffffff;
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        .score-blue {
+            background: #0d47a1;
+            border-color: #07356f;
+        }
+
+        .score-red {
+            background: #b71c1c;
+            border-color: #7f1010;
+        }
+
+        .qr-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1050;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .qr-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2.5rem;
+            background: #ffffff;
+            border-radius: 0.5rem;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+        }
+
+        .qr-box {
+            padding: 1rem;
+            background: #ffffff;
+            border: 4px solid #f3f4f6;
+            border-radius: 0.5rem;
+        }
+
         input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        @media (max-width: 992px) {
+            .kata-main {
+                grid-template-columns: 1fr;
+                height: auto;
+                min-height: 80vh;
+            }
+
+            .competitor-panel {
+                min-height: 180px;
+                border-width: 0 0 6px;
+            }
+
+            .judges-panel {
+                height: auto;
+                flex-wrap: wrap;
+            }
+        }
     </style>
 </body>
 </html>

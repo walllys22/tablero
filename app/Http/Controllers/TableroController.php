@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 class TableroController extends Controller
 {
     public function kumite()
@@ -11,7 +9,7 @@ class TableroController extends Controller
         return view('kumite.tablero');
     }
 
-        public function kata()
+    public function kata()
     {
         return view('kata.tablero');
     }

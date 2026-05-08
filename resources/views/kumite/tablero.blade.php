@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kumite Temporizador</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
@@ -37,9 +37,7 @@
                 <button class="btn-personalizadoAzul resta" onclick="updateScore('aka', -1)">- YUKO</button>
                 <button class="btn-personalizadoAzul resta" onclick="updateScore('aka', -2)">- WAZARI</button>
                 <button class="btn-personalizadoAzul resta" onclick="updateScore('aka', -3)">- IPPON</button>
-                <button id="btn-hantei-rojo" class="btn-personalizadosenshurojo" onclick="logicaHantei('aka')">
-                    Hantei
-                </button>Hantei</button>
+                <button id="btn-hantei-rojo" class="btn-personalizadosenshurojo" onclick="logicaHantei('aka')">Hantei</button>
             </div>
             <div class="fila">
                 <button id="btn-aka-c1" class="btn-falta" onclick="togglePenalty('aka', 1)">C1</button>
@@ -139,11 +137,7 @@
                 <button class="btn-personalizadoAzul resta" onclick="updateScore('ao', -1)">- YUKO</button>
                 <button class="btn-personalizadoAzul resta" onclick="updateScore('ao', -2)">- WAZARI</button>
                 <button class="btn-personalizadoAzul resta" onclick="updateScore('ao', -3)">- IPPON</button>
-                <button id="btn-hantei-azul" class="btn-personalizadosenshuazul" onclick="logicaHantei('ao')">
-                    Hantei
-                </button>
-                    Hantei
-                </button>
+                <button id="btn-hantei-azul" class="btn-personalizadosenshuazul" onclick="logicaHantei('ao')">Hantei</button>
             </div>
 
             <div class="fila">
@@ -674,6 +668,176 @@
 <style>
     .hidden {
         display: none !important;
+    }
+
+    .bg-slate-900 {
+        background-color: #0f172a;
+    }
+
+    .bg-white {
+        background-color: #ffffff;
+    }
+
+    .bg-gray-100 {
+        background-color: #f3f4f6;
+    }
+
+    .bg-green-600 {
+        background-color: #16a34a;
+    }
+
+    .bg-yellow-500 {
+        background-color: #eab308;
+    }
+
+    .bg-red-600 {
+        background-color: #dc2626;
+    }
+
+    .text-white {
+        color: #ffffff;
+    }
+
+    .text-red-600 {
+        color: #dc2626;
+    }
+
+    .text-gray-800 {
+        color: #1f2937;
+    }
+
+    .text-gray-100 {
+        color: #f3f4f6;
+    }
+
+    .flex {
+        display: flex;
+    }
+
+    .flex-wrap {
+        flex-wrap: wrap;
+    }
+
+    .flex-col {
+        flex-direction: column;
+    }
+
+    .items-center {
+        align-items: center;
+    }
+
+    .justify-center {
+        justify-content: center;
+    }
+
+    .grid {
+        display: grid;
+    }
+
+    .grid-cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid-cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .gap-3 {
+        gap: 0.75rem;
+    }
+
+    .gap-4 {
+        gap: 1rem;
+    }
+
+    .gap-6 {
+        gap: 1.5rem;
+    }
+
+    .w-full {
+        width: 100%;
+    }
+
+    .max-w-md {
+        max-width: 28rem;
+    }
+
+    .max-w-5xl {
+        max-width: 64rem;
+    }
+
+    .h-screen {
+        min-height: 100vh;
+    }
+
+    .mx-auto {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .mb-3 {
+        margin-bottom: 0.75rem;
+    }
+
+    .mb-6 {
+        margin-bottom: 1.5rem;
+    }
+
+    .mb-8 {
+        margin-bottom: 2rem;
+    }
+
+    .mb-10 {
+        margin-bottom: 2.5rem;
+    }
+
+    .p-2 {
+        padding: 0.5rem;
+    }
+
+    .py-3 {
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+    }
+
+    .py-12 {
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+    }
+
+    .rounded-xl,
+    .rounded-3xl {
+        border-radius: 0.5rem;
+    }
+
+    .shadow-md,
+    .shadow-inner,
+    .shadow-2xl {
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+    }
+
+    .border-8 {
+        border: 8px solid;
+    }
+
+    .border-gray-200 {
+        border-color: #e5e7eb;
+    }
+
+    .font-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .font-bold {
+        font-weight: 700;
+    }
+
+    .text-xl {
+        font-size: 1.25rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
     }
 
     .circulo-s {

@@ -11,7 +11,7 @@ class UpdateTorneoRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,12 @@ class UpdateTorneoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'fecha_inicio' => ['nullable', 'date'],
+            'fecha_fin' => ['nullable', 'date', 'after_or_equal:fecha_inicio'],
+            'nombre' => ['nullable', 'string', 'max:255'],
+            'lugar' => ['nullable', 'string', 'max:255'],
+            'logo' => ['nullable', 'string', 'max:600'],
+            'status' => ['nullable', 'integer', 'in:0,1'],
         ];
     }
 }
