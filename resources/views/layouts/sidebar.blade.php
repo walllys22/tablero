@@ -4,9 +4,10 @@
         [
             'label' => 'Eventos',
             'icon' => 'bi-calendar-event',
-            'active' => request()->routeIs('torneos.*'),
+            'active' => request()->routeIs('torneos.*') || request()->routeIs('modalidades.*'),
             'children' => [
                 ['label' => 'Torneos', 'icon' => 'bi-trophy', 'route' => 'torneos.index', 'active' => request()->routeIs('torneos.*')],
+                ['label' => 'Modalidades', 'icon' => 'bi-list-check', 'modal' => 'modal-modalidades-sidebar', 'active' => request()->routeIs('modalidades.*')],
             ],
         ],
         ['label' => 'Personas', 'icon' => 'bi-people', 'route' => 'people.browse', 'active' => request()->routeIs('people.*')],
@@ -30,10 +31,17 @@
                     <div class="collapse {{ $item['active'] ? 'show' : '' }}" id="sidebar-{{ Str::slug($item['label']) }}">
                         <div class="sidebar-subnav">
                             @foreach ($item['children'] as $child)
-                                <a href="{{ route($child['route']) }}" class="sidebar-link sidebar-sublink {{ $child['active'] ? 'active' : '' }}">
-                                    <i class="bi {{ $child['icon'] }}"></i>
-                                    <span>{{ $child['label'] }}</span>
-                                </a>
+                                @if (isset($child['modal']))
+                                    <button type="button" class="sidebar-link sidebar-sublink {{ $child['active'] ? 'active' : '' }}" data-bs-toggle="modal" data-bs-target="#{{ $child['modal'] }}">
+                                        <i class="bi {{ $child['icon'] }}"></i>
+                                        <span>{{ $child['label'] }}</span>
+                                    </button>
+                                @else
+                                    <a href="{{ route($child['route']) }}" class="sidebar-link sidebar-sublink {{ $child['active'] ? 'active' : '' }}">
+                                        <i class="bi {{ $child['icon'] }}"></i>
+                                        <span>{{ $child['label'] }}</span>
+                                    </a>
+                                @endif
                             @endforeach
                         </div>
                     </div>
@@ -77,10 +85,17 @@
                     <div class="collapse {{ $item['active'] ? 'show' : '' }}" id="mobile-sidebar-{{ Str::slug($item['label']) }}">
                         <div class="sidebar-subnav">
                             @foreach ($item['children'] as $child)
-                                <a href="{{ route($child['route']) }}" class="sidebar-link sidebar-sublink {{ $child['active'] ? 'active' : '' }}">
-                                    <i class="bi {{ $child['icon'] }}"></i>
-                                    <span>{{ $child['label'] }}</span>
-                                </a>
+                                @if (isset($child['modal']))
+                                    <button type="button" class="sidebar-link sidebar-sublink {{ $child['active'] ? 'active' : '' }}" data-bs-toggle="modal" data-bs-target="#{{ $child['modal'] }}">
+                                        <i class="bi {{ $child['icon'] }}"></i>
+                                        <span>{{ $child['label'] }}</span>
+                                    </button>
+                                @else
+                                    <a href="{{ route($child['route']) }}" class="sidebar-link sidebar-sublink {{ $child['active'] ? 'active' : '' }}">
+                                        <i class="bi {{ $child['icon'] }}"></i>
+                                        <span>{{ $child['label'] }}</span>
+                                    </a>
+                                @endif
                             @endforeach
                         </div>
                     </div>
@@ -104,3 +119,48 @@
         @endauth
     </div>
 </div>
+
+@php
+    $torneosModalidades = \App\Models\Torneo::orderByDesc('id')->get();
+@endphp
+
+<div class="modal fade" id="modal-modalidades-sidebar" tabindex="-1" aria-labelledby="modalModalidadesSidebarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="form-modalidades-sidebar">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalModalidadesSidebarLabel">Seleccionar campeonato</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="torneo_modalidad_sidebar" class="form-label">Campeonato</label>
+                    <select id="torneo_modalidad_sidebar" class="form-select" required>
+                        <option value="">Seleccione un campeonato</option>
+                        @foreach ($torneosModalidades as $torneo)
+                            <option value="{{ $torneo->id }}">{{ $torneo->nombre ?: 'Torneo #' . $torneo->id }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" {{ $torneosModalidades->isEmpty() ? 'disabled' : '' }}>
+                        <i class="bi bi-box-arrow-in-right"></i> Abrir
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('form-modalidades-sidebar').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        let torneoId = document.getElementById('torneo_modalidad_sidebar').value;
+        if (!torneoId) {
+            return;
+        }
+
+        window.location.href = `{{ url('/torneos') }}/${torneoId}/modalidades?return=dashboard`;
+    });
+</script>

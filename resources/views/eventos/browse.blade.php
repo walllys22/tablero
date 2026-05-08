@@ -30,9 +30,9 @@
                                 <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-create">
                                     <i class="bi bi-plus-lg"></i> <span>Crear</span>
                                 </button>
-                                <button type="button" class="btn btn-warning text-white" onclick="window.location.href='{{ route('dashboard') }}'">
+                                <a href="{{ route('dashboard') }}" class="btn btn-warning text-white">
                                     <i class="bi bi-x-lg"></i> <span>Cerrar</span>
-                                </button>
+                                </a>
                             </div>
                         </div>
                     </div>

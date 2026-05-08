@@ -3,6 +3,10 @@
 @section('title', 'Modalidades')
 
 @section('content')
+    @php
+        $closeRoute = request('return') === 'torneos' ? route('torneos.index') : route('dashboard');
+    @endphp
+
     <div class="container-fluid py-4 eventos-browse">
         @if (session('status'))
             <div class="alert alert-success js-auto-dismiss">
@@ -22,9 +26,9 @@
                                 <small class="text-muted">{{ $torneo->nombre ?: 'Torneo sin nombre' }}</small>
                             </div>
                             <div class="col-md-4 text-end px-3 py-3">
-                                <button type="button" class="btn btn-warning text-white" onclick="window.location.href='{{ route('torneos.index') }}'">
+                                <a href="{{ $closeRoute }}" class="btn btn-warning text-white">
                                     <i class="bi bi-x-lg"></i> <span>Cerrar</span>
-                                </button>
+                                </a>
                             </div>
                         </div>
                     </div>
