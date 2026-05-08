@@ -24,9 +24,9 @@ class StoreTorneoRequest extends FormRequest
         return [
             'fecha_inicio' => ['nullable', 'date'],
             'fecha_fin' => ['nullable', 'date', 'after_or_equal:fecha_inicio'],
-            'nombre' => ['nullable', 'string', 'max:255'],
+            'nombre' => ['required', 'string', 'max:255'],
             'lugar' => ['nullable', 'string', 'max:255'],
-            'logo' => ['nullable', 'string', 'max:600'],
+            'logo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:3072'],
             'status' => ['nullable', 'integer', 'in:0,1'],
         ];
     }

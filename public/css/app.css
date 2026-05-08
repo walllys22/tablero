@@ -291,6 +291,11 @@ button.sidebar-link {
     background: #cfe2ff;
 }
 
+.label-info {
+    color: #055160;
+    background: #cff4fc;
+}
+
 .table th {
     white-space: nowrap;
 }
@@ -298,6 +303,16 @@ button.sidebar-link {
 .image-expandable {
     border: 2px solid #ffffff;
     box-shadow: 0 3px 10px rgba(15, 23, 42, 0.15);
+    cursor: zoom-in;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    z-index: 1;
+}
+
+.image-expandable:hover {
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.28);
+    transform: scale(1.8);
+    z-index: 10;
 }
 
 .js-auto-dismiss {
@@ -317,6 +332,40 @@ button.sidebar-link {
 
 .empty-photo i {
     font-size: 4rem;
+}
+
+.eventos-browse .card {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+}
+
+.eventos-table td,
+.eventos-table th {
+    vertical-align: middle;
+}
+
+.eventos-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 220px;
+}
+
+.eventos-logo {
+    width: 58px;
+    height: 58px;
+    flex: 0 0 auto;
+    border-radius: 0.5rem;
+    object-fit: cover;
+    background: #f8f9fa;
+}
+
+.eventos-empty {
+    margin-top: 50px;
+}
+
+.eventos-empty img {
+    opacity: 0.8;
 }
 
 @media (max-width: 767.98px) {
