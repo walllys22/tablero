@@ -4,6 +4,7 @@
             <thead>
                 <tr>
                     <th style="text-align: center">ID</th>
+                    <th style="text-align: center">Categoria</th>
                     <th style="text-align: center">Modalidad</th>
                     <th style="text-align: center">Genero</th>
                     <th style="text-align: center">Opciones</th>
@@ -14,6 +15,14 @@
                     <tr>
                         <td style="text-align: center; vertical-align: middle;">
                             {{ $item->id }}
+                        </td>
+                        <td style="vertical-align: middle;">
+                            @if ($item->categoria)
+                                <strong>{{ $item->categoria->nombre }}</strong><br>
+                                <small class="text-muted">{{ $item->categoria->descripcion ?: 'Sin detalle' }}</small>
+                            @else
+                                <span class="text-muted">Sin categoria</span>
+                            @endif
                         </td>
                         <td style="vertical-align: middle;">
                             <strong>{{ $item->nombre }}</strong>
@@ -37,7 +46,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4">
+                        <td colspan="5">
                             <h5 class="text-center eventos-empty">
                                 <img src="{{ asset('images/empty.png') }}" width="120" alt="Sin resultados">
                                 <br><br>
@@ -87,6 +96,16 @@
                         </div>
 
                         <div class="col-md-8">
+                            <label class="form-label">Categoria</label>
+                            <input type="text" value="{{ $item->categoria ? $item->categoria->nombre : 'Sin categoria' }}" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Detalle categoria</label>
+                            <input type="text" value="{{ $item->categoria ? ($item->categoria->descripcion ?: 'Sin detalle') : 'Sin detalle' }}" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-8">
                             <label class="form-label">Modalidad</label>
                             <input type="text" value="{{ $item->nombre }}" class="form-control" readonly>
                         </div>
@@ -118,6 +137,23 @@
                     </div>
                     <div class="modal-body">
                         <div class="row g-3">
+                            <div class="col-md-12">
+                                <label for="categoria_modalidad_{{ $item->id }}" class="form-label">Categoria</label>
+                                <select name="categoria_id" id="categoria_modalidad_{{ $item->id }}" class="form-select @if(old('editing_modalidad') == $item->id) @error('categoria_id') is-invalid @enderror @endif" required>
+                                    <option value="">Seleccione</option>
+                                    @foreach ($categorias as $categoria)
+                                        <option value="{{ $categoria->id }}" {{ (old('editing_modalidad') == $item->id ? old('categoria_id') : $item->categoria_id) == $categoria->id ? 'selected' : '' }}>
+                                            {{ $categoria->nombre }}{{ $categoria->descripcion ? ' | ' . $categoria->descripcion : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if (old('editing_modalidad') == $item->id)
+                                    @error('categoria_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+
                             <div class="col-md-8">
                                 <label for="nombre_modalidad_{{ $item->id }}" class="form-label">Modalidad</label>
                                 <input type="text" name="nombre" id="nombre_modalidad_{{ $item->id }}" value="{{ old('editing_modalidad') == $item->id ? old('nombre') : $item->nombre }}" class="form-control @if(old('editing_modalidad') == $item->id) @error('nombre') is-invalid @enderror @endif" maxlength="255" required>

@@ -30,4 +30,19 @@ class Torneo extends Model
     {
         return $this->hasMany(Modalidad::class);
     }
+
+    public function categorias()
+    {
+        return $this->hasMany(Categoria::class);
+    }
+
+    public function inscripcionOrganizaciones()
+    {
+        return $this->hasMany(InscripcionOrganizacion::class);
+    }
+
+    public function inscripcionCompetidores()
+    {
+        return $this->hasMany(InscripcionCompetidor::class);
+    }
 }

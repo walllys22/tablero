@@ -1,6 +1,6 @@
 @php
     $items = [
-        ['label' => 'Dashboard', 'icon' => 'bi-speedometer2', 'route' => 'dashboard', 'active' => request()->routeIs('dashboard')],
+        ['label' => 'Menu Principal', 'icon' => '', 'route' => 'dashboard', 'active' => request()->routeIs('dashboard')],
         
         // Opcion Administracion con submenu para Torneos, Modalidades y Personas
         [
@@ -19,10 +19,11 @@
         [
             'label' => 'Registro',
             'icon' => 'fa-solid fa-address-card',
-            'active' => request()->is('registro*'),
+            'active' => request()->is('registro*') || request()->routeIs('inscripciones.*') || request()->routeIs('organizaciones.*'),
             'children' => [
                 ['label' => 'Jueces', 'icon' => 'fa-solid fa-user-tie', 'route' => 'dashboard', 'active' => false],
-                ['label' => 'Organización', 'icon' => 'fa-solid fa-torii-gate', 'route' => 'dashboard', 'active' => false],
+                ['label' => 'Organizacion', 'icon' => 'fa-solid fa-torii-gate', 'route' => 'organizaciones.index', 'active' => request()->routeIs('organizaciones.*')],
+                ['label' => 'Inscripciones', 'icon' => 'fa-solid fa-address-book', 'modal' => 'modal-inscripciones-sidebar', 'active' => request()->routeIs('inscripciones.*')],
                 ['label' => 'Competidores', 'icon' => 'fa-solid fa-image-portrait', 'route' => 'dashboard', 'active' => false],
             ],
         ],
@@ -55,7 +56,6 @@
 
 <aside class="app-sidebar d-none d-md-flex">
     <div class="sidebar-section">
-        <span class="sidebar-label">Menu</span>
         <nav class="sidebar-nav">
             @foreach ($items as $item)
                 @if (isset($item['children']))
@@ -209,6 +209,34 @@
     </div>
 </div>
 
+<div class="modal fade" id="modal-inscripciones-sidebar" tabindex="-1" aria-labelledby="modalInscripcionesSidebarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="form-inscripciones-sidebar">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalInscripcionesSidebarLabel">Seleccionar campeonato</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="torneo_inscripcion_sidebar" class="form-label">Campeonato</label>
+                    <select id="torneo_inscripcion_sidebar" class="form-select" required>
+                        <option value="">Seleccione un campeonato</option>
+                        @foreach ($torneosModalidades as $torneo)
+                            <option value="{{ $torneo->id }}">{{ $torneo->nombre ?: 'Torneo #' . $torneo->id }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" {{ $torneosModalidades->isEmpty() ? 'disabled' : '' }}>
+                        <i class="bi bi-box-arrow-in-right"></i> Abrir
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     document.getElementById('form-modalidades-sidebar').addEventListener('submit', function (event) {
         event.preventDefault();
@@ -219,5 +247,16 @@
         }
 
         window.location.href = `{{ url('/torneos') }}/${torneoId}/modalidades?return=dashboard`;
+    });
+
+    document.getElementById('form-inscripciones-sidebar').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        let torneoId = document.getElementById('torneo_inscripcion_sidebar').value;
+        if (!torneoId) {
+            return;
+        }
+
+        window.location.href = `{{ url('/torneos') }}/${torneoId}/inscripciones`;
     });
 </script>

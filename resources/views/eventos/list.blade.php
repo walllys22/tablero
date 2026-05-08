@@ -61,6 +61,9 @@
                             <a href="{{ route('modalidades.index', ['torneo' => $item, 'return' => 'torneos']) }}" title="Modalidades" class="btn btn-sm btn-primary">
                                 <i class="bi bi-list-check"></i>
                             </a>
+                            <a href="{{ route('inscripciones.index', $item) }}" title="Inscripciones" class="btn btn-sm btn-success">
+                                <i class="bi bi-person-check"></i>
+                            </a>
                             @if ($item->status == 1)
                                 <button type="button" title="Inactivar" data-bs-toggle="modal" data-bs-target="#modal-status-{{ $item->id }}" class="btn btn-sm btn-warning text-white">
                                     <i class="bi bi-toggle-on"></i>
@@ -133,12 +136,12 @@
                     @method('PATCH')
 
                     <div class="modal-content">
-                        <div class="modal-header bg-danger text-white">
+                        <div class="modal-header bg-warning text-dark fw-bold">
                             <h5 class="modal-title" id="modalStatusLabel{{ $item->id }}">Alerta</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            <button type="button" class="btn-close btn-close-black" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                         </div>
                         <div class="modal-body text-center">
-                            Esta seguro de desactivar el campeonato
+                            Esta seguro de desactivar el campeonato?
                         </div>
                         <div class="modal-footer justify-content-center">
                             <button type="submit" class="btn btn-danger">Si</button>
@@ -151,52 +154,63 @@
     @endif
 
     <div class="modal fade" id="modal-view-{{ $item->id }}" tabindex="-1" aria-labelledby="modalViewLabel{{ $item->id }}" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content border-0" style="background: #ffffff;">
-                <div class="d-flex align-items-center justify-content-between px-4 pt-3 pb-1">
-                    <h5 class="modal-title fw-bold mb-0" id="modalViewLabel{{ $item->id }}">Viendo Torneo</h5>
-                    <button type="button" class="btn fw-bold px-4" style="background: #ffc000; color: #000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);" data-bs-dismiss="modal">Cerrar</button>
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header py-2" style="background: #3a19f5; border-bottom: 0;">
+                    <h5 class="modal-title fw-bold text-white" id="modalViewLabel{{ $item->id }}" style="font-size: 20px; color: white;">
+                        Datos del Torneo
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <div class="modal-body px-4 pt-1 pb-4">
-                    <div class="px-4 py-5" style="border: 1.5px solid #1f4da1; border-radius: 40px;">
-                        <div class="row g-4 align-items-center">
-                            <div class="col-md-3 text-center">
-                                <img src="{{ $logoPreviewUrl }}" alt="{{ $item->nombre ?: 'Logo torneo' }}" style="width: 138px; height: 138px; object-fit: contain; border: 1px solid #333; background: #f8f9fa;" onerror="this.src='{{ asset('images/icono.png') }}'">
-                                <div class="mt-2 fw-semibold" style="font-size: 13px;">Logo Torneo</div>
-                            </div>
+                <div class="modal-body p-2" style="background: #eeeeee;">
+                    <div class="d-flex gap-2 align-items-stretch flex-column flex-md-row">
+                        <div class="flex-shrink-0 text-center px-3 py-2" style="width: 180px; min-height: 180px; border-radius: 18px; background: #f8f8f8;">
+                            <img src="{{ $logoPreviewUrl }}" alt="{{ $item->nombre ?: 'Logo torneo' }}" style="width: 138px; height: 138px; object-fit: contain; border: 1px solid #333; background: #ffffff;" onerror="this.src='{{ asset('images/icono.png') }}'">
+                            <div class="mt-2 fw-semibold" style="font-size: 13px;">Logo Torneo</div>
+                        </div>
 
-                            <div class="col-md-9">
-                                <div class="row g-3">
-                                    <div class="col-md-8">
-                                        <label class="form-label mb-1">Nombre</label>
-                                        <input type="text" value="{{ $item->nombre ?: 'Sin nombre' }}" class="form-control" readonly>
+                        <div class="flex-grow-1">
+                            <div class="row g-2">
+                                <div class="col-md-8">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Nombre</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->nombre ?: 'Sin nombre' }}</div>
                                     </div>
+                                </div>
 
-                                    <div class="col-md-4">
-                                        <label class="form-label mb-1">Lugar</label>
-                                        <input type="text" value="{{ $item->lugar ?: 'Sin lugar' }}" class="form-control" readonly>
+                                <div class="col-md-4">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Lugar</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->lugar ?: 'Sin lugar' }}</div>
                                     </div>
+                                </div>
 
-                                    <div class="col-md-6">
-                                        <label class="form-label mb-1">Fecha inicio</label>
-                                        <input type="date" value="{{ optional($item->fecha_inicio)->format('Y-m-d') }}" class="form-control" readonly>
+                                <div class="col-md-6">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Fecha inicio</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->fecha_inicio ? $item->fecha_inicio->format('d/m/Y') : 'Sin fecha' }}</div>
                                     </div>
+                                </div>
 
-                                    <div class="col-md-6">
-                                        <label class="form-label mb-1">Fecha fin</label>
-                                        <input type="date" value="{{ optional($item->fecha_fin)->format('Y-m-d') }}" class="form-control" readonly>
+                                <div class="col-md-6">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Fecha fin</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->fecha_fin ? $item->fecha_fin->format('d/m/Y') : 'Sin fecha' }}</div>
                                     </div>
+                                </div>
 
-                                    <div class="col-12">
-                                        <div class="form-check form-switch">
-                                            <input type="checkbox" class="form-check-input" {{ $item->status == 1 ? 'checked' : '' }} disabled>
-                                            <label class="form-check-label">Activo</label>
-                                        </div>
+                                <div class="col-12">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Estado</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->status == 1 ? 'Activo' : 'Inactivo' }}</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="modal-footer py-2" style="background: #eeeeee; border-top: 0;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
@@ -210,7 +224,7 @@
                 <input type="hidden" name="editing_torneo" value="{{ $item->id }}">
 
                 <div class="modal-content border-0" style="background: #ffffff;">
-                    <div class="modal-header bg-warning text-dark">
+                    <div class="modal-header bg-info text-dark">
                         <h5 class="modal-title fw-bold" id="modalEditLabel{{ $item->id }}">Editando Torneo</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>

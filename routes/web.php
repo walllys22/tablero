@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\PersonaController;
+use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\ModalidadController;
+use App\Http\Controllers\OrganizacionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TableroController;
 use App\Http\Controllers\TorneoController;
@@ -47,14 +49,26 @@ Route::middleware('auth')->group(function () {
     Route::patch('/people/{persona}/estado', [PersonaController::class, 'toggleStatus'])->name('people.toggle-status');
     Route::delete('/people/{persona}', [PersonaController::class, 'destroy'])->name('people.destroy');
 
+    Route::get('/organizaciones', [OrganizacionController::class, 'index'])->name('organizaciones.index');
+    Route::get('/organizaciones/ajax/list', [OrganizacionController::class, 'ajaxList'])->name('organizaciones.ajax.list');
+    Route::post('/organizaciones', [OrganizacionController::class, 'store'])->name('organizaciones.store');
+    Route::patch('/organizaciones/{organizacion}', [OrganizacionController::class, 'update'])->name('organizaciones.update');
+    Route::patch('/organizaciones/{organizacion}/estado', [OrganizacionController::class, 'toggleStatus'])->name('organizaciones.toggle-status');
+    Route::delete('/organizaciones/{organizacion}', [OrganizacionController::class, 'destroy'])->name('organizaciones.destroy');
+
     Route::get('/torneos', [TorneoController::class, 'index'])->name('torneos.index');
     Route::get('/torneos/ajax/list', [TorneoController::class, 'ajaxList'])->name('torneos.ajax.list');
     Route::post('/torneos', [TorneoController::class, 'store'])->name('torneos.store');
     Route::patch('/torneos/{torneo}', [TorneoController::class, 'update'])->name('torneos.update');
     Route::patch('/torneos/{torneo}/estado', [TorneoController::class, 'toggleStatus'])->name('torneos.toggle-status');
     Route::delete('/torneos/{torneo}', [TorneoController::class, 'destroy'])->name('torneos.destroy');
+    Route::get('/torneos/{torneo}/inscripciones', [InscripcionController::class, 'index'])->name('inscripciones.index');
+    Route::get('/torneos/{torneo}/inscripciones/ajax/list', [InscripcionController::class, 'ajaxList'])->name('inscripciones.ajax.list');
+    Route::post('/torneos/{torneo}/inscripciones/organizaciones', [InscripcionController::class, 'storeOrganizacion'])->name('inscripciones.organizaciones.store');
+    Route::post('/torneos/{torneo}/inscripciones/competidores', [InscripcionController::class, 'storeCompetidor'])->name('inscripciones.competidores.store');
     Route::get('/torneos/{torneo}/modalidades', [ModalidadController::class, 'index'])->name('modalidades.index');
     Route::get('/torneos/{torneo}/modalidades/ajax/list', [ModalidadController::class, 'ajaxList'])->name('modalidades.ajax.list');
+    Route::post('/torneos/{torneo}/categorias', [ModalidadController::class, 'storeCategoria'])->name('categorias.store');
     Route::post('/torneos/{torneo}/modalidades', [ModalidadController::class, 'store'])->name('modalidades.store');
     Route::patch('/torneos/{torneo}/modalidades/{modalidad}', [ModalidadController::class, 'update'])->name('modalidades.update');
     Route::delete('/torneos/{torneo}/modalidades/{modalidad}', [ModalidadController::class, 'destroy'])->name('modalidades.destroy');

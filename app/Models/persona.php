@@ -30,4 +30,14 @@ class Persona extends Model
         'birth_date' => 'date',
         'status' => 'integer',
     ];
+
+    public function inscripcionCompetidores()
+    {
+        return $this->hasMany(InscripcionCompetidor::class);
+    }
+
+    public function organizaciones()
+    {
+        return $this->hasMany(Organizacion::class);
+    }
 }

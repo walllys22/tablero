@@ -144,9 +144,9 @@
                     @method('PATCH')
 
                     <div class="modal-content">
-                        <div class="modal-header bg-danger text-white">
+                        <div class="modal-header bg-warning text-dark fw-bold">
                             <h5 class="modal-title" id="modalStatusLabel{{ $item->id }}">Alerta</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            <button type="button" class="btn-close btn-close-black" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                         </div>
                         <div class="modal-body text-center">
                             Esta seguro de desactivar la persona?
@@ -164,8 +164,10 @@
     <div class="modal fade" id="modal-view-{{ $item->id }}" tabindex="-1" aria-labelledby="modalViewLabel{{ $item->id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow">
-                <div class="modal-header py-2" style="background: #eeeeee; border-bottom: 0;">
-                    <h5 class="modal-title fw-bold" id="modalViewLabel{{ $item->id }}" style="font-size: 14px;">Datos Personales</h5>
+                <div class="modal-header py-2" style="background: #3a19f5; border-bottom: 0;">
+                    <h5 class="modal-title fw-bold text-white" id="modalViewLabel{{ $item->id }}" style="font-size: 20px; color: white;">
+                        Datos Personales
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body p-2" style="background: #eeeeee;">
@@ -244,8 +246,8 @@
                 <input type="hidden" name="editing_persona" value="{{ $item->id }}">
 
                 <div class="modal-content">
-                    <div class="modal-header bg-warning text-dark">
-                        <h5 class="modal-title fw-bold" id="modalEditLabel{{ $item->id }}">Editar persona</h5>
+                    <div class="modal-header bg-info text-dark" >
+                        <h5 class="modal-title fw-bold" id="modalEditLabel{{ $item->id }}" >Editar persona</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">

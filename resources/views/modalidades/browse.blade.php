@@ -32,7 +32,10 @@
                                 <small class="text-muted">{{ $torneo->nombre ?: 'Torneo sin nombre' }}</small>
                             </div>
                             <div class="col-md-4 text-end px-3 py-3">
-                                <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#modal-create-modalidad">
+                                <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#modal-create-categoria">
+                                    <i class="bi bi-tags"></i> <span>Categoria</span>
+                                </button>
+                                <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#modal-create-modalidad" {{ $categorias->isEmpty() ? 'disabled' : '' }}>
                                     <i class="bi bi-plus-lg"></i> <span>Crear</span>
                                 </button>
                                 <a href="{{ $closeRoute }}" class="btn btn-warning text-white">
@@ -44,6 +47,29 @@
                 </div>
             </div>
         </div>
+
+        @if ($categorias->isEmpty())
+            <div class="alert alert-warning">
+                Primero cree las categorias del campeonato. Despues podra registrar modalidades dentro de cada categoria.
+            </div>
+        @else
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="fw-bold mb-2">Categorias registradas</div>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach ($categorias as $categoria)
+                                    <span class="label label-primary">
+                                        {{ $categoria->nombre }}{{ $categoria->descripcion ? ' | ' . $categoria->descripcion : '' }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <div class="row">
             <div class="col-12">
@@ -76,6 +102,91 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modal-create-categoria" tabindex="-1" aria-labelledby="modalCreateCategoriaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <form method="POST" action="{{ route('categorias.store', ['torneo' => $torneo, 'return' => request('return')]) }}">
+                @csrf
+
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title fw-bold" id="modalCreateCategoriaLabel">Crear categoria</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="nombre_categoria" class="form-label">Categoria</label>
+                                <input type="text" name="nombre" id="nombre_categoria" value="{{ old('creating_categoria') ? old('nombre') : '' }}" class="form-control @if(old('creating_categoria')) @error('nombre') is-invalid @enderror @endif" maxlength="255" required>
+                                @if (old('creating_categoria'))
+                                    @error('nombre')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="genero_categoria" class="form-label">Genero</label>
+                                <select name="genero" id="genero_categoria" class="form-select">
+                                    <option value="">Seleccione</option>
+                                    <option value="Masculino" {{ old('genero') === 'Masculino' ? 'selected' : '' }}>Masculino</option>
+                                    <option value="Femenino" {{ old('genero') === 'Femenino' ? 'selected' : '' }}>Femenino</option>
+                                    <option value="Mixto" {{ old('genero') === 'Mixto' ? 'selected' : '' }}>Mixto</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="orden_categoria" class="form-label">Orden</label>
+                                <input type="number" name="orden" id="orden_categoria" value="{{ old('orden', 0) }}" class="form-control" min="0" max="9999">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="edad_desde_categoria" class="form-label">Edad desde</label>
+                                <input type="number" name="edad_desde" id="edad_desde_categoria" value="{{ old('edad_desde') }}" class="form-control @if(old('creating_categoria')) @error('edad_desde') is-invalid @enderror @endif" min="0" max="99">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="edad_hasta_categoria" class="form-label">Edad hasta</label>
+                                <input type="number" name="edad_hasta" id="edad_hasta_categoria" value="{{ old('edad_hasta') }}" class="form-control @if(old('creating_categoria')) @error('edad_hasta') is-invalid @enderror @endif" min="0" max="99">
+                                @if (old('creating_categoria'))
+                                    @error('edad_hasta')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="peso_desde_categoria" class="form-label">Peso desde</label>
+                                <input type="number" name="peso_desde" id="peso_desde_categoria" value="{{ old('peso_desde') }}" class="form-control @if(old('creating_categoria')) @error('peso_desde') is-invalid @enderror @endif" min="0" step="0.01">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="peso_hasta_categoria" class="form-label">Peso hasta</label>
+                                <input type="number" name="peso_hasta" id="peso_hasta_categoria" value="{{ old('peso_hasta') }}" class="form-control @if(old('creating_categoria')) @error('peso_hasta') is-invalid @enderror @endif" min="0" step="0.01">
+                                @if (old('creating_categoria'))
+                                    @error('peso_hasta')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+
+                            <div class="col-md-12">
+                                <label for="grado_categoria" class="form-label">Grado</label>
+                                <input type="text" name="grado" id="grado_categoria" value="{{ old('grado') }}" class="form-control" maxlength="100">
+                            </div>
+                        </div>
+                        <input type="hidden" name="creating_categoria" value="1">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal-create-modalidad" tabindex="-1" aria-labelledby="modalCreateModalidadLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <form method="POST" action="{{ route('modalidades.store', ['torneo' => $torneo, 'return' => request('return')]) }}">
@@ -88,6 +199,23 @@
                     </div>
                     <div class="modal-body">
                         <div class="row g-3">
+                            <div class="col-md-12">
+                                <label for="categoria_modalidad" class="form-label">Categoria</label>
+                                <select name="categoria_id" id="categoria_modalidad" class="form-select @if(old('creating_modalidad')) @error('categoria_id') is-invalid @enderror @endif" required>
+                                    <option value="">Seleccione</option>
+                                    @foreach ($categorias as $categoria)
+                                        <option value="{{ $categoria->id }}" {{ old('creating_modalidad') && old('categoria_id') == $categoria->id ? 'selected' : '' }}>
+                                            {{ $categoria->nombre }}{{ $categoria->descripcion ? ' | ' . $categoria->descripcion : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if (old('creating_modalidad'))
+                                    @error('categoria_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+
                             <div class="col-md-8">
                                 <label for="nombre_modalidad" class="form-label">Modalidad</label>
                                 <input type="text" name="nombre" id="nombre_modalidad" value="{{ old('creating_modalidad') ? old('nombre') : '' }}" class="form-control @if(old('creating_modalidad')) @error('nombre') is-invalid @enderror @endif" maxlength="255" required>
@@ -172,7 +300,12 @@
             });
         }
 
-        @if ($errors->any() && old('creating_modalidad'))
+        @if ($errors->any() && old('creating_categoria'))
+            document.addEventListener('DOMContentLoaded', function () {
+                let modal = new bootstrap.Modal(document.getElementById('modal-create-categoria'));
+                modal.show();
+            });
+        @elseif ($errors->any() && old('creating_modalidad'))
             document.addEventListener('DOMContentLoaded', function () {
                 let modal = new bootstrap.Modal(document.getElementById('modal-create-modalidad'));
                 modal.show();
