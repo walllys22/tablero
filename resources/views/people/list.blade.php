@@ -244,8 +244,8 @@
                 <input type="hidden" name="editing_persona" value="{{ $item->id }}">
 
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalEditLabel{{ $item->id }}">Editar persona</h5>
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title fw-bold" id="modalEditLabel{{ $item->id }}">Editar persona</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">

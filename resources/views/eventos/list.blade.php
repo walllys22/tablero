@@ -210,8 +210,9 @@
                 <input type="hidden" name="editing_torneo" value="{{ $item->id }}">
 
                 <div class="modal-content border-0" style="background: #ffffff;">
-                    <div class="px-4 pt-3 pb-2">
-                        <h5 class="modal-title fw-bold text-center mb-0" id="modalEditLabel{{ $item->id }}">Editando Torneo</h5>
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title fw-bold" id="modalEditLabel{{ $item->id }}">Editando Torneo</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body px-4 pt-3 pb-2">
                         <div class="px-4 py-5" style="border: 1.5px solid #1f4da1; border-radius: 40px;">

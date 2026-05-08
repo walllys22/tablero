@@ -76,9 +76,9 @@
             <form method="POST" action="{{ route('torneos.store') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalCreateLabel">Crear torneo</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title fw-bold" id="modalCreateLabel">Crear torneo</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
                         <div class="row g-3">
@@ -100,7 +100,7 @@
 
                             <div class="col-md-6">
                                 <label for="fecha_inicio" class="form-label">Fecha inicio</label>
-                                <input type="date" name="fecha_inicio" id="fecha_inicio" value="{{ old('fecha_inicio') }}" class="form-control @error('fecha_inicio') is-invalid @enderror">
+                                <input type="date" name="fecha_inicio" id="fecha_inicio" value="{{ old('fecha_inicio') }}" min="{{ now()->format('Y-m-d') }}" class="form-control @error('fecha_inicio') is-invalid @enderror">
                                 @error('fecha_inicio')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -108,7 +108,7 @@
 
                             <div class="col-md-6">
                                 <label for="fecha_fin" class="form-label">Fecha fin</label>
-                                <input type="date" name="fecha_fin" id="fecha_fin" value="{{ old('fecha_fin') }}" class="form-control @error('fecha_fin') is-invalid @enderror">
+                                <input type="date" name="fecha_fin" id="fecha_fin" value="{{ old('fecha_fin') }}" min="{{ old('fecha_inicio', now()->format('Y-m-d')) }}" class="form-control @error('fecha_fin') is-invalid @enderror">
                                 @error('fecha_fin')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -189,6 +189,10 @@
                 timeout = setTimeout(function () {
                     list();
                 }, 600);
+            });
+
+            $('#fecha_inicio').on('change', function () {
+                $('#fecha_fin').attr('min', this.value || '{{ now()->format('Y-m-d') }}');
             });
         });
 

@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/torneos/{torneo}', [TorneoController::class, 'destroy'])->name('torneos.destroy');
     Route::get('/torneos/{torneo}/modalidades', [ModalidadController::class, 'index'])->name('modalidades.index');
     Route::get('/torneos/{torneo}/modalidades/ajax/list', [ModalidadController::class, 'ajaxList'])->name('modalidades.ajax.list');
+    Route::post('/torneos/{torneo}/modalidades', [ModalidadController::class, 'store'])->name('modalidades.store');
     Route::patch('/torneos/{torneo}/modalidades/{modalidad}', [ModalidadController::class, 'update'])->name('modalidades.update');
     Route::delete('/torneos/{torneo}/modalidades/{modalidad}', [ModalidadController::class, 'destroy'])->name('modalidades.destroy');
 

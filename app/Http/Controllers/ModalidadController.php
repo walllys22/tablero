@@ -34,6 +34,22 @@ class ModalidadController extends Controller
         return view('modalidades.list', compact('data', 'torneo'));
     }
 
+    public function store(Request $request, Torneo $torneo)
+    {
+        $data = $request->validate([
+            'nombre' => ['required', 'string', 'max:255'],
+            'genero' => ['required', 'string', 'in:Masculino,Femenino'],
+            'creating_modalidad' => ['nullable'],
+        ]);
+        unset($data['creating_modalidad']);
+
+        $torneo->modalidades()->create($data);
+
+        return redirect()
+            ->route('modalidades.index', ['torneo' => $torneo, 'return' => request('return')])
+            ->with('status', 'Modalidad creada correctamente.');
+    }
+
     public function update(Request $request, Torneo $torneo, Modalidad $modalidad)
     {
         abort_unless($modalidad->torneo_id === $torneo->id, 404);

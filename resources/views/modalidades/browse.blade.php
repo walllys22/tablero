@@ -32,6 +32,9 @@
                                 <small class="text-muted">{{ $torneo->nombre ?: 'Torneo sin nombre' }}</small>
                             </div>
                             <div class="col-md-4 text-end px-3 py-3">
+                                <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#modal-create-modalidad">
+                                    <i class="bi bi-plus-lg"></i> <span>Crear</span>
+                                </button>
                                 <a href="{{ $closeRoute }}" class="btn btn-warning text-white">
                                     <i class="bi bi-x-lg"></i> <span>Cerrar</span>
                                 </a>
@@ -70,6 +73,55 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-create-modalidad" tabindex="-1" aria-labelledby="modalCreateModalidadLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <form method="POST" action="{{ route('modalidades.store', ['torneo' => $torneo, 'return' => request('return')]) }}">
+                @csrf
+
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title fw-bold" id="modalCreateModalidadLabel">Crear modalidad</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label for="nombre_modalidad" class="form-label">Modalidad</label>
+                                <input type="text" name="nombre" id="nombre_modalidad" value="{{ old('creating_modalidad') ? old('nombre') : '' }}" class="form-control @if(old('creating_modalidad')) @error('nombre') is-invalid @enderror @endif" maxlength="255" required>
+                                @if (old('creating_modalidad'))
+                                    @error('nombre')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="genero_modalidad" class="form-label">Genero</label>
+                                <select name="genero" id="genero_modalidad" class="form-select @if(old('creating_modalidad')) @error('genero') is-invalid @enderror @endif" required>
+                                    <option value="">Seleccione</option>
+                                    <option value="Masculino" {{ old('creating_modalidad') && old('genero') === 'Masculino' ? 'selected' : '' }}>Masculino</option>
+                                    <option value="Femenino" {{ old('creating_modalidad') && old('genero') === 'Femenino' ? 'selected' : '' }}>Femenino</option>
+                                </select>
+                                @if (old('creating_modalidad'))
+                                    @error('genero')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+                        </div>
+                        <input type="hidden" name="creating_modalidad" value="1">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 @endsection
@@ -119,5 +171,12 @@
                 }
             });
         }
+
+        @if ($errors->any() && old('creating_modalidad'))
+            document.addEventListener('DOMContentLoaded', function () {
+                let modal = new bootstrap.Modal(document.getElementById('modal-create-modalidad'));
+                modal.show();
+            });
+        @endif
     </script>
 @endpush

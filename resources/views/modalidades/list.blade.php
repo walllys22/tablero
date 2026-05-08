@@ -6,7 +6,7 @@
                     <th style="text-align: center">ID</th>
                     <th style="text-align: center">Modalidad</th>
                     <th style="text-align: center">Genero</th>
-                    <th style="text-align: center">Acciones</th>
+                    <th style="text-align: center">Opciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -24,6 +24,9 @@
                             </label>
                         </td>
                         <td style="vertical-align: middle; width: 14%" class="text-end">
+                            <button type="button" title="Ver" data-bs-toggle="modal" data-bs-target="#modal-view-modalidad-{{ $item->id }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-eye"></i>
+                            </button>
                             <button type="button" title="Editar" data-bs-toggle="modal" data-bs-target="#modal-edit-modalidad-{{ $item->id }}" class="btn btn-sm btn-info text-white">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
@@ -64,6 +67,43 @@
 </div>
 
 @foreach ($data as $item)
+    <div class="modal fade" id="modal-view-modalidad-{{ $item->id }}" tabindex="-1" aria-labelledby="modalViewModalidadLabel{{ $item->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalViewModalidadLabel{{ $item->id }}">Ver modalidad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">ID</label>
+                            <input type="text" value="{{ $item->id }}" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="form-label">Torneo</label>
+                            <input type="text" value="{{ $torneo->nombre ?: 'Torneo sin nombre' }}" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="form-label">Modalidad</label>
+                            <input type="text" value="{{ $item->nombre }}" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Genero</label>
+                            <input type="text" value="{{ $item->genero }}" class="form-control" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal-edit-modalidad-{{ $item->id }}" tabindex="-1" aria-labelledby="modalEditModalidadLabel{{ $item->id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <form method="POST" action="{{ route('modalidades.update', ['torneo' => $torneo, 'modalidad' => $item, 'return' => request('return')]) }}">
@@ -72,8 +112,8 @@
                 <input type="hidden" name="editing_modalidad" value="{{ $item->id }}">
 
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalEditModalidadLabel{{ $item->id }}">Editar modalidad</h5>
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title fw-bold" id="modalEditModalidadLabel{{ $item->id }}">Editar modalidad</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">

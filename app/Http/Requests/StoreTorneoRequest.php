@@ -22,7 +22,7 @@ class StoreTorneoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'fecha_inicio' => ['nullable', 'date'],
+            'fecha_inicio' => ['nullable', 'date', 'after_or_equal:today'],
             'fecha_fin' => ['nullable', 'date', 'after_or_equal:fecha_inicio'],
             'nombre' => ['required', 'string', 'max:255'],
             'lugar' => ['nullable', 'string', 'max:255'],

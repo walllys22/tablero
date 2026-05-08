@@ -76,9 +76,9 @@
             <form method="POST" action="{{ route('people.store') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalCreateLabel">Crear persona</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title fw-bold" id="modalCreateLabel">Crear persona</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
                         @include('people.partials.form', ['persona' => null, 'editing' => false])
