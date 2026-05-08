@@ -49,7 +49,7 @@ body {
 }
 
 .app-main {
-    padding: 1.5rem;
+    padding: 1.5rem 1.5rem 5.5rem;
 }
 
 .sidebar-label {
@@ -79,6 +79,13 @@ body {
     font-weight: 700;
 }
 
+button.sidebar-link {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: left;
+}
+
 .sidebar-link:hover {
     color: #0d6efd;
     background: #f1f5f9;
@@ -93,6 +100,29 @@ body {
     width: 1.25rem;
     font-size: 1.1rem;
     text-align: center;
+}
+
+.sidebar-toggle-icon {
+    margin-left: auto;
+    transition: transform 0.2s ease;
+}
+
+.sidebar-toggle:not(.collapsed) .sidebar-toggle-icon {
+    transform: rotate(180deg);
+}
+
+.sidebar-subnav {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0.2rem 0 0.35rem 1rem;
+    padding-left: 0.75rem;
+    border-left: 1px solid #e5e7eb;
+}
+
+.sidebar-sublink {
+    min-height: 38px;
+    padding: 0.5rem 0.65rem;
+    font-size: 0.92rem;
 }
 
 .sidebar-user {

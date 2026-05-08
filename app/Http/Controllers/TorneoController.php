@@ -13,7 +13,7 @@ class TorneoController extends Controller
      */
     public function index()
     {
-        //
+        return view('eventos.list');
     }
 
     /**
