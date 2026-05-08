@@ -286,6 +286,11 @@ button.sidebar-link {
     background: #fff3cd;
 }
 
+.label-danger {
+    color: #842029;
+    background: #f8d7da;
+}
+
 .label-primary {
     color: #084298;
     background: #cfe2ff;
