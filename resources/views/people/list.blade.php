@@ -14,7 +14,7 @@
             <tbody>
                 @forelse ($data as $item)
                 @php
-                    $image = asset('images/default.jpg');
+                    $image = asset('images/icono.png');
                     if($item->image){
                         $image = asset('storage/' . str_replace('.avif', '', $item->image) . '-cropped.webp');
                     }
@@ -95,7 +95,7 @@
                     <tr>
                         <td colspan="6">
                             <h5 class="text-center" style="margin-top: 50px">
-                                <img src="{{ asset('images/empty.png') }}" width="120px" alt="" style="opacity: 0.8">
+                                <img src="{{ asset('images/campeonato.png') }}" width="120px" alt="Sin resultados" style="opacity: 0.8">
                                 <br><br>
                                 No hay resultados
                             </h5>
