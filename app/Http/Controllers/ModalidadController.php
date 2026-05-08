@@ -10,8 +10,6 @@ class ModalidadController extends Controller
 {
     public function index(Torneo $torneo)
     {
-        $this->crearModalidadesEjemplo($torneo);
-
         return view('modalidades.browse', compact('torneo'));
     }
 
@@ -36,21 +34,31 @@ class ModalidadController extends Controller
         return view('modalidades.list', compact('data', 'torneo'));
     }
 
-    private function crearModalidadesEjemplo(Torneo $torneo): void
+    public function update(Request $request, Torneo $torneo, Modalidad $modalidad)
     {
-        $modalidades = [
-            ['nombre' => 'Kumite Individual', 'genero' => 'Masculino'],
-            ['nombre' => 'Kumite Equipos', 'genero' => 'Masculino'],
-            ['nombre' => 'Kumite Individual', 'genero' => 'Femenino'],
-            ['nombre' => 'Kumite Equipos', 'genero' => 'Femenino'],
-        ];
+        abort_unless($modalidad->torneo_id === $torneo->id, 404);
 
-        foreach ($modalidades as $modalidad) {
-            Modalidad::firstOrCreate([
-                'torneo_id' => $torneo->id,
-                'nombre' => $modalidad['nombre'],
-                'genero' => $modalidad['genero'],
-            ]);
-        }
+        $data = $request->validate([
+            'nombre' => ['required', 'string', 'max:255'],
+            'genero' => ['required', 'string', 'in:Masculino,Femenino'],
+        ]);
+
+        $modalidad->update($data);
+
+        return redirect()
+            ->route('modalidades.index', ['torneo' => $torneo, 'return' => request('return')])
+            ->with('status', 'Modalidad actualizada correctamente.');
     }
+
+    public function destroy(Request $request, Torneo $torneo, Modalidad $modalidad)
+    {
+        abort_unless($modalidad->torneo_id === $torneo->id, 404);
+
+        $modalidad->delete();
+
+        return redirect()
+            ->route('modalidades.index', ['torneo' => $torneo, 'return' => request('return')])
+            ->with('status', 'Modalidad eliminada correctamente.');
+    }
+
 }

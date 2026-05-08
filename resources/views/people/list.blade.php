@@ -1,6 +1,6 @@
 <div class="col-md-12">
     <div class="table-responsive">
-        <table id="dataTable" class="table table-bordered table-hover">
+        <table class="table table-bordered table-hover">
             <thead>
                 <tr>
                     <th style="text-align: center">Documento</th>
@@ -16,11 +16,7 @@
                     @php
                         $image = $item->image ? asset('storage/' . $item->image) : asset('images/icono.png');
                         $age = $item->birth_date ? $item->birth_date->diffInYears(now()) : null;
-                        $countryCodes = ['591' => 'bo', '54' => 'ar', '55' => 'br', '56' => 'cl', '51' => 'pe', '1' => 'us', '34' => 'es'];
-                        $countryNames = ['591' => 'Bolivia', '54' => 'Argentina', '55' => 'Brasil', '56' => 'Chile', '51' => 'Peru', '1' => 'USA', '34' => 'Espana'];
-                        $code = $item->country_code ?: '591';
-                        $flag = $countryCodes[$code] ?? 'bo';
-                        $countryName = $countryNames[$code] ?? '';
+                        $whatsappPhone = preg_replace('/\D+/', '', $item->phone ?? '');
                     @endphp
 
                     <tr>
@@ -50,12 +46,12 @@
                         <td style="text-align: center; vertical-align: middle;">
                             @if ($item->phone)
                                 <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <span style="font-weight: bold; font-size: 13px; white-space: nowrap;">
-                                        <span class="fi fi-{{ $flag }}" title="{{ $countryName }}" style="margin-right: 3px; box-shadow: 1px 1px 3px rgba(0,0,0,0.2);"></span> +{{ $code }} {{ $item->phone }}
-                                    </span>
-                                    <a href="https://wa.me/{{ $code }}{{ $item->phone }}?text=Hola {{ urlencode($item->first_name) }}" target="_blank" class="label label-success" style="margin-top: 5px; padding: 3px 8px; font-size: 10px; text-decoration: none; cursor: pointer;">
-                                        WhatsApp
-                                    </a>
+                                    <span style="font-weight: bold; font-size: 13px; white-space: nowrap;">{{ $item->phone }}</span>
+                                    @if ($whatsappPhone)
+                                        <a href="https://wa.me/{{ $whatsappPhone }}?text=Hola {{ urlencode($item->first_name) }}" target="_blank" class="label label-success" style="margin-top: 5px; padding: 3px 8px; font-size: 10px; text-decoration: none; cursor: pointer;">
+                                            WhatsApp
+                                        </a>
+                                    @endif
                                     @if ($item->email)
                                         <small style="margin-top: 5px; display: block;">{{ $item->email }}</small>
                                     @endif
@@ -80,7 +76,7 @@
                                 <label class="label label-danger">Inactivo</label>
                             @endif
                         </td>
-                        <td style="vertical-align: middle; width: 14%" class="no-sort no-click bread-actions text-end">
+                        <td style="vertical-align: middle; width: 14%" class="text-end">
                             @if ($item->status == 1)
                                 <button type="button" title="Inactivar" data-bs-toggle="modal" data-bs-target="#modal-status-{{ $item->id }}" class="btn btn-sm btn-warning text-white">
                                     <i class="bi bi-toggle-on"></i>
@@ -95,11 +91,15 @@
                                 </form>
                             @endif
 
+                            <button type="button" title="Ver" data-bs-toggle="modal" data-bs-target="#modal-view-{{ $item->id }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-eye"></i>
+                            </button>
+
                             <button type="button" title="Editar" data-bs-toggle="modal" data-bs-target="#modal-edit-{{ $item->id }}" class="btn btn-sm btn-info text-white">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
 
-                            <a href="#" onclick="event.preventDefault(); deleteItem('{{ route('people.destroy', $item) }}')" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete" class="btn btn-sm btn-danger delete">
+                            <a href="#" onclick="event.preventDefault(); deleteItem('{{ route('people.destroy', $item) }}')" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete" class="btn btn-sm btn-danger">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </td>
@@ -160,6 +160,81 @@
             </div>
         </div>
     @endif
+
+    <div class="modal fade" id="modal-view-{{ $item->id }}" tabindex="-1" aria-labelledby="modalViewLabel{{ $item->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header py-2" style="background: #eeeeee; border-bottom: 0;">
+                    <h5 class="modal-title fw-bold" id="modalViewLabel{{ $item->id }}" style="font-size: 14px;">Datos Personales</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-2" style="background: #eeeeee;">
+                    <div class="d-flex gap-2 align-items-stretch flex-column flex-md-row">
+                        <div class="flex-shrink-0 overflow-hidden" style="width: 165px; min-height: 170px; border-radius: 18px; background: #ff1717;">
+                            <img src="{{ $item->image ? asset('storage/' . $item->image) : asset('images/icono.png') }}" alt="{{ $item->first_name ?: 'Persona' }}" style="width: 100%; height: 100%; min-height: 170px; object-fit: cover;" onerror="this.src='{{ asset('images/icono.png') }}'">
+                        </div>
+
+                        <div class="flex-grow-1">
+                            <div class="row g-2">
+                                <div class="col-md-8">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Nombre Completo</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->first_name ?: 'No registrado' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Fecha de Ingreso</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->created_at ? $item->created_at->format('d/m/Y') : 'No registrado' }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-8">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Email</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->email ?: 'No registrado' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Documento</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">CI: {{ $item->ci ?: 'Sin documento' }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Genero</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->gender ?: 'No registrado' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Fecha de Nacimiento</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->birth_date ? $item->birth_date->format('d/m/Y') : 'No registrado' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Telefono / Celular</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->phone ?: 'No registrado' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-2 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Direccion</div>
+                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->address ?: 'No registrada' }}</div>
+                    </div>
+                </div>
+                <div class="modal-footer py-2" style="background: #eeeeee; border-top: 0;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal fade" id="modal-edit-{{ $item->id }}" tabindex="-1" aria-labelledby="modalEditLabel{{ $item->id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg">

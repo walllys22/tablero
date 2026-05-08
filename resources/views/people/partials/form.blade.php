@@ -22,6 +22,8 @@
     $hasError = function (string $field) use ($errors, $useOld) {
         return $useOld && $errors->has($field);
     };
+
+    $bloodTypes = ['A Rh (+)', 'A Rh (-)', 'B Rh (+)', 'B Rh (-)', 'AB Rh (+)', 'AB Rh (-)', 'O Rh (+)', 'O Rh (-)'];
 @endphp
 
 <div class="row g-3">
@@ -63,7 +65,12 @@
 
     <div class="col-md-4">
         <label for="sangre{{ $fieldId }}" class="form-label">Tipo sangre</label>
-        <input type="text" name="sangre" id="sangre{{ $fieldId }}" value="{{ $value('sangre') }}" class="form-control {{ $hasError('sangre') ? 'is-invalid' : '' }}" maxlength="20">
+        <select name="sangre" id="sangre{{ $fieldId }}" class="form-select {{ $hasError('sangre') ? 'is-invalid' : '' }}">
+            <option value="">Seleccione</option>
+            @foreach ($bloodTypes as $bloodType)
+                <option value="{{ $bloodType }}" {{ $value('sangre') === $bloodType ? 'selected' : '' }}>{{ $bloodType }}</option>
+            @endforeach
+        </select>
         @if ($hasError('sangre'))
             <div class="invalid-feedback">{{ $errors->first('sangre') }}</div>
         @endif
@@ -77,15 +84,7 @@
         @endif
     </div>
 
-    <div class="col-md-2">
-        <label for="country_code{{ $fieldId }}" class="form-label">Codigo</label>
-        <input type="text" name="country_code" id="country_code{{ $fieldId }}" value="{{ $value('country_code', '591') }}" class="form-control {{ $hasError('country_code') ? 'is-invalid' : '' }}" maxlength="10">
-        @if ($hasError('country_code'))
-            <div class="invalid-feedback">{{ $errors->first('country_code') }}</div>
-        @endif
-    </div>
-
-    <div class="col-md-4">
+    <div class="col-md-6">
         <label for="phone{{ $fieldId }}" class="form-label">Telefono</label>
         <input type="text" name="phone" id="phone{{ $fieldId }}" value="{{ $value('phone') }}" class="form-control {{ $hasError('phone') ? 'is-invalid' : '' }}" maxlength="50">
         @if ($hasError('phone'))

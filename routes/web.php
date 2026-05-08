@@ -5,6 +5,7 @@ use App\Http\Controllers\ModalidadController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TableroController;
 use App\Http\Controllers\TorneoController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,6 +32,14 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::post('/limpiar-cache', function () {
+        Artisan::call('optimize:clear');
+
+        return back()->with('status', 'Caches limpiadas correctamente.');
+    })->name('cache.clear');
+
+    Route::view('/eventos/registro', 'eventos.registro')->name('eventos.registro');
+
     Route::get('/people', [PersonaController::class, 'index'])->name('people.browse');
     Route::get('/people/ajax/list', [PersonaController::class, 'ajaxList'])->name('people.ajax.list');
     Route::post('/people', [PersonaController::class, 'store'])->name('people.store');
@@ -46,6 +55,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/torneos/{torneo}', [TorneoController::class, 'destroy'])->name('torneos.destroy');
     Route::get('/torneos/{torneo}/modalidades', [ModalidadController::class, 'index'])->name('modalidades.index');
     Route::get('/torneos/{torneo}/modalidades/ajax/list', [ModalidadController::class, 'ajaxList'])->name('modalidades.ajax.list');
+    Route::patch('/torneos/{torneo}/modalidades/{modalidad}', [ModalidadController::class, 'update'])->name('modalidades.update');
+    Route::delete('/torneos/{torneo}/modalidades/{modalidad}', [ModalidadController::class, 'destroy'])->name('modalidades.destroy');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

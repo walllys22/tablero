@@ -14,6 +14,12 @@
             </div>
         @endif
 
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                Revise los datos del formulario.
+            </div>
+        @endif
+
         <div class="row mb-3">
             <div class="col-12">
                 <div class="card shadow-sm">
@@ -103,7 +109,7 @@
             let search = $('#input-search').val() ? $('#input-search').val() : '';
 
             $.ajax({
-                url: `${url}?search=${encodeURIComponent(search)}&paginate=${countPage}&page=${page}`,
+                url: `${url}?search=${encodeURIComponent(search)}&paginate=${countPage}&page=${page}&return={{ urlencode(request('return', '')) }}`,
                 type: 'get',
                 success: function (result) {
                     $('#div-results').html(result);

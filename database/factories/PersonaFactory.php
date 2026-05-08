@@ -24,11 +24,10 @@ class PersonaFactory extends Factory
             'first_name' => fake()->name(),
             'birth_date' => fake()->dateTimeBetween('-45 years', '-8 years')->format('Y-m-d'),
             'email' => fake()->optional()->safeEmail(),
-            'country_code' => '591',
             'phone' => fake()->optional()->numerify('########'),
             'address' => fake()->optional()->address(),
             'gender' => fake()->randomElement(['Masculino', 'Femenino']),
-            'sangre' => fake()->optional()->randomElement(['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-']),
+            'sangre' => fake()->optional()->randomElement(['A Rh (+)', 'A Rh (-)', 'B Rh (+)', 'B Rh (-)', 'AB Rh (+)', 'AB Rh (-)', 'O Rh (+)', 'O Rh (-)']),
             'image' => null,
             'status' => 1,
         ];

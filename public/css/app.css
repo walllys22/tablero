@@ -365,7 +365,7 @@ button.sidebar-link {
     height: 58px;
     flex: 0 0 auto;
     border-radius: 0.5rem;
-    object-fit: cover;
+    object-fit: contain;
     background: #f8f9fa;
 }
 

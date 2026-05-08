@@ -6,6 +6,7 @@
                     <th style="text-align: center">ID</th>
                     <th style="text-align: center">Modalidad</th>
                     <th style="text-align: center">Genero</th>
+                    <th style="text-align: center">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -22,10 +23,18 @@
                                 {{ $item->genero }}
                             </label>
                         </td>
+                        <td style="vertical-align: middle; width: 14%" class="text-end">
+                            <button type="button" title="Editar" data-bs-toggle="modal" data-bs-target="#modal-edit-modalidad-{{ $item->id }}" class="btn btn-sm btn-info text-white">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button type="button" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete-modalidad-{{ $item->id }}" class="btn btn-sm btn-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="3">
+                        <td colspan="4">
                             <h5 class="text-center eventos-empty">
                                 <img src="{{ asset('images/empty.png') }}" width="120" alt="Sin resultados">
                                 <br><br>
@@ -54,6 +63,80 @@
     </div>
 </div>
 
+@foreach ($data as $item)
+    <div class="modal fade" id="modal-edit-modalidad-{{ $item->id }}" tabindex="-1" aria-labelledby="modalEditModalidadLabel{{ $item->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <form method="POST" action="{{ route('modalidades.update', ['torneo' => $torneo, 'modalidad' => $item, 'return' => request('return')]) }}">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="editing_modalidad" value="{{ $item->id }}">
+
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalEditModalidadLabel{{ $item->id }}">Editar modalidad</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label for="nombre_modalidad_{{ $item->id }}" class="form-label">Modalidad</label>
+                                <input type="text" name="nombre" id="nombre_modalidad_{{ $item->id }}" value="{{ old('editing_modalidad') == $item->id ? old('nombre') : $item->nombre }}" class="form-control @if(old('editing_modalidad') == $item->id) @error('nombre') is-invalid @enderror @endif" maxlength="255" required>
+                                @if (old('editing_modalidad') == $item->id)
+                                    @error('nombre')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="genero_modalidad_{{ $item->id }}" class="form-label">Genero</label>
+                                <select name="genero" id="genero_modalidad_{{ $item->id }}" class="form-select @error('genero') is-invalid @enderror" required>
+                                    <option value="Masculino" {{ (old('editing_modalidad') == $item->id ? old('genero') : $item->genero) === 'Masculino' ? 'selected' : '' }}>Masculino</option>
+                                    <option value="Femenino" {{ (old('editing_modalidad') == $item->id ? old('genero') : $item->genero) === 'Femenino' ? 'selected' : '' }}>Femenino</option>
+                                </select>
+                                @if (old('editing_modalidad') == $item->id)
+                                    @error('genero')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-info text-white">
+                            <i class="bi bi-check-lg"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-delete-modalidad-{{ $item->id }}" tabindex="-1" aria-labelledby="modalDeleteModalidadLabel{{ $item->id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="POST" action="{{ route('modalidades.destroy', ['torneo' => $torneo, 'modalidad' => $item, 'return' => request('return')]) }}">
+                @csrf
+                @method('DELETE')
+
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalDeleteModalidadLabel{{ $item->id }}">Eliminar modalidad</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        Seguro que desea eliminar la modalidad <strong>{{ $item->nombre }}</strong>?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+@endforeach
+
 <script>
     $(document).ready(function () {
         $('.page-link').click(function (event) {
@@ -65,5 +148,12 @@
                 list(url.searchParams.get('page') || 1);
             }
         });
+
+        @if ($errors->any() && old('editing_modalidad'))
+            let editModal = document.getElementById('modal-edit-modalidad-{{ old('editing_modalidad') }}');
+            if (editModal) {
+                new bootstrap.Modal(editModal).show();
+            }
+        @endif
     });
 </script>

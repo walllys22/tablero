@@ -46,7 +46,7 @@
                     <div class="card-body">
                         <div class="row mb-3 align-items-center">
                             <div class="col-sm-9">
-                                <div class="dataTables_length" id="dataTable_length">
+                                <div>
                                     <label class="d-flex align-items-center gap-2 mb-0">
                                         Mostrar
                                         <select id="select-paginate" class="form-select form-select-sm w-auto">

@@ -18,7 +18,6 @@ class Persona extends Model
         'first_name',
         'birth_date',
         'email',
-        'country_code',
         'phone',
         'address',
         'gender',

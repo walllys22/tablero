@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateTorneoRequest;
 use App\Models\Torneo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class TorneoController extends Controller
 {
@@ -38,7 +39,11 @@ class TorneoController extends Controller
             ->paginate($paginate)
             ->withQueryString();
 
-        return view('eventos.list', compact('data'));
+        return response()
+            ->view('eventos.list', compact('data'))
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     /**
@@ -93,11 +98,14 @@ class TorneoController extends Controller
         $data['status'] = $request->has('status') ? 1 : 0;
 
         if ($request->hasFile('logo')) {
-            if ($torneo->logo) {
-                Storage::disk('public')->delete($torneo->logo);
-            }
+            $file = $request->file('logo');
+            $filename = 'torneo-' . $torneo->id . '-' . now()->format('YmdHis') . '-' . Str::random(8) . '.' . $file->extension();
+            $previousLogo = $torneo->logo;
+            $data['logo'] = $file->storeAs('torneos', $filename, 'public');
 
-            $data['logo'] = $request->file('logo')->store('torneos', 'public');
+            if ($previousLogo) {
+                Storage::disk('public')->delete($previousLogo);
+            }
         } else {
             unset($data['logo']);
         }

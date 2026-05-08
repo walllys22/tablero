@@ -2,18 +2,28 @@
     $items = [
         ['label' => 'Dashboard', 'icon' => 'bi-speedometer2', 'route' => 'dashboard', 'active' => request()->routeIs('dashboard')],
         [
-            'label' => 'Eventos',
+            'label' => 'Administracion',
             'icon' => 'bi-calendar-event',
             'active' => request()->routeIs('torneos.*') || request()->routeIs('modalidades.*'),
             'children' => [
                 ['label' => 'Torneos', 'icon' => 'bi-trophy', 'route' => 'torneos.index', 'active' => request()->routeIs('torneos.*')],
                 ['label' => 'Modalidades', 'icon' => 'bi-list-check', 'modal' => 'modal-modalidades-sidebar', 'active' => request()->routeIs('modalidades.*')],
+                ['label' => 'Personas', 'icon' => 'bi-people', 'route' => 'people.browse', 'active' => request()->routeIs('people.*')],
             ],
         ],
-        ['label' => 'Personas', 'icon' => 'bi-people', 'route' => 'people.browse', 'active' => request()->routeIs('people.*')],
-        ['label' => 'Tablero Kumite', 'icon' => 'bi-stopwatch', 'route' => 'tablero.kumite', 'active' => request()->routeIs('tablero.kumite')],
-        ['label' => 'Tablero Kata', 'icon' => 'bi-qr-code', 'route' => 'tablero.kata', 'active' => request()->routeIs('tablero.kata')],
+        [
+            'label' => 'Eventos',
+            'icon' => 'bi-calendar-event',
+            'active' => request()->routeIs('tablero.*') || request()->routeIs('eventos.registro'),
+            'children' => [
+                ['label' => 'Registro', 'icon' => 'bi-clipboard-plus', 'route' => 'eventos.registro', 'active' => request()->routeIs('eventos.registro')],
+                ['label' => 'Tablero Kumite', 'icon' => 'bi-stopwatch', 'route' => 'tablero.kumite', 'active' => request()->routeIs('tablero.kumite')],
+                ['label' => 'Tablero Kata', 'icon' => 'bi-qr-code', 'route' => 'tablero.kata', 'active' => request()->routeIs('tablero.kata')],
+            ],
+        ],
+
         ['label' => 'Perfil', 'icon' => 'bi-person-lines-fill', 'route' => 'profile.edit', 'active' => request()->routeIs('profile.*')],
+        ['label' => 'Limpiar Cache', 'icon' => 'bi-brush', 'route' => 'cache.clear', 'method' => 'POST', 'active' => false],
     ];
 @endphp
 
@@ -23,21 +33,27 @@
         <nav class="sidebar-nav">
             @foreach ($items as $item)
                 @if (isset($item['children']))
-                    <button class="sidebar-link sidebar-toggle {{ $item['active'] ? 'active' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-{{ Str::slug($item['label']) }}" aria-expanded="{{ $item['active'] ? 'true' : 'false' }}" aria-controls="sidebar-{{ Str::slug($item['label']) }}">
+                    @php
+                        $isActive = $item['active'] ?? false;
+                    @endphp
+                    <button class="sidebar-link sidebar-toggle {{ $isActive ? 'active' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-{{ Str::slug($item['label']) }}" aria-expanded="{{ $isActive ? 'true' : 'false' }}" aria-controls="sidebar-{{ Str::slug($item['label']) }}">
                         <i class="bi {{ $item['icon'] }}"></i>
                         <span>{{ $item['label'] }}</span>
                         <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
                     </button>
-                    <div class="collapse {{ $item['active'] ? 'show' : '' }}" id="sidebar-{{ Str::slug($item['label']) }}">
+                    <div class="collapse {{ $isActive ? 'show' : '' }}" id="sidebar-{{ Str::slug($item['label']) }}">
                         <div class="sidebar-subnav">
                             @foreach ($item['children'] as $child)
+                                @php
+                                    $childActive = $child['active'] ?? false;
+                                @endphp
                                 @if (isset($child['modal']))
-                                    <button type="button" class="sidebar-link sidebar-sublink {{ $child['active'] ? 'active' : '' }}" data-bs-toggle="modal" data-bs-target="#{{ $child['modal'] }}">
+                                    <button type="button" class="sidebar-link sidebar-sublink {{ $childActive ? 'active' : '' }}" data-bs-toggle="modal" data-bs-target="#{{ $child['modal'] }}">
                                         <i class="bi {{ $child['icon'] }}"></i>
                                         <span>{{ $child['label'] }}</span>
                                     </button>
                                 @else
-                                    <a href="{{ route($child['route']) }}" class="sidebar-link sidebar-sublink {{ $child['active'] ? 'active' : '' }}">
+                                    <a href="{{ route($child['route']) }}" class="sidebar-link sidebar-sublink {{ $childActive ? 'active' : '' }}">
                                         <i class="bi {{ $child['icon'] }}"></i>
                                         <span>{{ $child['label'] }}</span>
                                     </a>
@@ -46,10 +62,20 @@
                         </div>
                     </div>
                 @else
-                    <a href="{{ route($item['route']) }}" class="sidebar-link {{ $item['active'] ? 'active' : '' }}">
-                        <i class="bi {{ $item['icon'] }}"></i>
-                        <span>{{ $item['label'] }}</span>
-                    </a>
+                    @if (($item['method'] ?? 'GET') === 'POST')
+                        <form method="POST" action="{{ route($item['route']) }}" class="m-0">
+                            @csrf
+                            <button type="submit" class="sidebar-link w-100 border-0 bg-transparent text-start {{ ($item['active'] ?? false) ? 'active' : '' }}">
+                                <i class="bi {{ $item['icon'] }}"></i>
+                                <span>{{ $item['label'] }}</span>
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ route($item['route']) }}" class="sidebar-link {{ ($item['active'] ?? false) ? 'active' : '' }}">
+                            <i class="bi {{ $item['icon'] }}"></i>
+                            <span>{{ $item['label'] }}</span>
+                        </a>
+                    @endif
                 @endif
             @endforeach
         </nav>
@@ -66,21 +92,27 @@
         <nav class="sidebar-nav">
             @foreach ($items as $item)
                 @if (isset($item['children']))
-                    <button class="sidebar-link sidebar-toggle {{ $item['active'] ? 'active' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#mobile-sidebar-{{ Str::slug($item['label']) }}" aria-expanded="{{ $item['active'] ? 'true' : 'false' }}" aria-controls="mobile-sidebar-{{ Str::slug($item['label']) }}">
+                    @php
+                        $isActive = $item['active'] ?? false;
+                    @endphp
+                    <button class="sidebar-link sidebar-toggle {{ $isActive ? 'active' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#mobile-sidebar-{{ Str::slug($item['label']) }}" aria-expanded="{{ $isActive ? 'true' : 'false' }}" aria-controls="mobile-sidebar-{{ Str::slug($item['label']) }}">
                         <i class="bi {{ $item['icon'] }}"></i>
                         <span>{{ $item['label'] }}</span>
                         <i class="bi bi-chevron-down sidebar-toggle-icon"></i>
                     </button>
-                    <div class="collapse {{ $item['active'] ? 'show' : '' }}" id="mobile-sidebar-{{ Str::slug($item['label']) }}">
+                    <div class="collapse {{ $isActive ? 'show' : '' }}" id="mobile-sidebar-{{ Str::slug($item['label']) }}">
                         <div class="sidebar-subnav">
                             @foreach ($item['children'] as $child)
+                                @php
+                                    $childActive = $child['active'] ?? false;
+                                @endphp
                                 @if (isset($child['modal']))
-                                    <button type="button" class="sidebar-link sidebar-sublink {{ $child['active'] ? 'active' : '' }}" data-bs-toggle="modal" data-bs-target="#{{ $child['modal'] }}">
+                                    <button type="button" class="sidebar-link sidebar-sublink {{ $childActive ? 'active' : '' }}" data-bs-toggle="modal" data-bs-target="#{{ $child['modal'] }}">
                                         <i class="bi {{ $child['icon'] }}"></i>
                                         <span>{{ $child['label'] }}</span>
                                     </button>
                                 @else
-                                    <a href="{{ route($child['route']) }}" class="sidebar-link sidebar-sublink {{ $child['active'] ? 'active' : '' }}">
+                                    <a href="{{ route($child['route']) }}" class="sidebar-link sidebar-sublink {{ $childActive ? 'active' : '' }}">
                                         <i class="bi {{ $child['icon'] }}"></i>
                                         <span>{{ $child['label'] }}</span>
                                     </a>
@@ -89,10 +121,20 @@
                         </div>
                     </div>
                 @else
-                    <a href="{{ route($item['route']) }}" class="sidebar-link {{ $item['active'] ? 'active' : '' }}">
-                        <i class="bi {{ $item['icon'] }}"></i>
-                        <span>{{ $item['label'] }}</span>
-                    </a>
+                    @if (($item['method'] ?? 'GET') === 'POST')
+                        <form method="POST" action="{{ route($item['route']) }}" class="m-0">
+                            @csrf
+                            <button type="submit" class="sidebar-link w-100 border-0 bg-transparent text-start {{ ($item['active'] ?? false) ? 'active' : '' }}">
+                                <i class="bi {{ $item['icon'] }}"></i>
+                                <span>{{ $item['label'] }}</span>
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ route($item['route']) }}" class="sidebar-link {{ ($item['active'] ?? false) ? 'active' : '' }}">
+                            <i class="bi {{ $item['icon'] }}"></i>
+                            <span>{{ $item['label'] }}</span>
+                        </a>
+                    @endif
                 @endif
             @endforeach
         </nav>

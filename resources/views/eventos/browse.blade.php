@@ -199,8 +199,9 @@
             let search = $('#input-search').val() ? $('#input-search').val() : '';
 
             $.ajax({
-                url: `${url}?search=${encodeURIComponent(search)}&paginate=${countPage}&page=${page}`,
+                url: `${url}?search=${encodeURIComponent(search)}&paginate=${countPage}&page=${page}&_=${Date.now()}`,
                 type: 'get',
+                cache: false,
                 success: function (result) {
                     $('#div-results').html(result);
                 },
@@ -212,6 +213,17 @@
 
         function deleteItem(url) {
             $('#delete_form').attr('action', url);
+        }
+
+        function previewTorneoLogo(input, previewId) {
+            let file = input.files && input.files[0];
+            let preview = document.getElementById(previewId);
+
+            if (!file || !preview) {
+                return;
+            }
+
+            preview.src = URL.createObjectURL(file);
         }
 
         @if ($errors->any())
