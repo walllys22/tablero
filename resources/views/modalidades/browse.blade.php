@@ -7,7 +7,7 @@
         $closeRoute = request('return') === 'torneos' ? route('torneos.index') : route('dashboard');
     @endphp
 
-    <div class="container-fluid py-4 eventos-browse">
+    <div class="container-fluid pt-0 ps-0 pb-4 eventos-browse">
         @if (session('status'))
             <div class="alert alert-success js-auto-dismiss">
                 {{ session('status') }}
@@ -23,15 +23,15 @@
         <div class="row mb-3">
             <div class="col-12">
                 <div class="card shadow-sm">
-                    <div class="card-body p-0">
+                    <div class="card-body p-1">
                         <div class="row g-0 align-items-center">
-                            <div class="col-md-8 px-3 py-3">
+                            <div class="col-md-8 pe-3 pb-3">
                                 <h1 class="h3 mb-0 text-dark">
                                     <i class="bi bi-list-check"></i> Modalidades
                                 </h1>
                                 <small class="text-muted">{{ $torneo->nombre ?: 'Torneo sin nombre' }}</small>
                             </div>
-                            <div class="col-md-4 text-end px-3 py-3">
+                            <div class="col-md-4 text-end pe-3 pb-3">
                                 <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#modal-create-modalidad">
                                     <i class="bi bi-plus-lg"></i> <span>Crear</span>
                                 </button>
