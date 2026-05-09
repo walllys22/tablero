@@ -186,9 +186,9 @@
     <div class="modal-dialog">
         <form id="form-modalidades-sidebar">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalModalidadesSidebarLabel">Seleccionar campeonato</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold" id="modalModalidadesSidebarLabel">Seleccionar campeonato</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <label for="torneo_modalidad_sidebar" class="form-label">Campeonato</label>
@@ -201,7 +201,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" {{ $torneosModalidades->isEmpty() ? 'disabled' : '' }}>
+                    <button type="submit" class="btn btn-success" {{ $torneosModalidades->isEmpty() ? 'disabled' : '' }}>
                         <i class="bi bi-box-arrow-in-right"></i> Abrir
                     </button>
                 </div>
@@ -214,9 +214,9 @@
     <div class="modal-dialog">
         <form id="form-inscripciones-sidebar">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalInscripcionesSidebarLabel">Seleccionar campeonato</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold" id="modalInscripcionesSidebarLabel">Seleccionar campeonato</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <label for="torneo_inscripcion_sidebar" class="form-label">Campeonato</label>
@@ -229,7 +229,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" {{ $torneosModalidades->isEmpty() ? 'disabled' : '' }}>
+                    <button type="submit" class="btn btn-success" {{ $torneosModalidades->isEmpty() ? 'disabled' : '' }}>
                         <i class="bi bi-box-arrow-in-right"></i> Abrir
                     </button>
                 </div>
@@ -242,9 +242,9 @@
     <div class="modal-dialog">
         <form id="form-arbitros-sidebar">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalArbitrosSidebarLabel">Seleccionar campeonato</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold" id="modalArbitrosSidebarLabel">Seleccionar campeonato</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <label for="torneo_arbitro_sidebar" class="form-label">Campeonato</label>
@@ -257,7 +257,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" {{ $torneosModalidades->isEmpty() ? 'disabled' : '' }}>
+                    <button type="submit" class="btn btn-success" {{ $torneosModalidades->isEmpty() ? 'disabled' : '' }}>
                         <i class="bi bi-box-arrow-in-right"></i> Abrir
                     </button>
                 </div>

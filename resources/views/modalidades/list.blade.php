@@ -34,16 +34,21 @@
                                 <span class="text-muted">Sin categorias</span>
                             @endforelse
                         </td>
-                        <td style="vertical-align: middle; width: 14%" class="text-end">
-                            <button type="button" title="Ver" data-bs-toggle="modal" data-bs-target="#modal-view-modalidad-{{ $item->id }}" class="btn btn-sm btn-primary">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                            <button type="button" title="Editar" data-bs-toggle="modal" data-bs-target="#modal-edit-modalidad-{{ $item->id }}" class="btn btn-sm btn-info text-white">
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
-                            <button type="button" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete-modalidad-{{ $item->id }}" class="btn btn-sm btn-danger">
-                                <i class="bi bi-trash"></i>
-                            </button>
+                        <td style="vertical-align: middle; width: 14%" class="text-end p-2">
+                            <div class="d-flex flex-wrap justify-content-end gap-2">
+                                <button type="button" title="Ver" data-bs-toggle="modal" data-bs-target="#modal-view-modalidad-{{ $item->id }}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button type="button" title="Editar" data-bs-toggle="modal" data-bs-target="#modal-edit-modalidad-{{ $item->id }}" class="btn btn-sm btn-info text-white">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button type="button" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete-modalidad-{{ $item->id }}" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                <button type="button" title="Categoria" data-bs-toggle="modal" data-bs-target="#modal-create-categoria" {{ $modalidades->isEmpty() ? 'disabled' : '' }} class="btn btn-sm btn-success">
+                                    <i class="bi bi-tags"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 @empty

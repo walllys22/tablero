@@ -71,7 +71,7 @@
     </div>
 
     <div class="modal fade" id="modal-create" tabindex="-1" aria-labelledby="modalCreateLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <form method="POST" action="{{ route('torneos.store') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-content">
@@ -81,7 +81,7 @@
                     </div>
                     <div class="modal-body">
                         <div class="row g-3">
-                            <div class="col-md-8">
+                            <div class="col-md-4">
                                 <label for="nombre" class="form-label">Nombre</label>
                                 <input type="text" name="nombre" id="nombre" value="{{ old('nombre') }}" class="form-control @error('nombre') is-invalid @enderror" maxlength="255" required>
                                 @error('nombre')
@@ -96,15 +96,29 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-
-                            <div class="col-md-8">
-                                <label for="direccion" class="form-label">Direccion</label>
-                                <input type="text" name="direccion" id="direccion" value="{{ old('direccion') }}" class="form-control @error('direccion') is-invalid @enderror" maxlength="1000">
-                                @error('direccion')
+                            <div class="col-md-4">
+                                <label for="organiza" class="form-label">Organiza</label>
+                                <input type="text" name="organiza" id="organiza" value="{{ old('organiza') }}" class="form-control @error('organiza') is-invalid @enderror" maxlength="255">
+                                @error('organiza')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
+
+                            <div class="col-md-4">
+                                <label for="fecha_inicio" class="form-label">Fecha inicio</label>
+                                <input type="date" name="fecha_inicio" id="fecha_inicio" value="{{ old('fecha_inicio') }}" min="{{ now()->format('Y-m-d') }}" class="form-control @error('fecha_inicio') is-invalid @enderror">
+                                @error('fecha_inicio')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label for="fecha_fin" class="form-label">Fecha fin</label>
+                                <input type="date" name="fecha_fin" id="fecha_fin" value="{{ old('fecha_fin') }}" min="{{ old('fecha_inicio', now()->format('Y-m-d')) }}" class="form-control @error('fecha_fin') is-invalid @enderror">
+                                @error('fecha_fin')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                             <div class="col-md-4">
                                 <label for="sistema_competencia" class="form-label">Sistema competencia</label>
                                 <select name="sistema_competencia" id="sistema_competencia" class="form-select @error('sistema_competencia') is-invalid @enderror" required>
@@ -117,7 +131,16 @@
                                 @enderror
                             </div>
 
-                            <div class="col-md-6">
+
+
+                            <div class="col-md-8">
+                                <label for="direccion" class="form-label">Direccion</label>
+                                <input type="text" name="direccion" id="direccion" value="{{ old('direccion') }}" class="form-control @error('direccion') is-invalid @enderror" maxlength="1000">
+                                @error('direccion')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
                                 <label for="modalidad_puntaje" class="form-label">Modalidad de puntaje</label>
                                 <input type="text" name="modalidad_puntaje" id="modalidad_puntaje" value="{{ old('modalidad_puntaje') }}" class="form-control @error('modalidad_puntaje') is-invalid @enderror" maxlength="100">
                                 @error('modalidad_puntaje')
@@ -125,13 +148,10 @@
                                 @enderror
                             </div>
 
-                            <div class="col-md-6">
-                                <label for="organiza" class="form-label">Organiza</label>
-                                <input type="text" name="organiza" id="organiza" value="{{ old('organiza') }}" class="form-control @error('organiza') is-invalid @enderror" maxlength="255">
-                                @error('organiza')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+
+
+
+
 
                             <div class="col-md-6">
                                 <label for="persona_id" class="form-label">Responsable</label>
@@ -152,29 +172,15 @@
                                 <label class="form-label">Contacto</label>
                                 <div class="text-center px-3 py-2" style="min-height: 110px; border: 1px solid #dee2e6; border-radius: 6px; background: #f8f9fa;">
                                     <div id="responsable-phone" class="fw-bold" style="font-size: 13px;">No registrado</div>
-                                    <a id="responsable-whatsapp" href="#" target="_blank" class="label label-success d-none" style="margin-top: 5px; padding: 3px 8px; font-size: 10px; text-decoration: none; cursor: pointer;">
-                                        WhatsApp
-                                    </a>
+
                                     <div id="responsable-email" class="mt-1" style="font-size: 13px;">No registrado</div>
                                     <div id="responsable-address" class="text-muted mt-1" style="font-size: 13px;">No registrada</div>
                                 </div>
                             </div>
 
-                            <div class="col-md-6">
-                                <label for="fecha_inicio" class="form-label">Fecha inicio</label>
-                                <input type="date" name="fecha_inicio" id="fecha_inicio" value="{{ old('fecha_inicio') }}" min="{{ now()->format('Y-m-d') }}" class="form-control @error('fecha_inicio') is-invalid @enderror">
-                                @error('fecha_inicio')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
 
-                            <div class="col-md-6">
-                                <label for="fecha_fin" class="form-label">Fecha fin</label>
-                                <input type="date" name="fecha_fin" id="fecha_fin" value="{{ old('fecha_fin') }}" min="{{ old('fecha_inicio', now()->format('Y-m-d')) }}" class="form-control @error('fecha_fin') is-invalid @enderror">
-                                @error('fecha_fin')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+
+
 
                             <div class="col-md-8">
                                 <label for="logo" class="form-label">Logo</label>
@@ -209,9 +215,9 @@
                 @csrf
                 @method('DELETE')
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalDeleteLabel">Eliminar torneo</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title fw-bold" id="modalDeleteLabel">Eliminar torneo</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
                         Seguro que desea eliminar este torneo?

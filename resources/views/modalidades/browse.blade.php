@@ -35,9 +35,6 @@
                                 <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#modal-create-modalidad">
                                     <i class="bi bi-plus-lg"></i> <span>Crear</span>
                                 </button>
-                                <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#modal-create-categoria" {{ $modalidades->isEmpty() ? 'disabled' : '' }}>
-                                    <i class="bi bi-tags"></i> <span>Categoria</span>
-                                </button>
                                 <a href="{{ $closeRoute }}" class="btn btn-warning text-white">
                                     <i class="bi bi-x-lg"></i> <span>Cerrar</span>
                                 </a>
@@ -47,29 +44,6 @@
                 </div>
             </div>
         </div>
-
-        @if ($modalidades->isEmpty())
-            <div class="alert alert-warning">
-                Primero cree las modalidades del campeonato. Despues podra registrar categorias dentro de cada modalidad.
-            </div>
-        @else
-            <div class="row mb-3">
-                <div class="col-12">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <div class="fw-bold mb-2">Modalidades registradas</div>
-                            <div class="d-flex flex-wrap gap-2">
-                                @foreach ($modalidades as $modalidad)
-                                    <span class="label label-primary">
-                                        {{ $modalidad->nombre }} - {{ $modalidad->genero }}
-                                    </span>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
 
         <div class="row">
             <div class="col-12">
