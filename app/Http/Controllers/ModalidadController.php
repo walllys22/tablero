@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categoria;
 use App\Models\Modalidad;
 use App\Models\Torneo;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class ModalidadController extends Controller
 {
@@ -49,47 +51,92 @@ class ModalidadController extends Controller
         return view('modalidades.list', compact('data', 'torneo', 'modalidades'));
     }
 
+    public function show(Torneo $torneo, Modalidad $modalidad)
+    {
+        abort_unless($modalidad->torneo_id === $torneo->id, 404);
+
+        $modalidad->load(['categorias' => function ($query) {
+            $query->orderBy('nombre');
+        }]);
+
+        return view('modalidades.read', compact('torneo', 'modalidad'));
+    }
+
     public function storeCategoria(Request $request, Torneo $torneo)
     {
-        $data = $request->validate([
+        [$data] = $this->categoriaData($request, $torneo);
+
+        $torneo->categorias()->create($data);
+
+        return redirect()
+            ->route('modalidades.index', ['torneo' => $torneo, 'return' => request('return')])
+            ->with('status', 'Categoria creada correctamente.');
+    }
+
+    public function updateCategoria(Request $request, Torneo $torneo, Modalidad $modalidad, Categoria $categoria)
+    {
+        abort_unless($modalidad->torneo_id === $torneo->id, 404);
+        abort_unless($categoria->torneo_id === $torneo->id && $categoria->modalidad_id === $modalidad->id, 404);
+
+        [$data] = $this->categoriaData($request, $torneo, $modalidad, $categoria);
+
+        $categoria->update($data);
+
+        return redirect()
+            ->route('modalidades.show', ['torneo' => $torneo, 'modalidad' => $modalidad, 'return' => request('return')])
+            ->with('status', 'Categoria actualizada correctamente.');
+    }
+
+    public function destroyCategoria(Request $request, Torneo $torneo, Modalidad $modalidad, Categoria $categoria)
+    {
+        abort_unless($modalidad->torneo_id === $torneo->id, 404);
+        abort_unless($categoria->torneo_id === $torneo->id && $categoria->modalidad_id === $modalidad->id, 404);
+
+        $categoria->delete();
+
+        return redirect()
+            ->route('modalidades.show', ['torneo' => $torneo, 'modalidad' => $modalidad, 'return' => request('return')])
+            ->with('status', 'Categoria eliminada correctamente.');
+    }
+
+    private function categoriaData(Request $request, Torneo $torneo, ?Modalidad $modalidad = null, ?Categoria $categoria = null): array
+    {
+        $rules = [
             'modalidad_id' => [
-                'required',
+                $modalidad ? 'nullable' : 'required',
                 Rule::exists('modalidades', 'id')->where('torneo_id', $torneo->id),
             ],
             'nombre' => ['nullable', 'string', 'max:255'],
-            'nombre_base' => ['nullable', 'string', 'max:255'],
             'genero' => ['nullable', 'string', 'in:Masculino,Femenino,Mixto'],
             'edad_desde' => ['nullable', 'integer', 'min:0', 'max:99'],
             'edad_hasta' => ['nullable', 'integer', 'min:0', 'max:99', 'gte:edad_desde'],
             'peso_hasta' => ['nullable', 'numeric', 'min:0', 'max:999.99'],
             'peso_tipo' => ['nullable', 'string', 'in:max,min'],
             'creating_categoria' => ['nullable'],
-        ]);
+            'editing_categoria' => ['nullable'],
+        ];
+
+        $data = $request->validate($rules);
         $pesoTipo = $data['peso_tipo'] ?? 'max';
-        $nombreBase = $data['nombre_base'] ?? $data['nombre'] ?? '';
-        unset($data['creating_categoria'], $data['peso_tipo'], $data['nombre_base']);
+        unset($data['creating_categoria'], $data['editing_categoria'], $data['peso_tipo']);
 
-        $modalidad = Modalidad::where('torneo_id', $torneo->id)
-            ->findOrFail($data['modalidad_id']);
-
-        $isKata = str_contains(mb_strtolower($modalidad->nombre), 'kata')
-            || str_contains(mb_strtolower($nombreBase), 'kata');
-
-        $baseNombre = trim(preg_replace('/\s+(menor|mayor)\s+o\s+igual\s+a\s+\d+([.,]\d+)?\s+kilos?$/iu', '', $nombreBase));
-        $baseNombre = trim(preg_replace('/\s+(masculino|femenino|mixto)$/iu', '', $baseNombre));
-        $baseNombre = trim(preg_replace('/\s+(\d+\s+a\s+\d+\s+anos|desde\s+\d+\s+anos|hasta\s+\d+\s+anos)$/iu', '', $baseNombre));
-        $nombreParts = [];
-
-        if ($baseNombre !== '') {
-            $nombreParts[] = $baseNombre;
+        if (! $modalidad) {
+            $modalidad = Modalidad::where('torneo_id', $torneo->id)
+                ->findOrFail($data['modalidad_id']);
         }
 
+        $data['modalidad_id'] = $modalidad->id;
+        $data['torneo_id'] = $torneo->id;
+
+        $isKata = str_contains(mb_strtolower($modalidad->nombre), 'kata');
+        $nombreParts = [];
+
         if (! empty($data['edad_desde']) && ! empty($data['edad_hasta'])) {
-            $nombreParts[] = "{$data['edad_desde']} a {$data['edad_hasta']} anos";
+            $nombreParts[] = "{$data['edad_desde']} a {$data['edad_hasta']} años";
         } elseif (! empty($data['edad_desde'])) {
-            $nombreParts[] = "desde {$data['edad_desde']} anos";
+            $nombreParts[] = "desde {$data['edad_desde']} años";
         } elseif (! empty($data['edad_hasta'])) {
-            $nombreParts[] = "hasta {$data['edad_hasta']} anos";
+            $nombreParts[] = "hasta {$data['edad_hasta']} años";
         }
 
         if (! empty($data['genero'])) {
@@ -105,18 +152,28 @@ class ModalidadController extends Controller
         }
 
         $data['nombre'] = trim(implode(' ', $nombreParts));
+        $data['nombre'] = str_replace(["a\xC3\x83\xC2\xB1os", 'anos'], 'años', $data['nombre']);
 
         if ($data['nombre'] === '') {
-            return back()
-                ->withErrors(['nombre' => 'Seleccione opciones para generar el nombre de la categoria.'])
-                ->withInput();
+            throw ValidationException::withMessages([
+                'nombre' => 'Seleccione opciones para generar el nombre de la categoria.',
+            ]);
         }
 
-        $torneo->categorias()->create($data);
+        $exists = Categoria::where('modalidad_id', $data['modalidad_id'])
+            ->where('nombre', $data['nombre'])
+            ->when($categoria, function ($query, $categoria) {
+                $query->where('id', '!=', $categoria->id);
+            })
+            ->exists();
 
-        return redirect()
-            ->route('modalidades.index', ['torneo' => $torneo, 'return' => request('return')])
-            ->with('status', 'Categoria creada correctamente.');
+        if ($exists) {
+            throw ValidationException::withMessages([
+                'nombre' => 'Esta categoria ya existe para la modalidad seleccionada.',
+            ]);
+        }
+
+        return [$data, $modalidad];
     }
 
     public function store(Request $request, Torneo $torneo)

@@ -60,6 +60,10 @@ Resumen de cambios realizados en el proyecto de torneos.
 - El nombre de categoria ahora se genera con las opciones seleccionadas: texto base, edad, genero y peso cuando aplica.
 - Se agrego migracion para regenerar nombres existentes desde `edad_desde`, `edad_hasta`, `genero` y `peso_hasta`, conservando `mayor o igual` cuando ya estaba escrito.
 - El campo visible `Categoria` quedo en solo lectura; el sistema genera y guarda el nombre desde `nombre_base` y las opciones elegidas.
+- Se elimino el campo `Nombre base` del modal de categoria.
+- El nombre de categoria ahora se genera solo con edad, genero y peso cuando aplica.
+- Se agrego validacion e indice unico para impedir categorias duplicadas dentro de la misma modalidad.
+- Se consolidaron categorias duplicadas existentes, manteniendo una sola por `modalidad_id` y `nombre`.
 
 ## Dashboard Y Navegacion
 

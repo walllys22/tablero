@@ -22,7 +22,7 @@ return new class extends Migration
 
                     $nombre = trim(preg_replace('/\s+(menor|mayor)\s+o\s+igual\s+a\s+\d+([.,]\d+)?\s+kilos?$/iu', '', $nombre));
                     $nombre = trim(preg_replace('/\s+(masculino|femenino|mixto)$/iu', '', $nombre));
-                    $nombre = trim(preg_replace('/\s+(\d+\s+a\s+\d+\s+anos|desde\s+\d+\s+anos|hasta\s+\d+\s+anos)$/iu', '', $nombre));
+                    $nombre = trim(preg_replace('/\s+(\d+\s+a\s+\d+\s+a(?:n|ñ)os|desde\s+\d+\s+a(?:n|ñ)os|hasta\s+\d+\s+a(?:n|ñ)os)$/iu', '', $nombre));
 
                     $parts = [];
 
@@ -31,11 +31,11 @@ return new class extends Migration
                     }
 
                     if ($categoria->edad_desde !== null && $categoria->edad_hasta !== null) {
-                        $parts[] = "{$categoria->edad_desde} a {$categoria->edad_hasta} anos";
+                        $parts[] = "{$categoria->edad_desde} a {$categoria->edad_hasta} años";
                     } elseif ($categoria->edad_desde !== null) {
-                        $parts[] = "desde {$categoria->edad_desde} anos";
+                        $parts[] = "desde {$categoria->edad_desde} años";
                     } elseif ($categoria->edad_hasta !== null) {
-                        $parts[] = "hasta {$categoria->edad_hasta} anos";
+                        $parts[] = "hasta {$categoria->edad_hasta} años";
                     }
 
                     if (! empty($categoria->genero)) {

@@ -128,11 +128,6 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-12">
-                                <label for="nombre_base_categoria" class="form-label">Nombre base</label>
-                                <input type="text" id="nombre_base_categoria" value="{{ old('nombre_base') }}" class="form-control" maxlength="255">
-                            </div>
-
                             <div class="col-md-3">
                                 <label for="edad_desde_categoria" class="form-label">Edad desde</label>
                                 <input type="number" name="edad_desde" id="edad_desde_categoria" value="{{ old('edad_desde') }}" class="form-control @if(old('creating_categoria')) @error('edad_desde') is-invalid @enderror @endif" min="0" max="99">
@@ -167,7 +162,6 @@
                             </div>
                         </div>
                         <input type="hidden" name="creating_categoria" value="1">
-                        <input type="hidden" name="nombre_base" id="nombre_base_categoria_hidden" value="{{ old('nombre_base') }}">
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -235,6 +229,10 @@
                 let modalidadNombre = button.data('modalidad-nombre') || '';
                 $('#modalidad_id_categoria').val(button.data('modalidad-id') || '');
                 $('#modalidad_nombre_referencia').text(modalidadNombre);
+                $('#nombre_categoria, #nombre_categoria_hidden').val('');
+                $('#genero_categoria').val('');
+                $('#edad_desde_categoria, #edad_hasta_categoria, #peso_hasta_categoria').val('');
+                $('#peso_tipo_categoria').val('max');
                 togglePesoCategoria(modalidadNombre);
             });
 
@@ -257,16 +255,11 @@
                 }, 600);
             });
 
-            $('#nombre_base_categoria').on('input blur', function () {
-                togglePesoCategoria($('#modalidad_nombre_referencia').text());
-            });
             $('#genero_categoria, #edad_desde_categoria, #edad_hasta_categoria, #peso_tipo_categoria, #peso_hasta_categoria').on('input change', updateCategoriaNombre);
         });
 
         function togglePesoCategoria(modalidadNombre) {
-            let categoriaNombre = $('#nombre_base_categoria').val();
-            let isKata = String(modalidadNombre || '').toLowerCase().includes('kata')
-                || String(categoriaNombre || '').toLowerCase().includes('kata');
+            let isKata = String(modalidadNombre || '').toLowerCase().includes('kata');
             $('.js-peso-categoria').toggleClass('d-none', isKata);
             $('#peso_tipo_categoria, #peso_hasta_categoria').prop('disabled', isKata);
 
@@ -280,38 +273,28 @@
         function updateCategoriaNombre() {
             let modalidadNombre = $('#modalidad_nombre_referencia').text();
             let nombreInput = $('#nombre_categoria');
-            let categoriaNombre = $('#nombre_base_categoria').val();
-            let isKata = String(modalidadNombre || '').toLowerCase().includes('kata')
-                || String(categoriaNombre || '').toLowerCase().includes('kata');
+            let isKata = String(modalidadNombre || '').toLowerCase().includes('kata');
             let peso = $('#peso_hasta_categoria').val();
-            let baseNombre = categoriaNombre
-                .replace(/\s+(menor|mayor)\s+o\s+igual\s+a\s+\d+([.,]\d+)?\s+kilos?$/i, '')
-                .replace(/\s+(masculino|femenino|mixto)$/i, '')
-                .replace(/\s+(\d+\s+a\s+\d+\s+anos|desde\s+\d+\s+anos|hasta\s+\d+\s+anos)$/i, '')
-                .trim();
-
             let genero = $('#genero_categoria').val();
             let edadDesde = $('#edad_desde_categoria').val();
             let edadHasta = $('#edad_hasta_categoria').val();
             let edadTexto = '';
 
             if (edadDesde && edadHasta) {
-                edadTexto = `${edadDesde} a ${edadHasta} anos`;
+                edadTexto = `${edadDesde} a ${edadHasta} años`;
             } else if (edadDesde) {
-                edadTexto = `desde ${edadDesde} anos`;
+                edadTexto = `desde ${edadDesde} años`;
             } else if (edadHasta) {
-                edadTexto = `hasta ${edadHasta} anos`;
+                edadTexto = `hasta ${edadHasta} años`;
             }
 
-            if (! baseNombre && ! genero && ! edadTexto && (! peso || isKata)) {
+            if (! genero && ! edadTexto && (! peso || isKata)) {
+                nombreInput.val('');
+                $('#nombre_categoria_hidden').val('');
                 return;
             }
 
             let parts = [];
-
-            if (baseNombre) {
-                parts.push(baseNombre);
-            }
 
             if (edadTexto) {
                 parts.push(edadTexto);
@@ -329,7 +312,6 @@
             let generatedName = parts.join(' ');
             nombreInput.val(generatedName);
             $('#nombre_categoria_hidden').val(generatedName);
-            $('#nombre_base_categoria_hidden').val(baseNombre);
         }
 
         function list(page = 1) {

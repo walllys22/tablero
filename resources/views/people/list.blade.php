@@ -50,7 +50,7 @@
                         <td style="text-align: center; vertical-align: middle;">
                             @if ($item->birth_date)
                                 <div><strong>Nacimiento:</strong> {{ $item->birth_date->format('d/m/Y') }}</div>
-                                <small>{{ $age }} anos</small><br>
+                                <small>{{ $age }} años</small><br>
                             @else
                                 <span class="text-muted">Sin fecha de nacimiento</span><br>
                             @endif
