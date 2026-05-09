@@ -305,7 +305,7 @@
             }
 
             if (! isKata && peso) {
-                let textoPeso = $('#peso_tipo_categoria').val() === 'min' ? 'mayor o igual' : 'menor o igual';
+                let textoPeso = $('#peso_tipo_categoria').val() === 'min' ? '\u2265' : '\u2264';
                 parts.push(`${textoPeso} a ${peso} kilos`);
             }
 

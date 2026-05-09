@@ -3,6 +3,16 @@
 @section('title', 'Ver modalidad')
 
 @section('content')
+    @php
+        $formatCategoriaNombre = function ($nombre) {
+            return str_replace(
+                ["a\xC3\x83\xC6\x92\xC3\x82\xC2\xB1os", "a\xC3\x83\xC2\xB1os", 'anos', 'menor o igual', 'mayor o igual'],
+                ["a\u{00F1}os", "a\u{00F1}os", "a\u{00F1}os", "\u{2264}", "\u{2265}"],
+                $nombre
+            );
+        };
+    @endphp
+
     <div class="container-fluid pt-0 ps-0 pb-4 eventos-browse">
         @if (session('status'))
             <div class="alert alert-success js-auto-dismiss">
@@ -84,9 +94,12 @@
                                 </thead>
                                 <tbody>
                                     @forelse ($modalidad->categorias as $categoria)
+                                        @php
+                                            $categoriaNombre = $formatCategoriaNombre($categoria->nombre);
+                                        @endphp
                                         <tr>
                                             <td style="vertical-align: middle;">
-                                                <strong>{{ $categoria->nombre }}</strong>
+                                                <strong>{{ $categoriaNombre }}</strong>
                                             </td>
                                             <td style="text-align: center; vertical-align: middle;">{{ $categoria->genero ?: '-' }}</td>
                                             <td style="text-align: center; vertical-align: middle;">{{ $categoria->edad_desde ?? '-' }}</td>
@@ -100,7 +113,7 @@
                                                         <i class="bi bi-pencil-square"></i>
                                                     </button>
 
-                                                    <form method="POST" action="{{ route('categorias.destroy', ['torneo' => $torneo, 'modalidad' => $modalidad, 'categoria' => $categoria, 'return' => request('return')]) }}" onsubmit='return confirm(@json("Seguro que desea eliminar la categoria {$categoria->nombre}?"))'>
+                                                    <form method="POST" action="{{ route('categorias.destroy', ['torneo' => $torneo, 'modalidad' => $modalidad, 'categoria' => $categoria, 'return' => request('return')]) }}" onsubmit='return confirm(@json("Seguro que desea eliminar la categoria {$categoriaNombre}?"))'>
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" title="Eliminar" class="btn btn-sm btn-danger">
@@ -133,6 +146,7 @@
             @php
                 $isEditing = old('editing_categoria') == $categoria->id;
                 $isKata = str_contains(mb_strtolower($modalidad->nombre), 'kata');
+                $categoriaNombre = $formatCategoriaNombre($categoria->nombre);
                 $pesoTipo = str_contains(mb_strtolower($categoria->nombre), 'mayor o igual') ? 'min' : 'max';
             @endphp
 
@@ -159,8 +173,8 @@
 
                                     <div class="col-md-6">
                                         <label for="nombre_categoria_{{ $categoria->id }}" class="form-label">Categoria</label>
-                                        <input type="text" id="nombre_categoria_{{ $categoria->id }}" value="{{ $isEditing ? old('nombre') : $categoria->nombre }}" class="form-control js-edit-nombre-categoria @if($isEditing) @error('nombre') is-invalid @enderror @endif" readonly>
-                                        <input type="hidden" name="nombre" class="js-edit-nombre-categoria-hidden" value="{{ $isEditing ? old('nombre') : $categoria->nombre }}">
+                                        <input type="text" id="nombre_categoria_{{ $categoria->id }}" value="{{ $isEditing ? old('nombre') : $categoriaNombre }}" class="form-control js-edit-nombre-categoria @if($isEditing) @error('nombre') is-invalid @enderror @endif" readonly>
+                                        <input type="hidden" name="nombre" class="js-edit-nombre-categoria-hidden" value="{{ $isEditing ? old('nombre') : $categoriaNombre }}">
                                         @if ($isEditing)
                                             @error('nombre')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -290,11 +304,12 @@
             }
 
             if (! isKata && peso) {
-                let textoPeso = modal.find('.js-edit-peso-tipo').val() === 'min' ? 'mayor o igual' : 'menor o igual';
+                let textoPeso = modal.find('.js-edit-peso-tipo').val() === 'min' ? '\u2265' : '\u2264';
                 parts.push(`${textoPeso} a ${peso} kilos`);
             }
 
             let generatedName = parts.join(' ');
+            generatedName = generatedName.replace(/a(?:\u00c3\u0192\u00c2\u00b1|\u00c3\u00b1|n)os/g, 'años');
             modal.find('.js-edit-nombre-categoria, .js-edit-nombre-categoria-hidden').val(generatedName);
         }
     </script>

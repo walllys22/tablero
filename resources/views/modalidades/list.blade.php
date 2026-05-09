@@ -1,9 +1,18 @@
+@php
+    $formatCategoriaNombre = function ($nombre) {
+        return str_replace(
+            ["a\xC3\x83\xC6\x92\xC3\x82\xC2\xB1os", "a\xC3\x83\xC2\xB1os", 'anos', 'menor o igual', 'mayor o igual'],
+            ["a\u{00F1}os", "a\u{00F1}os", "a\u{00F1}os", "\u{2264}", "\u{2265}"],
+            $nombre
+        );
+    };
+@endphp
+
 <div class="col-md-12">
     <div class="table-responsive">
         <table id="dataTable" class="table table-bordered table-hover eventos-table">
             <thead>
                 <tr>
-                    <th style="text-align: center">ID</th>
                     <th style="text-align: center">Modalidad</th>
                     <th style="text-align: center">Categorias</th>
                     <th style="text-align: center">Opciones</th>
@@ -12,9 +21,6 @@
             <tbody>
                 @forelse ($data as $item)
                     <tr>
-                        <td style="text-align: center; vertical-align: middle;">
-                            {{ $item->id }}
-                        </td>
                         <td style="vertical-align: middle;">
                             <strong>{{ $item->nombre }}</strong>
                         </td>
@@ -22,7 +28,7 @@
                         <td style="vertical-align: middle;">
                             @forelse ($item->categorias as $categoria)
                                 <div>
-                                    <strong>{{ $categoria->nombre }}</strong>
+                                    <strong>{{ $formatCategoriaNombre($categoria->nombre) }}</strong>
                                 </div>
                             @empty
                                 <span class="text-muted">Sin categorias</span>
@@ -47,7 +53,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5">
+                        <td colspan="3">
                             <h5 class="text-center eventos-empty">
                                 <img src="{{ asset('images/empty.png') }}" width="120" alt="Sin resultados">
                                 <br><br>
