@@ -11,6 +11,8 @@ class Categoria extends Model
 
     protected $table = 'categorias';
 
+    public $timestamps = false;
+
     protected $fillable = [
         'torneo_id',
         'modalidad_id',
@@ -18,18 +20,13 @@ class Categoria extends Model
         'genero',
         'edad_desde',
         'edad_hasta',
-        'peso_desde',
         'peso_hasta',
-        'grado',
-        'orden',
     ];
 
     protected $casts = [
         'edad_desde' => 'integer',
         'edad_hasta' => 'integer',
-        'peso_desde' => 'decimal:2',
         'peso_hasta' => 'decimal:2',
-        'orden' => 'integer',
     ];
 
     public function torneo()
@@ -40,17 +37,5 @@ class Categoria extends Model
     public function modalidad()
     {
         return $this->belongsTo(Modalidad::class);
-    }
-
-    public function getDescripcionAttribute(): string
-    {
-        $parts = array_filter([
-            $this->genero,
-            $this->edad_desde || $this->edad_hasta ? trim(($this->edad_desde ?: '') . ' - ' . ($this->edad_hasta ?: '')) . ' anos' : null,
-            $this->peso_desde || $this->peso_hasta ? trim(($this->peso_desde ?: '') . ' - ' . ($this->peso_hasta ?: '')) . ' kg' : null,
-            $this->grado,
-        ]);
-
-        return implode(' | ', $parts);
     }
 }

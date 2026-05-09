@@ -24,7 +24,6 @@ class InscripcionController extends Controller
         $categorias = $torneo->categorias()
             ->with('modalidad')
             ->leftJoin('modalidades', 'modalidades.id', '=', 'categorias.modalidad_id')
-            ->orderBy('categorias.orden')
             ->orderBy('categorias.nombre')
             ->orderBy('modalidades.nombre')
             ->select('categorias.*')
@@ -154,8 +153,8 @@ class InscripcionController extends Controller
         $inscripcion->load('organizacion.persona');
         $personas = Persona::where('status', 1)->orderBy('first_name')->get();
         $categoriasDisponibles = $this->categoriasQuery($torneo, $request)->get();
-        $categorias = $torneo->categorias()->with('modalidad')->orderBy('orden')->orderBy('nombre')->get();
-        $modalidades = $torneo->modalidades()->orderBy('nombre')->orderBy('genero')->get();
+        $categorias = $torneo->categorias()->with('modalidad')->orderBy('nombre')->get();
+        $modalidades = $torneo->modalidades()->orderBy('nombre')->get();
         $competidores = $inscripcion->competidores()
             ->with(['persona', 'modalidades.modalidad', 'modalidades.categoria'])
             ->latest()
@@ -234,7 +233,6 @@ class InscripcionController extends Controller
                 $query->where('categorias.id', $request->input('categoria_id'));
             })
             ->leftJoin('modalidades', 'modalidades.id', '=', 'categorias.modalidad_id')
-            ->orderBy('categorias.orden')
             ->orderBy('categorias.nombre')
             ->orderBy('modalidades.nombre')
             ->select('categorias.*');

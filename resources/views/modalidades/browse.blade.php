@@ -76,38 +76,41 @@
         </div>
     </div>
 
+    @php
+        $oldModalidadNombre = old('modalidad_id')
+            ? optional($modalidades->firstWhere('id', (int) old('modalidad_id')))->nombre
+            : '';
+    @endphp
+
     <div class="modal fade" id="modal-create-categoria" tabindex="-1" aria-labelledby="modalCreateCategoriaLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <form method="POST" action="{{ route('categorias.store', ['torneo' => $torneo, 'return' => request('return')]) }}">
                 @csrf
 
                 <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
+                    <div class="modal-header bg-success text-white">
                         <h5 class="modal-title fw-bold" id="modalCreateCategoriaLabel">Crear categoria</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
                         <div class="row g-3">
                             <div class="col-md-12">
-                                <label for="modalidad_categoria" class="form-label">Modalidad</label>
-                                <select name="modalidad_id" id="modalidad_categoria" class="form-select @if(old('creating_categoria')) @error('modalidad_id') is-invalid @enderror @endif" required>
-                                    <option value="">Seleccione</option>
-                                    @foreach ($modalidades as $modalidad)
-                                        <option value="{{ $modalidad->id }}" {{ old('creating_categoria') && old('modalidad_id') == $modalidad->id ? 'selected' : '' }}>
-                                            {{ $modalidad->nombre }} - {{ $modalidad->genero }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <div class="form-control-plaintext border-bottom fs-5">
+                                    <span class="fw-semibold">Modalidad:</span>
+                                    <span id="modalidad_nombre_referencia">{{ $oldModalidadNombre }}</span>
+                                </div>
+                                <input type="hidden" name="modalidad_id" id="modalidad_id_categoria" value="{{ old('modalidad_id') }}">
                                 @if (old('creating_categoria'))
                                     @error('modalidad_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                 @endif
                             </div>
 
                             <div class="col-md-6">
                                 <label for="nombre_categoria" class="form-label">Categoria</label>
-                                <input type="text" name="nombre" id="nombre_categoria" value="{{ old('creating_categoria') ? old('nombre') : '' }}" class="form-control @if(old('creating_categoria')) @error('nombre') is-invalid @enderror @endif" maxlength="255" required>
+                                <input type="text" id="nombre_categoria" value="{{ old('creating_categoria') ? old('nombre') : '' }}" class="form-control @if(old('creating_categoria')) @error('nombre') is-invalid @enderror @endif" readonly>
+                                <input type="hidden" name="nombre" id="nombre_categoria_hidden" value="{{ old('creating_categoria') ? old('nombre') : '' }}">
                                 @if (old('creating_categoria'))
                                     @error('nombre')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -115,7 +118,7 @@
                                 @endif
                             </div>
 
-                            <div class="col-md-3">
+                            <div class="col-md-6">
                                 <label for="genero_categoria" class="form-label">Genero</label>
                                 <select name="genero" id="genero_categoria" class="form-select">
                                     <option value="">Seleccione</option>
@@ -125,9 +128,9 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-3">
-                                <label for="orden_categoria" class="form-label">Orden</label>
-                                <input type="number" name="orden" id="orden_categoria" value="{{ old('orden', 0) }}" class="form-control" min="0" max="9999">
+                            <div class="col-md-12">
+                                <label for="nombre_base_categoria" class="form-label">Nombre base</label>
+                                <input type="text" id="nombre_base_categoria" value="{{ old('nombre_base') }}" class="form-control" maxlength="255">
                             </div>
 
                             <div class="col-md-3">
@@ -145,13 +148,16 @@
                                 @endif
                             </div>
 
-                            <div class="col-md-3">
-                                <label for="peso_desde_categoria" class="form-label">Peso desde</label>
-                                <input type="number" name="peso_desde" id="peso_desde_categoria" value="{{ old('peso_desde') }}" class="form-control @if(old('creating_categoria')) @error('peso_desde') is-invalid @enderror @endif" min="0" step="0.01">
+                            <div class="col-md-3 js-peso-categoria">
+                                <label for="peso_tipo_categoria" class="form-label">Tipo peso</label>
+                                <select name="peso_tipo" id="peso_tipo_categoria" class="form-select">
+                                    <option value="max" {{ old('peso_tipo', 'max') === 'max' ? 'selected' : '' }}>Menor o igual</option>
+                                    <option value="min" {{ old('peso_tipo') === 'min' ? 'selected' : '' }}>Mayor o igual</option>
+                                </select>
                             </div>
 
-                            <div class="col-md-3">
-                                <label for="peso_hasta_categoria" class="form-label">Peso hasta</label>
+                            <div class="col-md-3 js-peso-categoria">
+                                <label for="peso_hasta_categoria" class="form-label">Peso referencia</label>
                                 <input type="number" name="peso_hasta" id="peso_hasta_categoria" value="{{ old('peso_hasta') }}" class="form-control @if(old('creating_categoria')) @error('peso_hasta') is-invalid @enderror @endif" min="0" step="0.01">
                                 @if (old('creating_categoria'))
                                     @error('peso_hasta')
@@ -159,13 +165,9 @@
                                     @enderror
                                 @endif
                             </div>
-
-                            <div class="col-md-12">
-                                <label for="grado_categoria" class="form-label">Grado</label>
-                                <input type="text" name="grado" id="grado_categoria" value="{{ old('grado') }}" class="form-control" maxlength="100">
-                            </div>
                         </div>
                         <input type="hidden" name="creating_categoria" value="1">
+                        <input type="hidden" name="nombre_base" id="nombre_base_categoria_hidden" value="{{ old('nombre_base') }}">
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -190,25 +192,11 @@
                     </div>
                     <div class="modal-body">
                         <div class="row g-3">
-                            <div class="col-md-8">
+                            <div class="col-md-12">
                                 <label for="nombre_modalidad" class="form-label">Modalidad</label>
                                 <input type="text" name="nombre" id="nombre_modalidad" value="{{ old('creating_modalidad') ? old('nombre') : '' }}" class="form-control @if(old('creating_modalidad')) @error('nombre') is-invalid @enderror @endif" maxlength="255" required>
                                 @if (old('creating_modalidad'))
                                     @error('nombre')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                @endif
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="genero_modalidad" class="form-label">Genero</label>
-                                <select name="genero" id="genero_modalidad" class="form-select @if(old('creating_modalidad')) @error('genero') is-invalid @enderror @endif" required>
-                                    <option value="">Seleccione</option>
-                                    <option value="Masculino" {{ old('creating_modalidad') && old('genero') === 'Masculino' ? 'selected' : '' }}>Masculino</option>
-                                    <option value="Femenino" {{ old('creating_modalidad') && old('genero') === 'Femenino' ? 'selected' : '' }}>Femenino</option>
-                                </select>
-                                @if (old('creating_modalidad'))
-                                    @error('genero')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 @endif
@@ -235,6 +223,20 @@
 
         $(document).ready(function () {
             list();
+            togglePesoCategoria(@json($oldModalidadNombre));
+
+            $('#modal-create-categoria').on('show.bs.modal', function (event) {
+                let button = $(event.relatedTarget);
+
+                if (! button.length) {
+                    return;
+                }
+
+                let modalidadNombre = button.data('modalidad-nombre') || '';
+                $('#modalidad_id_categoria').val(button.data('modalidad-id') || '');
+                $('#modalidad_nombre_referencia').text(modalidadNombre);
+                togglePesoCategoria(modalidadNombre);
+            });
 
             $('#input-search').on('keyup', function (event) {
                 if (event.keyCode === 13) {
@@ -254,7 +256,81 @@
                     list();
                 }, 600);
             });
+
+            $('#nombre_base_categoria').on('input blur', function () {
+                togglePesoCategoria($('#modalidad_nombre_referencia').text());
+            });
+            $('#genero_categoria, #edad_desde_categoria, #edad_hasta_categoria, #peso_tipo_categoria, #peso_hasta_categoria').on('input change', updateCategoriaNombre);
         });
+
+        function togglePesoCategoria(modalidadNombre) {
+            let categoriaNombre = $('#nombre_base_categoria').val();
+            let isKata = String(modalidadNombre || '').toLowerCase().includes('kata')
+                || String(categoriaNombre || '').toLowerCase().includes('kata');
+            $('.js-peso-categoria').toggleClass('d-none', isKata);
+            $('#peso_tipo_categoria, #peso_hasta_categoria').prop('disabled', isKata);
+
+            if (isKata) {
+                $('#peso_hasta_categoria').val('');
+            }
+
+            updateCategoriaNombre();
+        }
+
+        function updateCategoriaNombre() {
+            let modalidadNombre = $('#modalidad_nombre_referencia').text();
+            let nombreInput = $('#nombre_categoria');
+            let categoriaNombre = $('#nombre_base_categoria').val();
+            let isKata = String(modalidadNombre || '').toLowerCase().includes('kata')
+                || String(categoriaNombre || '').toLowerCase().includes('kata');
+            let peso = $('#peso_hasta_categoria').val();
+            let baseNombre = categoriaNombre
+                .replace(/\s+(menor|mayor)\s+o\s+igual\s+a\s+\d+([.,]\d+)?\s+kilos?$/i, '')
+                .replace(/\s+(masculino|femenino|mixto)$/i, '')
+                .replace(/\s+(\d+\s+a\s+\d+\s+anos|desde\s+\d+\s+anos|hasta\s+\d+\s+anos)$/i, '')
+                .trim();
+
+            let genero = $('#genero_categoria').val();
+            let edadDesde = $('#edad_desde_categoria').val();
+            let edadHasta = $('#edad_hasta_categoria').val();
+            let edadTexto = '';
+
+            if (edadDesde && edadHasta) {
+                edadTexto = `${edadDesde} a ${edadHasta} anos`;
+            } else if (edadDesde) {
+                edadTexto = `desde ${edadDesde} anos`;
+            } else if (edadHasta) {
+                edadTexto = `hasta ${edadHasta} anos`;
+            }
+
+            if (! baseNombre && ! genero && ! edadTexto && (! peso || isKata)) {
+                return;
+            }
+
+            let parts = [];
+
+            if (baseNombre) {
+                parts.push(baseNombre);
+            }
+
+            if (edadTexto) {
+                parts.push(edadTexto);
+            }
+
+            if (genero) {
+                parts.push(genero);
+            }
+
+            if (! isKata && peso) {
+                let textoPeso = $('#peso_tipo_categoria').val() === 'min' ? 'mayor o igual' : 'menor o igual';
+                parts.push(`${textoPeso} a ${peso} kilos`);
+            }
+
+            let generatedName = parts.join(' ');
+            nombreInput.val(generatedName);
+            $('#nombre_categoria_hidden').val(generatedName);
+            $('#nombre_base_categoria_hidden').val(baseNombre);
+        }
 
         function list(page = 1) {
             $('#div-results').html('<div class="col-12 text-center text-muted py-5">Cargando...</div>');

@@ -39,13 +39,27 @@ Resumen de cambios realizados en el proyecto de torneos.
   - `modalidades.index`
   - `modalidades.ajax.list`
 - Se ingresaron datos de ejemplo:
-  - Kumite Individual - Masculino
-  - Kumite Equipos - Masculino
-  - Kumite Individual - Femenino
-  - Kumite Equipos - Femenino
+  - Kumite Individual
+  - Kumite Equipos
 - El cierre de modalidades depende del origen:
   - Si se abre desde Torneos, vuelve a Torneos.
   - Si se abre desde el menu Modalidades, vuelve al dashboard.
+- Se ajusto la relacion para que una modalidad pueda tener varias categorias.
+- La modalidad se administra solo por nombre; el genero queda en cada categoria.
+- El boton verde de categoria en cada modalidad abre el modal con la modalidad seleccionada.
+- Se ajusto el seeder para crear una sola modalidad por nombre y asociarle sus categorias.
+- Se elimino el campo `genero` del modelo y tabla `modalidades`.
+- En el modal de crear categoria, el nombre de la modalidad elegida se muestra solo como referencia.
+- Se simplifico `categorias` para usar solamente `id`, `torneo_id`, `modalidad_id`, `nombre`, `genero`, `edad_desde`, `edad_hasta` y `peso_hasta`.
+- Se eliminaron `peso_desde`, `grado`, `orden`, `created_at` y `updated_at` de `categorias`.
+- En categorias de modalidades con la palabra `Kata` no se solicita peso; el backend tambien ignora `peso_hasta` para esas modalidades.
+- Para Kumite, `peso_hasta` queda como valor de referencia y la condicion de peso maximo/minimo se escribe en el nombre de la categoria.
+- En el modal de categoria se agrego un selector visual para indicar si el peso es `menor o igual` o `mayor o igual`; no se guarda como columna, solo ayuda a formar el nombre.
+- El genero seleccionado se agrega al nombre de la categoria para todas las modalidades.
+- Se agrego migracion para normalizar categorias existentes y sumar el genero al nombre sin duplicarlo.
+- El nombre de categoria ahora se genera con las opciones seleccionadas: texto base, edad, genero y peso cuando aplica.
+- Se agrego migracion para regenerar nombres existentes desde `edad_desde`, `edad_hasta`, `genero` y `peso_hasta`, conservando `mayor o igual` cuando ya estaba escrito.
+- El campo visible `Categoria` quedo en solo lectura; el sistema genera y guarda el nombre desde `nombre_base` y las opciones elegidas.
 
 ## Dashboard Y Navegacion
 

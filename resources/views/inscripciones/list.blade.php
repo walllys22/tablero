@@ -38,7 +38,7 @@
                                                 @if ($detalle->categoria)
                                                     {{ $detalle->categoria->nombre }} /
                                                 @endif
-                                                {{ $detalle->modalidad->nombre }} - {{ $detalle->modalidad->genero }}:
+                                                {{ $detalle->modalidad->nombre }}:
                                                 {{ number_format((float) $detalle->costo, 2) }}
                                             </li>
                                         @endforeach

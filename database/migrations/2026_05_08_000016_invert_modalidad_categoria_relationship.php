@@ -53,7 +53,7 @@ return new class extends Migration
             ->get();
 
         foreach ($modalidades as $modalidad) {
-            $key = $modalidad->torneo_id . '|' . mb_strtolower($modalidad->nombre) . '|' . mb_strtolower($modalidad->genero);
+            $key = $modalidad->torneo_id . '|' . mb_strtolower($modalidad->nombre);
             $canonicalModalidades[$key] ??= $modalidad->id;
             $canonicalId = $canonicalModalidades[$key];
 
@@ -99,7 +99,7 @@ return new class extends Migration
         $seen = [];
 
         foreach ($modalidades as $modalidad) {
-            $key = $modalidad->torneo_id . '|' . mb_strtolower($modalidad->nombre) . '|' . mb_strtolower($modalidad->genero);
+            $key = $modalidad->torneo_id . '|' . mb_strtolower($modalidad->nombre);
 
             if (isset($seen[$key])) {
                 $duplicateIds[] = $modalidad->id;
@@ -120,7 +120,7 @@ return new class extends Migration
             $table->dropUnique('modalidades_categoria_nombre_genero_unique');
             $table->dropForeign('modalidades_categoria_fk');
             $table->dropColumn('categoria_id');
-            $table->unique(['torneo_id', 'nombre', 'genero'], 'modalidades_torneo_nombre_genero_unique');
+            $table->unique(['torneo_id', 'nombre'], 'modalidades_torneo_nombre_unique');
         });
 
         Schema::table('categorias', function (Blueprint $table) {
@@ -153,7 +153,7 @@ return new class extends Migration
         });
 
         Schema::table('modalidades', function (Blueprint $table) {
-            $table->dropUnique('modalidades_torneo_nombre_genero_unique');
+            $table->dropUnique('modalidades_torneo_nombre_unique');
             $table->foreignId('categoria_id')
                 ->nullable()
                 ->after('torneo_id')

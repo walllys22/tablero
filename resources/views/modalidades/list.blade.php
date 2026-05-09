@@ -5,7 +5,6 @@
                 <tr>
                     <th style="text-align: center">ID</th>
                     <th style="text-align: center">Modalidad</th>
-                    <th style="text-align: center">Genero</th>
                     <th style="text-align: center">Categorias</th>
                     <th style="text-align: center">Opciones</th>
                 </tr>
@@ -19,16 +18,11 @@
                         <td style="vertical-align: middle;">
                             <strong>{{ $item->nombre }}</strong>
                         </td>
-                        <td style="text-align: center; vertical-align: middle;">
-                            <label class="label {{ strtolower($item->genero) === 'masculino' ? 'label-primary' : 'label-danger' }}">
-                                {{ $item->genero }}
-                            </label>
-                        </td>
+
                         <td style="vertical-align: middle;">
                             @forelse ($item->categorias as $categoria)
                                 <div>
                                     <strong>{{ $categoria->nombre }}</strong>
-                                    <small class="text-muted">{{ $categoria->descripcion ? ' | ' . $categoria->descripcion : '' }}</small>
                                 </div>
                             @empty
                                 <span class="text-muted">Sin categorias</span>
@@ -45,7 +39,7 @@
                                 <button type="button" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete-modalidad-{{ $item->id }}" class="btn btn-sm btn-danger">
                                     <i class="bi bi-trash"></i>
                                 </button>
-                                <button type="button" title="Categoria" data-bs-toggle="modal" data-bs-target="#modal-create-categoria" {{ $modalidades->isEmpty() ? 'disabled' : '' }} class="btn btn-sm btn-success">
+                                <button type="button" title="Categoria" data-bs-toggle="modal" data-bs-target="#modal-create-categoria" data-modalidad-id="{{ $item->id }}" data-modalidad-nombre="{{ $item->nombre }}" class="btn btn-sm btn-success">
                                     <i class="bi bi-tags"></i>
                                 </button>
                             </div>
@@ -84,37 +78,27 @@
 
 @foreach ($data as $item)
     <div class="modal fade" id="modal-view-modalidad-{{ $item->id }}" tabindex="-1" aria-labelledby="modalViewModalidadLabel{{ $item->id }}" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered ">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="modalViewModalidadLabel{{ $item->id }}">Ver modalidad</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">ID</label>
-                            <input type="text" value="{{ $item->id }}" class="form-control" readonly>
-                        </div>
-
-                        <div class="col-md-8">
+                        <div class="col-md-6">
                             <label class="form-label">Torneo</label>
                             <input type="text" value="{{ $torneo->nombre ?: 'Torneo sin nombre' }}" class="form-control" readonly>
                         </div>
 
-                        <div class="col-md-8">
+                        <div class="col-md-6">
                             <label class="form-label">Modalidad</label>
                             <input type="text" value="{{ $item->nombre }}" class="form-control" readonly>
                         </div>
 
-                        <div class="col-md-4">
-                            <label class="form-label">Genero</label>
-                            <input type="text" value="{{ $item->genero }}" class="form-control" readonly>
-                        </div>
-
                         <div class="col-md-12">
                             <label class="form-label">Categorias</label>
-                            <textarea class="form-control" rows="4" readonly>@foreach ($item->categorias as $categoria){{ $categoria->nombre }}{{ $categoria->descripcion ? ' | ' . $categoria->descripcion : '' }}
+                            <textarea class="form-control" rows="4" readonly>@foreach ($item->categorias as $categoria){{ $categoria->nombre }}
 @endforeach</textarea>
                         </div>
                     </div>
@@ -134,7 +118,7 @@
                 <input type="hidden" name="editing_modalidad" value="{{ $item->id }}">
 
                 <div class="modal-content">
-                    <div class="modal-header bg-warning text-dark">
+                    <div class="modal-header bg-info text-white">
                         <h5 class="modal-title fw-bold" id="modalEditModalidadLabel{{ $item->id }}">Editar modalidad</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
@@ -150,18 +134,6 @@
                                 @endif
                             </div>
 
-                            <div class="col-md-4">
-                                <label for="genero_modalidad_{{ $item->id }}" class="form-label">Genero</label>
-                                <select name="genero" id="genero_modalidad_{{ $item->id }}" class="form-select @error('genero') is-invalid @enderror" required>
-                                    <option value="Masculino" {{ (old('editing_modalidad') == $item->id ? old('genero') : $item->genero) === 'Masculino' ? 'selected' : '' }}>Masculino</option>
-                                    <option value="Femenino" {{ (old('editing_modalidad') == $item->id ? old('genero') : $item->genero) === 'Femenino' ? 'selected' : '' }}>Femenino</option>
-                                </select>
-                                @if (old('editing_modalidad') == $item->id)
-                                    @error('genero')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                @endif
-                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -182,7 +154,7 @@
                 @method('DELETE')
 
                 <div class="modal-content">
-                    <div class="modal-header">
+                    <div class="modal-header bg-danger text-white">
                         <h5 class="modal-title" id="modalDeleteModalidadLabel{{ $item->id }}">Eliminar modalidad</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>

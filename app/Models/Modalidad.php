@@ -14,7 +14,6 @@ class Modalidad extends Model
     protected $fillable = [
         'torneo_id',
         'nombre',
-        'genero',
     ];
 
     public function torneo()

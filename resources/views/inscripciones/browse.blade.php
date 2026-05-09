@@ -197,8 +197,8 @@
                                                 <input type="hidden" class="js-modalidad-id" name="modalidades[{{ $index }}][id]" value="{{ $categoria->modalidad_id }}" {{ $oldMatch ? '' : 'disabled' }}>
                                             </td>
                                             <td>
-                                                <strong>{{ $categoria->modalidad->nombre ?? 'Sin modalidad' }}</strong> - {{ $categoria->modalidad->genero ?? $categoria->genero }}<br>
-                                                <small class="text-muted">{{ $categoria->nombre }}{{ $categoria->descripcion ? ' | ' . $categoria->descripcion : '' }}</small>
+                                                <strong>{{ $categoria->modalidad->nombre ?? 'Sin modalidad' }}</strong>{{ $categoria->genero ? ' - ' . $categoria->genero : '' }}<br>
+                                                <small class="text-muted">{{ $categoria->nombre }}</small>
                                             </td>
                                             <td>
                                                 <input type="number" class="form-control form-control-sm js-modalidad-costo" name="modalidades[{{ $index }}][costo]" value="{{ $oldMatch['costo'] ?? '0' }}" min="0" step="0.01" {{ $oldMatch ? '' : 'disabled' }}>
