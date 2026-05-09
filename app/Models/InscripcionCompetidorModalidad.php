@@ -14,6 +14,7 @@ class InscripcionCompetidorModalidad extends Model
     protected $fillable = [
         'inscripcion_competidor_id',
         'modalidad_id',
+        'categoria_id',
         'costo',
     ];
 
@@ -29,5 +30,10 @@ class InscripcionCompetidorModalidad extends Model
     public function modalidad()
     {
         return $this->belongsTo(Modalidad::class);
+    }
+
+    public function categoria()
+    {
+        return $this->belongsTo(Categoria::class);
     }
 }

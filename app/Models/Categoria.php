@@ -13,6 +13,7 @@ class Categoria extends Model
 
     protected $fillable = [
         'torneo_id',
+        'modalidad_id',
         'nombre',
         'genero',
         'edad_desde',
@@ -36,9 +37,9 @@ class Categoria extends Model
         return $this->belongsTo(Torneo::class);
     }
 
-    public function modalidades()
+    public function modalidad()
     {
-        return $this->hasMany(Modalidad::class);
+        return $this->belongsTo(Modalidad::class);
     }
 
     public function getDescripcionAttribute(): string

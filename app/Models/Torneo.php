@@ -15,6 +15,11 @@ class Torneo extends Model
         'fecha_inicio',
         'fecha_fin',
         'nombre',
+        'ciudad',
+        'direccion',
+        'sistema_competencia',
+        'modalidad_puntaje',
+        'organiza',
         'persona_id',
         'lugar',
         'logo',
@@ -50,5 +55,10 @@ class Torneo extends Model
     public function inscripcionCompetidores()
     {
         return $this->hasMany(InscripcionCompetidor::class);
+    }
+
+    public function arbitros()
+    {
+        return $this->hasMany(Arbitro::class);
     }
 }

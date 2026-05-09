@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\PersonaController;
+use App\Http\Controllers\ArbitroController;
 use App\Http\Controllers\InscripcionController;
+use App\Http\Controllers\LicenciaTipoController;
 use App\Http\Controllers\ModalidadController;
 use App\Http\Controllers\OrganizacionController;
 use App\Http\Controllers\ProfileController;
@@ -62,16 +64,27 @@ Route::middleware('auth')->group(function () {
     Route::patch('/torneos/{torneo}', [TorneoController::class, 'update'])->name('torneos.update');
     Route::patch('/torneos/{torneo}/estado', [TorneoController::class, 'toggleStatus'])->name('torneos.toggle-status');
     Route::delete('/torneos/{torneo}', [TorneoController::class, 'destroy'])->name('torneos.destroy');
+    Route::get('/torneos/{torneo}/arbitros', [ArbitroController::class, 'index'])->name('arbitros.index');
+    Route::post('/torneos/{torneo}/arbitros', [ArbitroController::class, 'store'])->name('arbitros.store');
+    Route::patch('/torneos/{torneo}/arbitros/{arbitro}', [ArbitroController::class, 'update'])->name('arbitros.update');
+    Route::delete('/torneos/{torneo}/arbitros/{arbitro}', [ArbitroController::class, 'destroy'])->name('arbitros.destroy');
     Route::get('/torneos/{torneo}/inscripciones', [InscripcionController::class, 'index'])->name('inscripciones.index');
     Route::get('/torneos/{torneo}/inscripciones/ajax/list', [InscripcionController::class, 'ajaxList'])->name('inscripciones.ajax.list');
     Route::post('/torneos/{torneo}/inscripciones/organizaciones', [InscripcionController::class, 'storeOrganizacion'])->name('inscripciones.organizaciones.store');
     Route::post('/torneos/{torneo}/inscripciones/competidores', [InscripcionController::class, 'storeCompetidor'])->name('inscripciones.competidores.store');
+    Route::get('/torneos/{torneo}/inscripciones/{inscripcion}/participantes', [InscripcionController::class, 'participantes'])->name('inscripciones.participantes');
+    Route::post('/torneos/{torneo}/inscripciones/{inscripcion}/participantes', [InscripcionController::class, 'storeParticipante'])->name('inscripciones.participantes.store');
     Route::get('/torneos/{torneo}/modalidades', [ModalidadController::class, 'index'])->name('modalidades.index');
     Route::get('/torneos/{torneo}/modalidades/ajax/list', [ModalidadController::class, 'ajaxList'])->name('modalidades.ajax.list');
     Route::post('/torneos/{torneo}/categorias', [ModalidadController::class, 'storeCategoria'])->name('categorias.store');
     Route::post('/torneos/{torneo}/modalidades', [ModalidadController::class, 'store'])->name('modalidades.store');
     Route::patch('/torneos/{torneo}/modalidades/{modalidad}', [ModalidadController::class, 'update'])->name('modalidades.update');
     Route::delete('/torneos/{torneo}/modalidades/{modalidad}', [ModalidadController::class, 'destroy'])->name('modalidades.destroy');
+
+    Route::get('/licencias', [LicenciaTipoController::class, 'index'])->name('licencias.index');
+    Route::post('/licencias', [LicenciaTipoController::class, 'store'])->name('licencias.store');
+    Route::patch('/licencias/{licencia}', [LicenciaTipoController::class, 'update'])->name('licencias.update');
+    Route::delete('/licencias/{licencia}', [LicenciaTipoController::class, 'destroy'])->name('licencias.destroy');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

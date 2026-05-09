@@ -13,7 +13,6 @@ class Modalidad extends Model
 
     protected $fillable = [
         'torneo_id',
-        'categoria_id',
         'nombre',
         'genero',
     ];
@@ -23,13 +22,13 @@ class Modalidad extends Model
         return $this->belongsTo(Torneo::class);
     }
 
-    public function categoria()
-    {
-        return $this->belongsTo(Categoria::class);
-    }
-
     public function inscripcionCompetidorModalidades()
     {
         return $this->hasMany(InscripcionCompetidorModalidad::class);
+    }
+
+    public function categorias()
+    {
+        return $this->hasMany(Categoria::class);
     }
 }

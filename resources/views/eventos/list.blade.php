@@ -1,13 +1,13 @@
 <div class="col-md-12">
     <div class="table-responsive">
-        <table id="dataTable" class="table table-bordered table-hover eventos-table">
+        <table id="dataTable" class="table table-bordered table-hover eventos-table w-100">
             <thead>
                 <tr>
                     <th style="text-align: center">Torneo</th>
                     <th style="text-align: center">Responsable</th>
-                    <th style="text-align: center">Lugar</th>
-                    <th style="text-align: center">Fecha inicio</th>
-                    <th style="text-align: center">Fecha fin</th>
+                    <th style="text-align: center">Ciudad</th>
+                    <th style="text-align: center">Sistema</th>
+                    <th style="text-align: center">Fecha</th>
                     <th style="text-align: center">Estado</th>
                     <th style="text-align: center">Acciones</th>
                 </tr>
@@ -31,7 +31,6 @@
                                 @endif
                                 <div>
                                     <strong>{{ $item->nombre ?: 'Sin nombre' }}</strong><br>
-                                    <small class="text-muted">ID: {{ $item->id }}</small>
                                 </div>
                             </div>
                         </td>
@@ -44,16 +43,8 @@
                                     @else
                                         <span class="text-muted" style="font-style: italic;">Sin telefono</span>
                                     @endif
-                                    @if ($responsableWhatsapp)
-                                        <a href="https://wa.me/{{ $responsableWhatsapp }}?text=Hola {{ urlencode($item->persona->first_name) }}" target="_blank" class="label label-success" style="margin-top: 5px; padding: 3px 8px; font-size: 10px; text-decoration: none; cursor: pointer;">
-                                            WhatsApp
-                                        </a>
-                                    @endif
                                     @if ($item->persona->email)
                                         <small style="margin-top: 5px; display: block;">{{ $item->persona->email }}</small>
-                                    @endif
-                                    @if ($item->persona->address)
-                                        <small class="text-muted" style="margin-top: 4px; display: block;">{{ $item->persona->address }}</small>
                                     @endif
                                 </div>
                             @else
@@ -61,18 +52,23 @@
                             @endif
                         </td>
                         <td style="text-align: center; vertical-align: middle;">
-                            {{ $item->lugar ?: 'Sin lugar' }}
-                        </td>
-                        <td style="text-align: center; vertical-align: middle;">
-                            @if ($item->fecha_inicio)
-                                <label class="label label-primary">{{ $item->fecha_inicio->format('d/m/Y') }}</label>
-                            @else
-                                <span class="text-muted">Sin fecha</span>
+                            <strong>{{ $item->ciudad ?: ($item->lugar ?: 'Sin ciudad') }}</strong>
+                            @if ($item->direccion)
+                                <br><small class="text-muted">{{ $item->direccion }}</small>
                             @endif
                         </td>
                         <td style="text-align: center; vertical-align: middle;">
-                            @if ($item->fecha_fin)
-                                <label class="label label-info">{{ $item->fecha_fin->format('d/m/Y') }}</label>
+                            <label class="label label-info">{{ strtoupper($item->sistema_competencia ?: 'tradicional') }}</label>
+                            @if ($item->modalidad_puntaje)
+                                <br><small class="text-muted">{{ $item->modalidad_puntaje }}</small>
+                            @endif
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            @if ($item->fecha_inicio)
+                                <span>
+                                    desde el {{ $item->fecha_inicio->format('d/m/Y') }}
+                                    al {{ $item->fecha_fin->format('d/m/Y') }}
+                                </span>
                             @else
                                 <span class="text-muted">Sin fecha</span>
                             @endif
@@ -91,6 +87,9 @@
                             </a>
                             <a href="{{ route('inscripciones.index', $item) }}" title="Inscripciones" class="btn btn-sm btn-success">
                                 <i class="bi bi-person-check"></i>
+                            </a>
+                            <a href="{{ route('arbitros.index', $item) }}" title="Jueces" class="btn btn-sm btn-secondary">
+                                <i class="bi bi-person-badge"></i>
                             </a>
                             @if ($item->status == 1)
                                 <button type="button" title="Inactivar" data-bs-toggle="modal" data-bs-target="#modal-status-{{ $item->id }}" class="btn btn-sm btn-warning text-white">
@@ -119,7 +118,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7">
+                        <td colspan="8">
                             <h5 class="text-center eventos-empty">
                                 <img src="{{ asset('images/empty.png') }}" width="120" alt="Sin resultados">
                                 <br><br>
@@ -209,8 +208,8 @@
 
                                     <div class="col-md-4">
                                         <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
-                                            <div class="fw-bold" style="font-size: 12px; line-height: 1;">Lugar</div>
-                                            <div class="fw-semibold" style="font-size: 14px;">{{ $item->lugar ?: 'Sin lugar' }}</div>
+                                            <div class="fw-bold" style="font-size: 12px; line-height: 1;">Ciudad</div>
+                                            <div class="fw-semibold" style="font-size: 14px;">{{ $item->ciudad ?: ($item->lugar ?: 'Sin ciudad') }}</div>
                                         </div>
                                     </div>
 
@@ -225,6 +224,34 @@
                                     <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
                                         <div class="fw-bold" style="font-size: 12px; line-height: 1;">Fecha inicio</div>
                                         <div class="fw-semibold" style="font-size: 14px;">{{ $item->fecha_inicio ? $item->fecha_inicio->format('d/m/Y') : 'Sin fecha' }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-8">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Direccion</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->direccion ?: 'Sin direccion' }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Sistema</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ strtoupper($item->sistema_competencia ?: 'tradicional') }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Modalidad puntaje</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->modalidad_puntaje ?: 'No registrada' }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Organiza</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->organiza ?: 'No registrado' }}</div>
                                     </div>
                                 </div>
 
@@ -291,10 +318,55 @@
                                         </div>
 
                                         <div class="col-md-4">
-                                            <label for="lugar_edit_{{ $item->id }}" class="form-label mb-1">Lugar</label>
-                                            <input type="text" name="lugar" id="lugar_edit_{{ $item->id }}" value="{{ old('editing_torneo') == $item->id ? old('lugar') : $item->lugar }}" class="form-control @if(old('editing_torneo') == $item->id) @error('lugar') is-invalid @enderror @endif" maxlength="255">
+                                            <label for="ciudad_edit_{{ $item->id }}" class="form-label mb-1">Ciudad</label>
+                                            <input type="text" name="ciudad" id="ciudad_edit_{{ $item->id }}" value="{{ old('editing_torneo') == $item->id ? old('ciudad') : ($item->ciudad ?: $item->lugar) }}" class="form-control @if(old('editing_torneo') == $item->id) @error('ciudad') is-invalid @enderror @endif" maxlength="255">
                                             @if (old('editing_torneo') == $item->id)
-                                                @error('lugar')
+                                                @error('ciudad')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            @endif
+                                        </div>
+
+                                        <div class="col-md-8">
+                                            <label for="direccion_edit_{{ $item->id }}" class="form-label mb-1">Direccion</label>
+                                            <input type="text" name="direccion" id="direccion_edit_{{ $item->id }}" value="{{ old('editing_torneo') == $item->id ? old('direccion') : $item->direccion }}" class="form-control @if(old('editing_torneo') == $item->id) @error('direccion') is-invalid @enderror @endif" maxlength="1000">
+                                            @if (old('editing_torneo') == $item->id)
+                                                @error('direccion')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            @endif
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label for="sistema_competencia_edit_{{ $item->id }}" class="form-label mb-1">Sistema competencia</label>
+                                            @php $sistemaActual = old('editing_torneo') == $item->id ? old('sistema_competencia') : ($item->sistema_competencia ?: 'tradicional'); @endphp
+                                            <select name="sistema_competencia" id="sistema_competencia_edit_{{ $item->id }}" class="form-select @if(old('editing_torneo') == $item->id) @error('sistema_competencia') is-invalid @enderror @endif" required>
+                                                <option value="tradicional" {{ $sistemaActual === 'tradicional' ? 'selected' : '' }}>Tradicional</option>
+                                                <option value="wkf" {{ $sistemaActual === 'wkf' ? 'selected' : '' }}>WKF</option>
+                                                <option value="otro" {{ $sistemaActual === 'otro' ? 'selected' : '' }}>Otro</option>
+                                            </select>
+                                            @if (old('editing_torneo') == $item->id)
+                                                @error('sistema_competencia')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            @endif
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="modalidad_puntaje_edit_{{ $item->id }}" class="form-label mb-1">Modalidad de puntaje</label>
+                                            <input type="text" name="modalidad_puntaje" id="modalidad_puntaje_edit_{{ $item->id }}" value="{{ old('editing_torneo') == $item->id ? old('modalidad_puntaje') : $item->modalidad_puntaje }}" class="form-control @if(old('editing_torneo') == $item->id) @error('modalidad_puntaje') is-invalid @enderror @endif" maxlength="100">
+                                            @if (old('editing_torneo') == $item->id)
+                                                @error('modalidad_puntaje')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            @endif
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="organiza_edit_{{ $item->id }}" class="form-label mb-1">Organiza</label>
+                                            <input type="text" name="organiza" id="organiza_edit_{{ $item->id }}" value="{{ old('editing_torneo') == $item->id ? old('organiza') : $item->organiza }}" class="form-control @if(old('editing_torneo') == $item->id) @error('organiza') is-invalid @enderror @endif" maxlength="255">
+                                            @if (old('editing_torneo') == $item->id)
+                                                @error('organiza')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             @endif

@@ -24,6 +24,21 @@
     };
 
     $bloodTypes = ['A Rh (+)', 'A Rh (-)', 'B Rh (+)', 'B Rh (-)', 'AB Rh (+)', 'AB Rh (-)', 'O Rh (+)', 'O Rh (-)'];
+
+    $defaultPersonImage = asset('images/default.jpg');
+    $previewImage = $defaultPersonImage;
+
+    if ($persona?->image) {
+        $imagePath = ltrim($persona->image, '/');
+
+        if (\Illuminate\Support\Str::startsWith($imagePath, ['http://', 'https://'])) {
+            $previewImage = $imagePath;
+        } elseif (\Illuminate\Support\Str::startsWith($imagePath, ['storage/', 'images/'])) {
+            $previewImage = asset($imagePath);
+        } else {
+            $previewImage = asset('storage/' . $imagePath);
+        }
+    }
 @endphp
 
 <div class="row g-3">
@@ -102,10 +117,14 @@
 
     <div class="col-md-4">
         <label for="image{{ $fieldId }}" class="form-label">Imagen</label>
+        <div class="mb-2">
+            <img src="{{ $previewImage }}" 
+                 class="img-thumbnail image-expandable" 
+                 style="height: 100px; width: 100px; object-fit: cover;" 
+                 alt="Vista previa"
+                 onerror="this.src='{{ $defaultPersonImage }}'">
+        </div>
         <input type="file" name="image" id="image{{ $fieldId }}" class="form-control {{ $hasError('image') ? 'is-invalid' : '' }}" accept="image/jpeg,image/png,image/webp">
-        @if ($persona?->image)
-            <small class="text-muted">Imagen actual: {{ basename($persona->image) }}</small>
-        @endif
         @if ($hasError('image'))
             <div class="invalid-feedback">{{ $errors->first('image') }}</div>
         @endif

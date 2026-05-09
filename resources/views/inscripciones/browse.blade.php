@@ -45,9 +45,9 @@
             <div class="alert alert-warning">
                 Primero inscriba una organizacion al campeonato para habilitar el registro de competidores.
             </div>
-        @elseif ($modalidades->isEmpty())
+        @elseif ($categorias->isEmpty())
             <div class="alert alert-warning">
-                Este campeonato no tiene modalidades registradas. Cree modalidades antes de inscribir competidores.
+                Este campeonato no tiene categorias registradas. Cree modalidades y categorias antes de inscribir competidores.
             </div>
         @endif
 
@@ -186,21 +186,19 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($modalidades as $index => $modalidad)
+                                    @foreach ($categorias as $index => $categoria)
                                         @php
                                             $oldModalidades = collect(old('modalidades', []));
-                                            $oldMatch = $oldModalidades->firstWhere('id', (string) $modalidad->id) ?: $oldModalidades->firstWhere('id', $modalidad->id);
+                                            $oldMatch = $oldModalidades->firstWhere('categoria_id', (string) $categoria->id) ?: $oldModalidades->firstWhere('categoria_id', $categoria->id);
                                         @endphp
                                         <tr>
                                             <td class="text-center">
-                                                <input type="checkbox" class="form-check-input js-modalidad-check" name="modalidades[{{ $index }}][id]" value="{{ $modalidad->id }}" {{ $oldMatch ? 'checked' : '' }}>
+                                                <input type="checkbox" class="form-check-input js-modalidad-check" name="modalidades[{{ $index }}][categoria_id]" value="{{ $categoria->id }}" {{ $oldMatch ? 'checked' : '' }}>
+                                                <input type="hidden" class="js-modalidad-id" name="modalidades[{{ $index }}][id]" value="{{ $categoria->modalidad_id }}" {{ $oldMatch ? '' : 'disabled' }}>
                                             </td>
                                             <td>
-                                                @if ($modalidad->categoria)
-                                                    <strong>{{ $modalidad->categoria->nombre }}</strong>
-                                                    <small class="text-muted">{{ $modalidad->categoria->descripcion ? ' | ' . $modalidad->categoria->descripcion : '' }}</small><br>
-                                                @endif
-                                                {{ $modalidad->nombre }} - {{ $modalidad->genero }}
+                                                <strong>{{ $categoria->modalidad->nombre ?? 'Sin modalidad' }}</strong> - {{ $categoria->modalidad->genero ?? $categoria->genero }}<br>
+                                                <small class="text-muted">{{ $categoria->nombre }}{{ $categoria->descripcion ? ' | ' . $categoria->descripcion : '' }}</small>
                                             </td>
                                             <td>
                                                 <input type="number" class="form-control form-control-sm js-modalidad-costo" name="modalidades[{{ $index }}][costo]" value="{{ $oldMatch['costo'] ?? '0' }}" min="0" step="0.01" {{ $oldMatch ? '' : 'disabled' }}>
@@ -300,6 +298,7 @@
             $('.js-modalidad-check').each(function () {
                 let row = $(this).closest('tr');
                 row.find('.js-modalidad-costo').prop('disabled', !this.checked);
+                row.find('.js-modalidad-id').prop('disabled', !this.checked);
             });
 
             updateCompetidorTotal();

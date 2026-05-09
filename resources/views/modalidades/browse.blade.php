@@ -32,11 +32,11 @@
                                 <small class="text-muted">{{ $torneo->nombre ?: 'Torneo sin nombre' }}</small>
                             </div>
                             <div class="col-md-4 text-end px-3 py-3">
-                                <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#modal-create-categoria">
-                                    <i class="bi bi-tags"></i> <span>Categoria</span>
-                                </button>
-                                <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#modal-create-modalidad" {{ $categorias->isEmpty() ? 'disabled' : '' }}>
+                                <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#modal-create-modalidad">
                                     <i class="bi bi-plus-lg"></i> <span>Crear</span>
+                                </button>
+                                <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#modal-create-categoria" {{ $modalidades->isEmpty() ? 'disabled' : '' }}>
+                                    <i class="bi bi-tags"></i> <span>Categoria</span>
                                 </button>
                                 <a href="{{ $closeRoute }}" class="btn btn-warning text-white">
                                     <i class="bi bi-x-lg"></i> <span>Cerrar</span>
@@ -48,20 +48,20 @@
             </div>
         </div>
 
-        @if ($categorias->isEmpty())
+        @if ($modalidades->isEmpty())
             <div class="alert alert-warning">
-                Primero cree las categorias del campeonato. Despues podra registrar modalidades dentro de cada categoria.
+                Primero cree las modalidades del campeonato. Despues podra registrar categorias dentro de cada modalidad.
             </div>
         @else
             <div class="row mb-3">
                 <div class="col-12">
                     <div class="card shadow-sm">
                         <div class="card-body">
-                            <div class="fw-bold mb-2">Categorias registradas</div>
+                            <div class="fw-bold mb-2">Modalidades registradas</div>
                             <div class="d-flex flex-wrap gap-2">
-                                @foreach ($categorias as $categoria)
+                                @foreach ($modalidades as $modalidad)
                                     <span class="label label-primary">
-                                        {{ $categoria->nombre }}{{ $categoria->descripcion ? ' | ' . $categoria->descripcion : '' }}
+                                        {{ $modalidad->nombre }} - {{ $modalidad->genero }}
                                     </span>
                                 @endforeach
                             </div>
@@ -114,6 +114,23 @@
                     </div>
                     <div class="modal-body">
                         <div class="row g-3">
+                            <div class="col-md-12">
+                                <label for="modalidad_categoria" class="form-label">Modalidad</label>
+                                <select name="modalidad_id" id="modalidad_categoria" class="form-select @if(old('creating_categoria')) @error('modalidad_id') is-invalid @enderror @endif" required>
+                                    <option value="">Seleccione</option>
+                                    @foreach ($modalidades as $modalidad)
+                                        <option value="{{ $modalidad->id }}" {{ old('creating_categoria') && old('modalidad_id') == $modalidad->id ? 'selected' : '' }}>
+                                            {{ $modalidad->nombre }} - {{ $modalidad->genero }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if (old('creating_categoria'))
+                                    @error('modalidad_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+
                             <div class="col-md-6">
                                 <label for="nombre_categoria" class="form-label">Categoria</label>
                                 <input type="text" name="nombre" id="nombre_categoria" value="{{ old('creating_categoria') ? old('nombre') : '' }}" class="form-control @if(old('creating_categoria')) @error('nombre') is-invalid @enderror @endif" maxlength="255" required>
@@ -199,23 +216,6 @@
                     </div>
                     <div class="modal-body">
                         <div class="row g-3">
-                            <div class="col-md-12">
-                                <label for="categoria_modalidad" class="form-label">Categoria</label>
-                                <select name="categoria_id" id="categoria_modalidad" class="form-select @if(old('creating_modalidad')) @error('categoria_id') is-invalid @enderror @endif" required>
-                                    <option value="">Seleccione</option>
-                                    @foreach ($categorias as $categoria)
-                                        <option value="{{ $categoria->id }}" {{ old('creating_modalidad') && old('categoria_id') == $categoria->id ? 'selected' : '' }}>
-                                            {{ $categoria->nombre }}{{ $categoria->descripcion ? ' | ' . $categoria->descripcion : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @if (old('creating_modalidad'))
-                                    @error('categoria_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                @endif
-                            </div>
-
                             <div class="col-md-8">
                                 <label for="nombre_modalidad" class="form-label">Modalidad</label>
                                 <input type="text" name="nombre" id="nombre_modalidad" value="{{ old('creating_modalidad') ? old('nombre') : '' }}" class="form-control @if(old('creating_modalidad')) @error('nombre') is-invalid @enderror @endif" maxlength="255" required>

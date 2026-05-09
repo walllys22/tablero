@@ -35,8 +35,8 @@
                                     <ul class="mb-0 mt-1">
                                         @foreach ($competidor->modalidades as $detalle)
                                             <li>
-                                                @if ($detalle->modalidad->categoria)
-                                                    {{ $detalle->modalidad->categoria->nombre }} /
+                                                @if ($detalle->categoria)
+                                                    {{ $detalle->categoria->nombre }} /
                                                 @endif
                                                 {{ $detalle->modalidad->nombre }} - {{ $detalle->modalidad->genero }}:
                                                 {{ number_format((float) $detalle->costo, 2) }}
@@ -58,9 +58,9 @@
                             <button type="button" class="btn btn-sm btn-primary" title="Recibo" data-bs-toggle="modal" data-bs-target="#modal-recibo-organizacion-{{ $inscripcion->id }}">
                                 <i class="bi bi-receipt"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-success" title="Agregar competidor" onclick="openCompetidorModal('{{ $inscripcion->id }}')">
+                            <a href="{{ route('inscripciones.participantes', [$torneo, $inscripcion]) }}" class="btn btn-sm btn-success" title="Participantes">
                                 <i class="bi bi-person-plus"></i>
-                            </button>
+                            </a>
                         </td>
                     </tr>
                 @empty

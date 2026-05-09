@@ -4,9 +4,9 @@
             <thead>
                 <tr>
                     <th style="text-align: center">ID</th>
-                    <th style="text-align: center">Categoria</th>
                     <th style="text-align: center">Modalidad</th>
                     <th style="text-align: center">Genero</th>
+                    <th style="text-align: center">Categorias</th>
                     <th style="text-align: center">Opciones</th>
                 </tr>
             </thead>
@@ -17,20 +17,22 @@
                             {{ $item->id }}
                         </td>
                         <td style="vertical-align: middle;">
-                            @if ($item->categoria)
-                                <strong>{{ $item->categoria->nombre }}</strong><br>
-                                <small class="text-muted">{{ $item->categoria->descripcion ?: 'Sin detalle' }}</small>
-                            @else
-                                <span class="text-muted">Sin categoria</span>
-                            @endif
-                        </td>
-                        <td style="vertical-align: middle;">
                             <strong>{{ $item->nombre }}</strong>
                         </td>
                         <td style="text-align: center; vertical-align: middle;">
                             <label class="label {{ strtolower($item->genero) === 'masculino' ? 'label-primary' : 'label-danger' }}">
                                 {{ $item->genero }}
                             </label>
+                        </td>
+                        <td style="vertical-align: middle;">
+                            @forelse ($item->categorias as $categoria)
+                                <div>
+                                    <strong>{{ $categoria->nombre }}</strong>
+                                    <small class="text-muted">{{ $categoria->descripcion ? ' | ' . $categoria->descripcion : '' }}</small>
+                                </div>
+                            @empty
+                                <span class="text-muted">Sin categorias</span>
+                            @endforelse
                         </td>
                         <td style="vertical-align: middle; width: 14%" class="text-end">
                             <button type="button" title="Ver" data-bs-toggle="modal" data-bs-target="#modal-view-modalidad-{{ $item->id }}" class="btn btn-sm btn-primary">
@@ -96,16 +98,6 @@
                         </div>
 
                         <div class="col-md-8">
-                            <label class="form-label">Categoria</label>
-                            <input type="text" value="{{ $item->categoria ? $item->categoria->nombre : 'Sin categoria' }}" class="form-control" readonly>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Detalle categoria</label>
-                            <input type="text" value="{{ $item->categoria ? ($item->categoria->descripcion ?: 'Sin detalle') : 'Sin detalle' }}" class="form-control" readonly>
-                        </div>
-
-                        <div class="col-md-8">
                             <label class="form-label">Modalidad</label>
                             <input type="text" value="{{ $item->nombre }}" class="form-control" readonly>
                         </div>
@@ -113,6 +105,12 @@
                         <div class="col-md-4">
                             <label class="form-label">Genero</label>
                             <input type="text" value="{{ $item->genero }}" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Categorias</label>
+                            <textarea class="form-control" rows="4" readonly>@foreach ($item->categorias as $categoria){{ $categoria->nombre }}{{ $categoria->descripcion ? ' | ' . $categoria->descripcion : '' }}
+@endforeach</textarea>
                         </div>
                     </div>
                 </div>
@@ -137,23 +135,6 @@
                     </div>
                     <div class="modal-body">
                         <div class="row g-3">
-                            <div class="col-md-12">
-                                <label for="categoria_modalidad_{{ $item->id }}" class="form-label">Categoria</label>
-                                <select name="categoria_id" id="categoria_modalidad_{{ $item->id }}" class="form-select @if(old('editing_modalidad') == $item->id) @error('categoria_id') is-invalid @enderror @endif" required>
-                                    <option value="">Seleccione</option>
-                                    @foreach ($categorias as $categoria)
-                                        <option value="{{ $categoria->id }}" {{ (old('editing_modalidad') == $item->id ? old('categoria_id') : $item->categoria_id) == $categoria->id ? 'selected' : '' }}>
-                                            {{ $categoria->nombre }}{{ $categoria->descripcion ? ' | ' . $categoria->descripcion : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @if (old('editing_modalidad') == $item->id)
-                                    @error('categoria_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                @endif
-                            </div>
-
                             <div class="col-md-8">
                                 <label for="nombre_modalidad_{{ $item->id }}" class="form-label">Modalidad</label>
                                 <input type="text" name="nombre" id="nombre_modalidad_{{ $item->id }}" value="{{ old('editing_modalidad') == $item->id ? old('nombre') : $item->nombre }}" class="form-control @if(old('editing_modalidad') == $item->id) @error('nombre') is-invalid @enderror @endif" maxlength="255" required>

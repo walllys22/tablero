@@ -6,13 +6,14 @@
         [
             'label' => 'Administracion',
             'icon' => 'fa-solid fa-file-lines',
-            'active' => request()->routeIs('torneos.*') || request()->routeIs('modalidades.*') || request()->routeIs('organizaciones.*'),
+            'active' => request()->routeIs('torneos.*') || request()->routeIs('modalidades.*') || request()->routeIs('organizaciones.*') || request()->routeIs('licencias.*'),
             'children' => [
                 ['label' => 'Torneos', 'icon' => 'fa-solid fa-trophy', 'route' => 'torneos.index', 'active' => request()->routeIs('torneos.*')],
                 ['label' => 'Modalidades', 'icon' => 'fa-brands fa-markdown', 'modal' => 'modal-modalidades-sidebar', 'active' => request()->routeIs('modalidades.*')],
                 ['label' => 'Listado Katas', 'icon' => 'fa-solid fa-clipboard-list', 'route' => 'dashboard', 'active' => false],
                 ['label' => 'Personas', 'icon' => 'fa-solid fa-people-group', 'route' => 'people.browse', 'active' => request()->routeIs('people.*')],
                 ['label' => 'Organizacion', 'icon' => 'fa-solid fa-torii-gate', 'route' => 'organizaciones.index', 'active' => request()->routeIs('organizaciones.*')],
+                ['label' => 'Licencias', 'icon' => 'fa-solid fa-award', 'route' => 'licencias.index', 'active' => request()->routeIs('licencias.*')],
             ],
         ],
 
@@ -20,9 +21,9 @@
         [
             'label' => 'Registro',
             'icon' => 'fa-solid fa-address-card',
-            'active' => request()->is('registro*') || request()->routeIs('inscripciones.*'),
+            'active' => request()->is('registro*') || request()->routeIs('inscripciones.*') || request()->routeIs('arbitros.*'),
             'children' => [
-                ['label' => 'Jueces', 'icon' => 'fa-solid fa-user-tie', 'route' => 'dashboard', 'active' => false],
+                ['label' => 'Jueces', 'icon' => 'fa-solid fa-user-tie', 'modal' => 'modal-arbitros-sidebar', 'active' => request()->routeIs('arbitros.*')],
                 ['label' => 'Inscripciones', 'icon' => 'fa-solid fa-address-book', 'modal' => 'modal-inscripciones-sidebar', 'active' => request()->routeIs('inscripciones.*')],
                 ['label' => 'Competidores', 'icon' => 'fa-solid fa-image-portrait', 'route' => 'dashboard', 'active' => false],
             ],
@@ -54,7 +55,7 @@
     ];
 @endphp
 
-<aside class="app-sidebar d-none d-md-flex">
+<aside class="app-sidebar d-none d-md-flex" style="margin-right: -20px;">
     <div class="sidebar-section">
         <nav class="sidebar-nav">
             @foreach ($items as $item)
@@ -237,6 +238,34 @@
     </div>
 </div>
 
+<div class="modal fade" id="modal-arbitros-sidebar" tabindex="-1" aria-labelledby="modalArbitrosSidebarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="form-arbitros-sidebar">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalArbitrosSidebarLabel">Seleccionar campeonato</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="torneo_arbitro_sidebar" class="form-label">Campeonato</label>
+                    <select id="torneo_arbitro_sidebar" class="form-select" required>
+                        <option value="">Seleccione un campeonato</option>
+                        @foreach ($torneosModalidades as $torneo)
+                            <option value="{{ $torneo->id }}">{{ $torneo->nombre ?: 'Torneo #' . $torneo->id }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" {{ $torneosModalidades->isEmpty() ? 'disabled' : '' }}>
+                        <i class="bi bi-box-arrow-in-right"></i> Abrir
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     document.getElementById('form-modalidades-sidebar').addEventListener('submit', function (event) {
         event.preventDefault();
@@ -258,5 +287,16 @@
         }
 
         window.location.href = `{{ url('/torneos') }}/${torneoId}/inscripciones`;
+    });
+
+    document.getElementById('form-arbitros-sidebar').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        let torneoId = document.getElementById('torneo_arbitro_sidebar').value;
+        if (!torneoId) {
+            return;
+        }
+
+        window.location.href = `{{ url('/torneos') }}/${torneoId}/arbitros`;
     });
 </script>

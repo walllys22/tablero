@@ -3,7 +3,7 @@
 @section('title', 'Torneos')
 
 @section('content')
-    <div class="container-fluid py-4 eventos-browse">
+    <div class="container-fluid eventos-browse">
         @if (session('status'))
             <div class="alert alert-success js-auto-dismiss">
                 {{ session('status') }}
@@ -16,7 +16,7 @@
             </div>
         @endif
 
-        <div class="row mb-3">
+        <div class="row mb-2" style="margin-right: -25px;">
             <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-body p-0">
@@ -63,8 +63,7 @@
                                 <input type="text" id="input-search" placeholder="Buscar..." class="form-control">
                             </div>
                         </div>
-
-                        <div class="row" id="div-results" style="min-height: 120px"></div>
+                        <div class="row" id="div-results" style="min-height: 120px; margin-right: -25px;"></div>
                     </div>
                 </div>
             </div>
@@ -91,9 +90,45 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label for="lugar" class="form-label">Lugar</label>
-                                <input type="text" name="lugar" id="lugar" value="{{ old('lugar') }}" class="form-control @error('lugar') is-invalid @enderror" maxlength="255">
-                                @error('lugar')
+                                <label for="ciudad" class="form-label">Ciudad</label>
+                                <input type="text" name="ciudad" id="ciudad" value="{{ old('ciudad') }}" class="form-control @error('ciudad') is-invalid @enderror" maxlength="255">
+                                @error('ciudad')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-8">
+                                <label for="direccion" class="form-label">Direccion</label>
+                                <input type="text" name="direccion" id="direccion" value="{{ old('direccion') }}" class="form-control @error('direccion') is-invalid @enderror" maxlength="1000">
+                                @error('direccion')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="sistema_competencia" class="form-label">Sistema competencia</label>
+                                <select name="sistema_competencia" id="sistema_competencia" class="form-select @error('sistema_competencia') is-invalid @enderror" required>
+                                    <option value="tradicional" {{ old('sistema_competencia', 'tradicional') === 'tradicional' ? 'selected' : '' }}>Tradicional</option>
+                                    <option value="wkf" {{ old('sistema_competencia') === 'wkf' ? 'selected' : '' }}>WKF</option>
+                                    <option value="otro" {{ old('sistema_competencia') === 'otro' ? 'selected' : '' }}>Otro</option>
+                                </select>
+                                @error('sistema_competencia')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="modalidad_puntaje" class="form-label">Modalidad de puntaje</label>
+                                <input type="text" name="modalidad_puntaje" id="modalidad_puntaje" value="{{ old('modalidad_puntaje') }}" class="form-control @error('modalidad_puntaje') is-invalid @enderror" maxlength="100">
+                                @error('modalidad_puntaje')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="organiza" class="form-label">Organiza</label>
+                                <input type="text" name="organiza" id="organiza" value="{{ old('organiza') }}" class="form-control @error('organiza') is-invalid @enderror" maxlength="255">
+                                @error('organiza')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>

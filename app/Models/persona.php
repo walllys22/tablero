@@ -45,4 +45,9 @@ class Persona extends Model
     {
         return $this->hasMany(Torneo::class);
     }
+
+    public function arbitros()
+    {
+        return $this->hasMany(Arbitro::class);
+    }
 }

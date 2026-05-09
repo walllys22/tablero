@@ -12,12 +12,12 @@ class ModalidadController extends Controller
 {
     public function index(Torneo $torneo)
     {
-        $categorias = $torneo->categorias()
-            ->orderBy('orden')
+        $modalidades = $torneo->modalidades()
             ->orderBy('nombre')
+            ->orderBy('genero')
             ->get();
 
-        return view('modalidades.browse', compact('torneo', 'categorias'));
+        return view('modalidades.browse', compact('torneo', 'modalidades'));
     }
 
     public function ajaxList(Request $request, Torneo $torneo)
@@ -27,36 +27,40 @@ class ModalidadController extends Controller
         $paginate = in_array($paginate, [10, 25, 50, 100], true) ? $paginate : 10;
 
         $data = $torneo->modalidades()
-            ->with('categoria')
+            ->with(['categorias' => function ($query) {
+                $query->orderBy('orden')->orderBy('nombre');
+            }])
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('id', $search)
                         ->orWhere('nombre', 'like', "%{$search}%")
                         ->orWhere('genero', 'like', "%{$search}%")
-                        ->orWhereHas('categoria', function ($query) use ($search) {
+                        ->orWhereHas('categorias', function ($query) use ($search) {
                             $query->where('nombre', 'like', "%{$search}%");
                         });
                 });
             })
-            ->leftJoin('categorias', 'categorias.id', '=', 'modalidades.categoria_id')
-            ->orderBy('categorias.orden')
-            ->orderBy('categorias.nombre')
             ->orderBy('modalidades.nombre')
+            ->orderBy('modalidades.genero')
             ->select('modalidades.*')
             ->paginate($paginate)
             ->withQueryString();
 
-        $categorias = $torneo->categorias()
-            ->orderBy('orden')
+        $modalidades = $torneo->modalidades()
             ->orderBy('nombre')
+            ->orderBy('genero')
             ->get();
 
-        return view('modalidades.list', compact('data', 'torneo', 'categorias'));
+        return view('modalidades.list', compact('data', 'torneo', 'modalidades'));
     }
 
     public function storeCategoria(Request $request, Torneo $torneo)
     {
         $data = $request->validate([
+            'modalidad_id' => [
+                'required',
+                Rule::exists('modalidades', 'id')->where('torneo_id', $torneo->id),
+            ],
             'nombre' => ['required', 'string', 'max:255'],
             'genero' => ['nullable', 'string', 'in:Masculino,Femenino,Mixto'],
             'edad_desde' => ['nullable', 'integer', 'min:0', 'max:99'],
@@ -80,10 +84,6 @@ class ModalidadController extends Controller
     public function store(Request $request, Torneo $torneo)
     {
         $data = $request->validate([
-            'categoria_id' => [
-                'required',
-                Rule::exists('categorias', 'id')->where('torneo_id', $torneo->id),
-            ],
             'nombre' => ['required', 'string', 'max:255'],
             'genero' => ['required', 'string', 'in:Masculino,Femenino'],
             'creating_modalidad' => ['nullable'],
@@ -102,10 +102,6 @@ class ModalidadController extends Controller
         abort_unless($modalidad->torneo_id === $torneo->id, 404);
 
         $data = $request->validate([
-            'categoria_id' => [
-                'required',
-                Rule::exists('categorias', 'id')->where('torneo_id', $torneo->id),
-            ],
             'nombre' => ['required', 'string', 'max:255'],
             'genero' => ['required', 'string', 'in:Masculino,Femenino'],
         ]);

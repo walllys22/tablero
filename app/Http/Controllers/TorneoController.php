@@ -6,6 +6,7 @@ use App\Http\Requests\StoreTorneoRequest;
 use App\Http\Requests\UpdateTorneoRequest;
 use App\Models\Persona;
 use App\Models\Torneo;
+use App\Support\DefaultTournamentCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -36,6 +37,10 @@ class TorneoController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->where('id', $search)
                         ->orWhere('nombre', 'like', "%{$search}%")
+                        ->orWhere('ciudad', 'like', "%{$search}%")
+                        ->orWhere('direccion', 'like', "%{$search}%")
+                        ->orWhere('sistema_competencia', 'like', "%{$search}%")
+                        ->orWhere('organiza', 'like', "%{$search}%")
                         ->orWhere('lugar', 'like', "%{$search}%")
                         ->orWhere('fecha_inicio', 'like', "%{$search}%")
                         ->orWhere('fecha_fin', 'like', "%{$search}%")
@@ -80,7 +85,8 @@ class TorneoController extends Controller
             $data['logo'] = $request->file('logo')->store('torneos', 'public');
         }
 
-        Torneo::create($data);
+        $torneo = Torneo::create($data);
+        DefaultTournamentCatalog::seedFor($torneo);
 
         return redirect()
             ->route('torneos.index')

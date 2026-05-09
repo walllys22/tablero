@@ -14,7 +14,21 @@
             <tbody>
                 @forelse ($data as $item)
                     @php
-                        $image = $item->image ? asset('storage/' . $item->image) : asset('images/icono.png');
+                        $defaultPersonImage = asset('images/default.jpg');
+                        $image = $defaultPersonImage;
+
+                        if ($item->image) {
+                            $imagePath = ltrim($item->image, '/');
+
+                            if (\Illuminate\Support\Str::startsWith($imagePath, ['http://', 'https://'])) {
+                                $image = $imagePath;
+                            } elseif (\Illuminate\Support\Str::startsWith($imagePath, ['storage/', 'images/'])) {
+                                $image = asset($imagePath);
+                            } else {
+                                $image = asset('storage/' . $imagePath);
+                            }
+                        }
+
                         $age = $item->birth_date ? $item->birth_date->diffInYears(now()) : null;
                         $whatsappPhone = preg_replace('/\D+/', '', $item->phone ?? '');
                     @endphp
@@ -26,7 +40,7 @@
                         </td>
                         <td style="vertical-align: middle;">
                             <div style="display: flex; align-items: center;">
-                                <img src="{{ $image }}" alt="{{ $item->first_name ?: 'Persona' }}" class="image-expandable" style="width: 60px; height: 60px; border-radius: 30px; margin-right: 10px; object-fit: cover;" onerror="this.src='{{ asset('images/icono.png') }}'">
+                                <img src="{{ $image }}" alt="{{ $item->first_name ?: 'Persona' }}" class="image-expandable" style="width: 60px; height: 60px; border-radius: 30px; margin-right: 10px; object-fit: cover;" onerror="this.src='{{ $defaultPersonImage }}'">
                                 <div>
                                     <strong>{{ strtoupper($item->first_name ?: 'Sin nombre') }}</strong><br>
                                     <small class="text-muted">ID: {{ $item->id }}</small>
@@ -173,7 +187,7 @@
                 <div class="modal-body p-2" style="background: #eeeeee;">
                     <div class="d-flex gap-2 align-items-stretch flex-column flex-md-row">
                         <div class="flex-shrink-0 overflow-hidden" style="width: 165px; min-height: 170px; border-radius: 18px; background: #ff1717;">
-                            <img src="{{ $item->image ? asset('storage/' . $item->image) : asset('images/icono.png') }}" alt="{{ $item->first_name ?: 'Persona' }}" style="width: 100%; height: 100%; min-height: 170px; object-fit: cover;" onerror="this.src='{{ asset('images/icono.png') }}'">
+                            <img src="{{ $image }}" alt="{{ $item->first_name ?: 'Persona' }}" style="width: 100%; height: 100%; min-height: 170px; object-fit: cover;" onerror="this.src='{{ $defaultPersonImage }}'">
                         </div>
 
                         <div class="flex-grow-1">
