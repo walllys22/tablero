@@ -125,7 +125,7 @@ class ModalidadController extends Controller
             'genero' => ['nullable', 'string', 'in:Masculino,Femenino,Mixto'],
             'edad_desde' => ['nullable', 'integer', 'min:0', 'max:99'],
             'edad_hasta' => ['nullable', 'integer', 'min:0', 'max:99', 'gte:edad_desde'],
-            'peso_hasta' => ['nullable', 'numeric', 'min:0', 'max:999.99'],
+            'peso_hasta' => ['nullable', 'numeric', 'min:0', 'max:999.999'],
             'peso_tipo' => ['nullable', 'string', 'in:max,min'],
             'creating_categoria' => ['nullable'],
             'editing_categoria' => ['nullable'],
@@ -162,7 +162,7 @@ class ModalidadController extends Controller
             $data['peso_hasta'] = null;
         } elseif ($data['peso_hasta'] !== null) {
             $textoPeso = $pesoTipo === 'min' ? 'mayor o igual' : 'menor o igual';
-            $peso = rtrim(rtrim((string) $data['peso_hasta'], '0'), '.');
+            $peso = number_format((float) $data['peso_hasta'], 3, '.', '');
             $nombreParts[] = "{$textoPeso} a {$peso} kilos";
         }
 

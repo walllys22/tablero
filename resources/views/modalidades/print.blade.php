@@ -4,28 +4,8 @@
 
 @section('content')
     @php
-        $formatCategoriaNombre = function ($nombre) {
-            $nombre = e($nombre);
-
-            return str_replace(
-                [
-                    'a&amp;Atilde;&amp;plusmn;os',
-                    'a&Atilde;&plusmn;os',
-                    "a\xC3\xB1os",
-                    'anos',
-                    'menor o igual',
-                    'mayor o igual',
-                ],
-                [
-                    'a&ntilde;os',
-                    'a&ntilde;os',
-                    'a&ntilde;os',
-                    'a&ntilde;os',
-                    '&le;',
-                    '&ge;',
-                ],
-                $nombre
-            );
+        $formatCategoriaNombre = function ($categoria, $modalidad) {
+            return \App\Support\CategoriaNameFormatter::format($categoria, $modalidad->nombre);
         };
 
         $logo = $torneo->logo ? asset('storage/' . $torneo->logo) : asset('images/default.jpg');
@@ -253,7 +233,7 @@
                             <td>
                                 <div class="collapse" id="categorias-modalidad-{{ $modalidad->id }}">
                                     @forelse ($modalidad->categorias as $categoria)
-                                        <div class="categoria-line">{!! $formatCategoriaNombre($categoria->nombre) !!}</div>
+                                        <div class="categoria-line">{{ $formatCategoriaNombre($categoria, $modalidad) }}</div>
                                     @empty
                                         <span>Sin categorias</span>
                                     @endforelse

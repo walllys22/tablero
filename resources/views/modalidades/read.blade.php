@@ -4,12 +4,8 @@
 
 @section('content')
     @php
-        $formatCategoriaNombre = function ($nombre) {
-            return str_replace(
-                ["a\xC3\x83\xC6\x92\xC3\x82\xC2\xB1os", "a\xC3\x83\xC2\xB1os", 'anos', 'menor o igual', 'mayor o igual'],
-                ["a\u{00F1}os", "a\u{00F1}os", "a\u{00F1}os", "\u{2264}", "\u{2265}"],
-                $nombre
-            );
+        $formatCategoriaNombre = function ($categoria) use ($modalidad) {
+            return \App\Support\CategoriaNameFormatter::format($categoria, $modalidad->nombre);
         };
     @endphp
 
@@ -93,7 +89,7 @@
                                         <td>
                                             @forelse ($modalidad->categorias as $categoria)
                                                 @php
-                                                    $categoriaNombre = $formatCategoriaNombre($categoria->nombre);
+                                                    $categoriaNombre = $formatCategoriaNombre($categoria);
                                                 @endphp
                                                 <div class="d-flex align-items-center justify-content-between gap-2 py-1">
                                                     <span style="line-height: 1.6;">{{ $categoriaNombre }}</span>
@@ -124,7 +120,7 @@
             @php
                 $isEditing = old('editing_categoria') == $categoria->id;
                 $isKata = str_contains(mb_strtolower($modalidad->nombre), 'kata');
-                $categoriaNombre = $formatCategoriaNombre($categoria->nombre);
+                $categoriaNombre = $formatCategoriaNombre($categoria);
                 $pesoTipo = str_contains(mb_strtolower($categoria->nombre), 'mayor o igual') ? 'min' : 'max';
             @endphp
 
@@ -195,7 +191,7 @@
 
                                     <div class="col-md-3 js-edit-peso-categoria {{ $isKata ? 'd-none' : '' }}">
                                         <label for="peso_hasta_categoria_{{ $categoria->id }}" class="form-label">Peso referencia</label>
-                                        <input type="number" name="peso_hasta" id="peso_hasta_categoria_{{ $categoria->id }}" value="{{ $isEditing ? old('peso_hasta') : $categoria->peso_hasta }}" class="form-control js-edit-peso-hasta js-edit-categoria-field @if($isEditing) @error('peso_hasta') is-invalid @enderror @endif" min="0" step="0.01" {{ $isKata ? 'disabled' : '' }}>
+                                        <input type="number" name="peso_hasta" id="peso_hasta_categoria_{{ $categoria->id }}" value="{{ $isEditing ? old('peso_hasta') : $categoria->peso_hasta }}" class="form-control js-edit-peso-hasta js-edit-categoria-field @if($isEditing) @error('peso_hasta') is-invalid @enderror @endif" min="0" step="0.001" {{ $isKata ? 'disabled' : '' }}>
                                         @if ($isEditing)
                                             @error('peso_hasta')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -327,7 +323,7 @@
 
             if (! isKata && peso) {
                 let textoPeso = modal.find('.js-edit-peso-tipo').val() === 'min' ? '\u2265' : '\u2264';
-                parts.push(`${textoPeso} a ${peso} kilos`);
+                parts.push(`${textoPeso} a ${Number(peso).toFixed(3)} kilos`);
             }
 
             let generatedName = parts.join(' ');

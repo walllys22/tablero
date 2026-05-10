@@ -156,7 +156,7 @@
 
                             <div class="col-md-3 js-peso-categoria">
                                 <label for="peso_hasta_categoria" class="form-label">Peso referencia</label>
-                                <input type="number" name="peso_hasta" id="peso_hasta_categoria" value="{{ old('peso_hasta') }}" class="form-control @if(old('creating_categoria')) @error('peso_hasta') is-invalid @enderror @endif" min="0" step="0.01">
+                                <input type="number" name="peso_hasta" id="peso_hasta_categoria" value="{{ old('peso_hasta') }}" class="form-control @if(old('creating_categoria')) @error('peso_hasta') is-invalid @enderror @endif" min="0" step="0.001">
                                 @if (old('creating_categoria'))
                                     @error('peso_hasta')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -309,7 +309,7 @@
 
             if (! isKata && peso) {
                 let textoPeso = $('#peso_tipo_categoria').val() === 'min' ? '\u2265' : '\u2264';
-                parts.push(`${textoPeso} a ${peso} kilos`);
+                parts.push(`${textoPeso} a ${Number(peso).toFixed(3)} kilos`);
             }
 
             let generatedName = parts.join(' ');

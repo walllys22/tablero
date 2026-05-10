@@ -1,13 +1,3 @@
-@php
-    $formatCategoriaNombre = function ($nombre) {
-        return str_replace(
-            ["a\xC3\x83\xC6\x92\xC3\x82\xC2\xB1os", "a\xC3\x83\xC2\xB1os", 'anos', 'menor o igual', 'mayor o igual'],
-            ["a\u{00F1}os", "a\u{00F1}os", "a\u{00F1}os", "\u{2264}", "\u{2265}"],
-            $nombre
-        );
-    };
-@endphp
-
 <style>
     .modalidad-toggle {
         align-items: center;
@@ -67,7 +57,7 @@
                             <div class="collapse categoria-collapse" id="categorias-modalidad-{{ $item->id }}">
                                 @forelse ($item->categorias as $categoria)
                                     <div>
-                                        <strong>{{ $formatCategoriaNombre($categoria->nombre) }}</strong>
+                                        <strong>{{ \App\Support\CategoriaNameFormatter::format($categoria, $item->nombre) }}</strong>
                                     </div>
                                 @empty
                                     <span class="text-muted">Sin categorias</span>

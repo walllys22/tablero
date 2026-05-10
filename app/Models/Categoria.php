@@ -26,7 +26,7 @@ class Categoria extends Model
     protected $casts = [
         'edad_desde' => 'integer',
         'edad_hasta' => 'integer',
-        'peso_hasta' => 'decimal:2',
+        'peso_hasta' => 'decimal:3',
     ];
 
     public function torneo()
