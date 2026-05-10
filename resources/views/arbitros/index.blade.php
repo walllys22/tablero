@@ -76,9 +76,34 @@
         </div>
     </div>
 
+
+    {{-- Botón Crear: Color verde (success) --}}
+    @include('arbitros.partials.form', [
+        'action' => route('arbitros.store', $torneo), 
+        'method' => null, 
+        'modalId' => 'modal-create-arbitro', 
+        'title' => 'Crear juez', 
+        'arbitro' => null,
+        'color' => 'success' 
+    ])
+
+    {{-- Botón Editar: Color celeste (info) --}}
+    @foreach ($arbitros as $arbitro)
+        @include('arbitros.partials.form', [
+            'action' => route('arbitros.update', [$torneo, $arbitro]), 
+            'method' => 'PATCH', 
+            'modalId' => 'modal-edit-arbitro-' . $arbitro->id, 
+            'title' => 'Editar juez', 
+            'arbitro' => $arbitro,
+            'color' => 'info'
+        ])
+    @endforeach
+
+{{-- 
     @include('arbitros.partials.form', ['action' => route('arbitros.store', $torneo), 'method' => null, 'modalId' => 'modal-create-arbitro', 'title' => 'Crear juez', 'arbitro' => null])
 
     @foreach ($arbitros as $arbitro)
         @include('arbitros.partials.form', ['action' => route('arbitros.update', [$torneo, $arbitro]), 'method' => 'PATCH', 'modalId' => 'modal-edit-arbitro-' . $arbitro->id, 'title' => 'Editar juez', 'arbitro' => $arbitro])
-    @endforeach
+    @endforeach 
+--}}
 @endsection

@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/torneos/ajax/list', [TorneoController::class, 'ajaxList'])->name('torneos.ajax.list');
     Route::post('/torneos', [TorneoController::class, 'store'])->name('torneos.store');
     Route::patch('/torneos/{torneo}', [TorneoController::class, 'update'])->name('torneos.update');
+    Route::patch('/torneos/{torneo}/costos-inscripcion', [TorneoController::class, 'updateCostos'])->name('torneos.costos.update');
     Route::patch('/torneos/{torneo}/estado', [TorneoController::class, 'toggleStatus'])->name('torneos.toggle-status');
     Route::delete('/torneos/{torneo}', [TorneoController::class, 'destroy'])->name('torneos.destroy');
     Route::get('/torneos/{torneo}/arbitros', [ArbitroController::class, 'index'])->name('arbitros.index');
@@ -71,6 +72,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/torneos/{torneo}/inscripciones', [InscripcionController::class, 'index'])->name('inscripciones.index');
     Route::get('/torneos/{torneo}/inscripciones/ajax/list', [InscripcionController::class, 'ajaxList'])->name('inscripciones.ajax.list');
     Route::post('/torneos/{torneo}/inscripciones/organizaciones', [InscripcionController::class, 'storeOrganizacion'])->name('inscripciones.organizaciones.store');
+    Route::delete('/torneos/{torneo}/inscripciones/organizaciones/{inscripcion}', [InscripcionController::class, 'destroyOrganizacion'])->name('inscripciones.organizaciones.destroy');
     Route::post('/torneos/{torneo}/inscripciones/competidores', [InscripcionController::class, 'storeCompetidor'])->name('inscripciones.competidores.store');
     Route::get('/torneos/{torneo}/inscripciones/{inscripcion}/participantes', [InscripcionController::class, 'participantes'])->name('inscripciones.participantes');
     Route::post('/torneos/{torneo}/inscripciones/{inscripcion}/participantes', [InscripcionController::class, 'storeParticipante'])->name('inscripciones.participantes.store');

@@ -26,19 +26,7 @@
     $bloodTypes = ['A Rh (+)', 'A Rh (-)', 'B Rh (+)', 'B Rh (-)', 'AB Rh (+)', 'AB Rh (-)', 'O Rh (+)', 'O Rh (-)'];
 
     $defaultPersonImage = asset('images/default.jpg');
-    $previewImage = $defaultPersonImage;
-
-    if ($persona?->image) {
-        $imagePath = ltrim($persona->image, '/');
-
-        if (\Illuminate\Support\Str::startsWith($imagePath, ['http://', 'https://'])) {
-            $previewImage = $imagePath;
-        } elseif (\Illuminate\Support\Str::startsWith($imagePath, ['storage/', 'images/'])) {
-            $previewImage = asset($imagePath);
-        } else {
-            $previewImage = asset('storage/' . $imagePath);
-        }
-    }
+    $previewImage = $persona?->image_url ?? $defaultPersonImage;
 @endphp
 
 <div class="row g-3">

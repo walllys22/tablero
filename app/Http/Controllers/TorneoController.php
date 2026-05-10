@@ -137,6 +137,20 @@ class TorneoController extends Controller
             ->with('status', 'Torneo actualizado correctamente.');
     }
 
+    public function updateCostos(Request $request, Torneo $torneo)
+    {
+        $data = $request->validate([
+            'costo_inscripcion_organizacion' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
+            'costo_inscripcion_competidor' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
+        ]);
+
+        $torneo->update($data);
+
+        return redirect()
+            ->route('torneos.index')
+            ->with('status', 'Costos de inscripcion actualizados correctamente.');
+    }
+
     public function toggleStatus(Torneo $torneo)
     {
         $torneo->update([

@@ -110,7 +110,7 @@
                                                         <small class="text-muted">{{ $categoria->nombre }}</small>
                                                     </td>
                                                     <td>
-                                                        <input type="number" class="form-control form-control-sm js-modalidad-costo" name="modalidades[{{ $index }}][costo]" value="{{ $oldMatch['costo'] ?? '0' }}" min="0" step="0.01" {{ $oldMatch ? '' : 'disabled' }}>
+                                                        <input type="number" class="form-control form-control-sm js-modalidad-costo" name="modalidades[{{ $index }}][costo]" value="{{ $oldMatch['costo'] ?? $torneo->costo_inscripcion_competidor }}" min="0" step="0.01" {{ $oldMatch ? '' : 'disabled' }}>
                                                     </td>
                                                 </tr>
                                             @endforeach

@@ -19,6 +19,8 @@ class Torneo extends Model
         'direccion',
         'sistema_competencia',
         'modalidad_puntaje',
+        'costo_inscripcion_organizacion',
+        'costo_inscripcion_competidor',
         'organiza',
         'persona_id',
         'lugar',
@@ -29,6 +31,8 @@ class Torneo extends Model
     protected $casts = [
         'fecha_inicio' => 'date',
         'fecha_fin' => 'date',
+        'costo_inscripcion_organizacion' => 'decimal:2',
+        'costo_inscripcion_competidor' => 'decimal:2',
         'status' => 'integer',
     ];
 

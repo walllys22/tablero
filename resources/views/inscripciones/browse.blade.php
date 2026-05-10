@@ -110,7 +110,7 @@
                         </div>
                         <div>
                             <label for="costo_organizacion" class="form-label">Costo</label>
-                            <input type="number" name="costo" id="costo_organizacion" value="{{ old('creating_organizacion') ? old('costo') : '200' }}" class="form-control @if(old('creating_organizacion')) @error('costo') is-invalid @enderror @endif" min="0" step="0.01" required>
+                            <input type="number" name="costo" id="costo_organizacion" value="{{ old('creating_organizacion') ? old('costo') : $torneo->costo_inscripcion_organizacion }}" class="form-control @if(old('creating_organizacion')) @error('costo') is-invalid @enderror @endif" min="0" step="0.01" required>
                             @if (old('creating_organizacion'))
                                 @error('costo')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -126,6 +126,23 @@
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-no-organizacion" tabindex="-1" aria-labelledby="modalNoOrganizacionLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title fw-bold" id="modalNoOrganizacionLabel">Organizacion requerida</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    No se puede inscribir competidores si no tiene una organizacion inscrita en este campeonato.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Aceptar</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -201,7 +218,7 @@
                                                 <small class="text-muted">{{ $categoria->nombre }}</small>
                                             </td>
                                             <td>
-                                                <input type="number" class="form-control form-control-sm js-modalidad-costo" name="modalidades[{{ $index }}][costo]" value="{{ $oldMatch['costo'] ?? '0' }}" min="0" step="0.01" {{ $oldMatch ? '' : 'disabled' }}>
+                                                <input type="number" class="form-control form-control-sm js-modalidad-costo" name="modalidades[{{ $index }}][costo]" value="{{ $oldMatch['costo'] ?? $torneo->costo_inscripcion_competidor }}" min="0" step="0.01" {{ $oldMatch ? '' : 'disabled' }}>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -305,6 +322,11 @@
         }
 
         function openCompetidorModal(inscripcionOrganizacionId) {
+            if (!inscripcionOrganizacionId) {
+                new bootstrap.Modal(document.getElementById('modal-no-organizacion')).show();
+                return;
+            }
+
             $('#inscripcion_organizacion_id').val(inscripcionOrganizacionId);
             new bootstrap.Modal(document.getElementById('modal-create-competidor')).show();
         }

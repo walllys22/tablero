@@ -5,8 +5,8 @@
             @if ($method)
                 @method($method)
             @endif
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
+            <div class="modal-content"> 
+                <div class="modal-header bg-{{ $color }} text-white">
                     <h5 class="modal-title">{{ $title }}</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>

@@ -15,19 +15,7 @@
                 @forelse ($data as $item)
                     @php
                         $defaultPersonImage = asset('images/default.jpg');
-                        $image = $defaultPersonImage;
-
-                        if ($item->image) {
-                            $imagePath = ltrim($item->image, '/');
-
-                            if (\Illuminate\Support\Str::startsWith($imagePath, ['http://', 'https://'])) {
-                                $image = $imagePath;
-                            } elseif (\Illuminate\Support\Str::startsWith($imagePath, ['storage/', 'images/'])) {
-                                $image = asset($imagePath);
-                            } else {
-                                $image = asset('storage/' . $imagePath);
-                            }
-                        }
+                        $image = $item->image_url;
 
                         $age = $item->birth_date ? $item->birth_date->diffInYears(now()) : null;
                         $whatsappPhone = preg_replace('/\D+/', '', $item->phone ?? '');
@@ -152,19 +140,7 @@
 @foreach ($data as $item)
     @php
         $defaultPersonImage = asset('images/default.jpg');
-        $modalPersonImage = $defaultPersonImage;
-
-        if ($item->image) {
-            $imagePath = ltrim($item->image, '/');
-
-            if (\Illuminate\Support\Str::startsWith($imagePath, ['http://', 'https://'])) {
-                $modalPersonImage = $imagePath;
-            } elseif (\Illuminate\Support\Str::startsWith($imagePath, ['storage/', 'images/'])) {
-                $modalPersonImage = asset($imagePath);
-            } else {
-                $modalPersonImage = asset('storage/' . $imagePath);
-            }
-        }
+        $modalPersonImage = $item->image_url;
     @endphp
 
     @if ($item->status == 1)

@@ -91,6 +91,9 @@
                             <a href="{{ route('arbitros.index', $item) }}" title="Jueces" class="btn btn-sm btn-secondary">
                                 <i class="bi bi-person-badge"></i>
                             </a>
+                            <button type="button" title="Costos de inscripcion" data-bs-toggle="modal" data-bs-target="#modal-costos-{{ $item->id }}" class="btn btn-sm btn-success">
+                                <i class="bi bi-cash-stack"></i>
+                            </button>
                             @if ($item->status == 1)
                                 <button type="button" title="Inactivar" data-bs-toggle="modal" data-bs-target="#modal-status-{{ $item->id }}" class="btn btn-sm btn-warning text-white">
                                     <i class="bi bi-toggle-on"></i>
@@ -181,6 +184,47 @@
         </div>
     @endif
 
+    <div class="modal fade" id="modal-costos-{{ $item->id }}" tabindex="-1" aria-labelledby="modalCostosLabel{{ $item->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="POST" action="{{ route('torneos.costos.update', $item) }}">
+                @csrf
+                @method('PATCH')
+
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title fw-bold" id="modalCostosLabel{{ $item->id }}">
+                            <i class="bi bi-cash-stack"></i> Costos de inscripcion
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Torneo</label>
+                            <div class="form-control-plaintext border rounded px-3 py-2 bg-light">
+                                {{ $item->nombre ?: 'Torneo sin nombre' }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="costo_organizacion_{{ $item->id }}" class="form-label">Inscripcion de Organizacion</label>
+                            <input type="number" name="costo_inscripcion_organizacion" id="costo_organizacion_{{ $item->id }}" value="{{ old('costo_inscripcion_organizacion', $item->costo_inscripcion_organizacion ?? 0) }}" class="form-control" min="0" step="0.01" required>
+                        </div>
+                        <div>
+                            <label for="costo_competidor_{{ $item->id }}" class="form-label">Inscripcion de Competidores</label>
+                            <input type="number" name="costo_inscripcion_competidor" id="costo_competidor_{{ $item->id }}" value="{{ old('costo_inscripcion_competidor', $item->costo_inscripcion_competidor ?? 0) }}" class="form-control" min="0" step="0.01" required>
+                            <small class="text-muted">Este valor se usara como costo por categoria/modalidad del competidor.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal-view-{{ $item->id }}" tabindex="-1" aria-labelledby="modalViewLabel{{ $item->id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow">
@@ -262,7 +306,21 @@
                                     </div>
                                 </div>
 
-                                <div class="col-12">
+                                <div class="col-md-6">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Inscripcion de Organizacion</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ number_format((float) $item->costo_inscripcion_organizacion, 2) }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Inscripcion de Competidores</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ number_format((float) $item->costo_inscripcion_competidor, 2) }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-6">
                                     <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
                                         <div class="fw-bold" style="font-size: 12px; line-height: 1;">Estado</div>
                                         <div class="fw-semibold" style="font-size: 14px;">{{ $item->status == 1 ? 'Activo' : 'Inactivo' }}</div>
@@ -357,6 +415,26 @@
                                             <input type="text" name="modalidad_puntaje" id="modalidad_puntaje_edit_{{ $item->id }}" value="{{ old('editing_torneo') == $item->id ? old('modalidad_puntaje') : $item->modalidad_puntaje }}" class="form-control @if(old('editing_torneo') == $item->id) @error('modalidad_puntaje') is-invalid @enderror @endif" maxlength="100">
                                             @if (old('editing_torneo') == $item->id)
                                                 @error('modalidad_puntaje')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            @endif
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="costo_inscripcion_organizacion_edit_{{ $item->id }}" class="form-label mb-1">Inscripcion de Organizacion</label>
+                                            <input type="number" name="costo_inscripcion_organizacion" id="costo_inscripcion_organizacion_edit_{{ $item->id }}" value="{{ old('editing_torneo') == $item->id ? old('costo_inscripcion_organizacion') : $item->costo_inscripcion_organizacion }}" class="form-control @if(old('editing_torneo') == $item->id) @error('costo_inscripcion_organizacion') is-invalid @enderror @endif" min="0" step="0.01">
+                                            @if (old('editing_torneo') == $item->id)
+                                                @error('costo_inscripcion_organizacion')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            @endif
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="costo_inscripcion_competidor_edit_{{ $item->id }}" class="form-label mb-1">Inscripcion de Competidores</label>
+                                            <input type="number" name="costo_inscripcion_competidor" id="costo_inscripcion_competidor_edit_{{ $item->id }}" value="{{ old('editing_torneo') == $item->id ? old('costo_inscripcion_competidor') : $item->costo_inscripcion_competidor }}" class="form-control @if(old('editing_torneo') == $item->id) @error('costo_inscripcion_competidor') is-invalid @enderror @endif" min="0" step="0.01">
+                                            @if (old('editing_torneo') == $item->id)
+                                                @error('costo_inscripcion_competidor')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             @endif

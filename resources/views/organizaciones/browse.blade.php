@@ -74,7 +74,7 @@
             <form method="POST" action="{{ route('organizaciones.store') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
+                    <div class="modal-header bg-success text-white">
                         <h5 class="modal-title fw-bold" id="modalCreateLabel">Crear organizacion</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>

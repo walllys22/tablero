@@ -148,6 +148,22 @@
                                 @enderror
                             </div>
 
+                            <div class="col-md-4">
+                                <label for="costo_inscripcion_organizacion" class="form-label">Inscripcion de Organizacion</label>
+                                <input type="number" name="costo_inscripcion_organizacion" id="costo_inscripcion_organizacion" value="{{ old('costo_inscripcion_organizacion', 0) }}" class="form-control @error('costo_inscripcion_organizacion') is-invalid @enderror" min="0" step="0.01">
+                                @error('costo_inscripcion_organizacion')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="costo_inscripcion_competidor" class="form-label">Inscripcion de Competidores</label>
+                                <input type="number" name="costo_inscripcion_competidor" id="costo_inscripcion_competidor" value="{{ old('costo_inscripcion_competidor', 0) }}" class="form-control @error('costo_inscripcion_competidor') is-invalid @enderror" min="0" step="0.01">
+                                @error('costo_inscripcion_competidor')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
 
 
 

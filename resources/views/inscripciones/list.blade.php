@@ -61,6 +61,9 @@
                             <a href="{{ route('inscripciones.participantes', [$torneo, $inscripcion]) }}" class="btn btn-sm btn-success" title="Participantes">
                                 <i class="bi bi-person-plus"></i>
                             </a>
+                            <button type="button" class="btn btn-sm btn-danger" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete-organizacion-{{ $inscripcion->id }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </td>
                     </tr>
                 @empty
@@ -95,6 +98,36 @@
 </div>
 
 @foreach ($organizaciones as $inscripcion)
+    <div class="modal fade" id="modal-delete-organizacion-{{ $inscripcion->id }}" tabindex="-1" aria-labelledby="modalDeleteOrganizacionLabel{{ $inscripcion->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="POST" action="{{ route('inscripciones.organizaciones.destroy', [$torneo, $inscripcion]) }}">
+                @csrf
+                @method('DELETE')
+
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title fw-bold" id="modalDeleteOrganizacionLabel{{ $inscripcion->id }}">Eliminar organizacion</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        Seguro que desea eliminar la inscripcion de <strong>{{ $inscripcion->organizacion->nombre }}</strong>?
+                        @if ($inscripcion->competidores->isNotEmpty())
+                            <div class="alert alert-warning mt-3 mb-0">
+                                Tambien se eliminaran sus competidores inscritos en este campeonato.
+                            </div>
+                        @endif
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="modal fade" id="modal-recibo-organizacion-{{ $inscripcion->id }}" tabindex="-1" aria-labelledby="modalReciboOrganizacionLabel{{ $inscripcion->id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">

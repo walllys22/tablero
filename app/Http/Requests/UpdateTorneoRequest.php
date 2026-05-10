@@ -29,6 +29,8 @@ class UpdateTorneoRequest extends FormRequest
             'direccion' => ['nullable', 'string', 'max:1000'],
             'sistema_competencia' => ['required', 'string', 'in:tradicional,wkf,otro'],
             'modalidad_puntaje' => ['nullable', 'string', 'max:100'],
+            'costo_inscripcion_organizacion' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            'costo_inscripcion_competidor' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'organiza' => ['nullable', 'string', 'max:255'],
             'persona_id' => ['required', 'exists:personas,id'],
             'lugar' => ['nullable', 'string', 'max:255'],

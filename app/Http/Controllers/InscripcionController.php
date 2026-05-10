@@ -92,8 +92,25 @@ class InscripcionController extends Controller
             ->with('recibo_inscripcion_id', $inscripcion->id);
     }
 
+    public function destroyOrganizacion(Torneo $torneo, InscripcionOrganizacion $inscripcion)
+    {
+        abort_unless($inscripcion->torneo_id === $torneo->id, 404);
+
+        $inscripcion->delete();
+
+        return redirect()
+            ->route('inscripciones.index', $torneo)
+            ->with('status', 'Organizacion eliminada de la inscripcion correctamente.');
+    }
+
     public function storeCompetidor(Request $request, Torneo $torneo)
     {
+        if (! $torneo->inscripcionOrganizaciones()->exists()) {
+            return back()
+                ->withErrors(['inscripcion_organizacion_id' => 'Primero inscriba una organizacion al campeonato.'])
+                ->withInput(['creating_competidor' => 1] + $request->all());
+        }
+
         $data = $request->validate([
             'inscripcion_organizacion_id' => [
                 'required',
