@@ -76,6 +76,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/torneos/{torneo}/inscripciones/{inscripcion}/participantes', [InscripcionController::class, 'storeParticipante'])->name('inscripciones.participantes.store');
     Route::get('/torneos/{torneo}/modalidades', [ModalidadController::class, 'index'])->name('modalidades.index');
     Route::get('/torneos/{torneo}/modalidades/ajax/list', [ModalidadController::class, 'ajaxList'])->name('modalidades.ajax.list');
+    Route::get('/torneos/{torneo}/modalidades/imprimir', [ModalidadController::class, 'print'])->name('modalidades.print');
     Route::get('/torneos/{torneo}/modalidades/{modalidad}', [ModalidadController::class, 'show'])->name('modalidades.show');
     Route::post('/torneos/{torneo}/categorias', [ModalidadController::class, 'storeCategoria'])->name('categorias.store');
     Route::patch('/torneos/{torneo}/modalidades/{modalidad}/categorias/{categoria}', [ModalidadController::class, 'updateCategoria'])->name('categorias.update');

@@ -14,6 +14,9 @@ class ModalidadController extends Controller
     public function index(Torneo $torneo)
     {
         $modalidades = $torneo->modalidades()
+            ->with(['categorias' => function ($query) {
+                $query->orderBy('nombre');
+            }])
             ->orderBy('nombre')
             ->get();
 
@@ -60,6 +63,18 @@ class ModalidadController extends Controller
         }]);
 
         return view('modalidades.read', compact('torneo', 'modalidad'));
+    }
+
+    public function print(Torneo $torneo)
+    {
+        $modalidades = $torneo->modalidades()
+            ->with(['categorias' => function ($query) {
+                $query->orderBy('nombre');
+            }])
+            ->orderBy('nombre')
+            ->get();
+
+        return view('modalidades.print', compact('torneo', 'modalidades'));
     }
 
     public function storeCategoria(Request $request, Torneo $torneo)

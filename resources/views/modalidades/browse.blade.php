@@ -35,6 +35,9 @@
                                 <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#modal-create-modalidad">
                                     <i class="bi bi-plus-lg"></i> <span>Crear</span>
                                 </button>
+                                <a href="{{ route('modalidades.print', ['torneo' => $torneo, 'return' => request('return')]) }}" class="btn btn-primary me-2">
+                                    <i class="bi bi-printer"></i> <span>Imprimir</span>
+                                </a>
                                 <a href="{{ $closeRoute }}" class="btn btn-warning text-white">
                                     <i class="bi bi-x-lg"></i> <span>Cerrar</span>
                                 </a>

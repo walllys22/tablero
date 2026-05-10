@@ -76,64 +76,28 @@
 
             <div class="col-12">
                 <div class="card shadow-sm">
-                    <div class="card-header" style="background-color: #bfe9ff;">
-                        <strong>Categorias</strong>
-                    </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-bordered table-hover mb-0">
+                            <table class="table table-bordered mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Categoria</th>
-                                        <th style="text-align: center">Genero</th>
-                                        <th style="text-align: center">Edad desde</th>
-                                        <th style="text-align: center">Edad hasta</th>
-                                        <th style="text-align: center">Peso referencia</th>
-                                        <th style="text-align: center; width: 130px">Acciones</th>
+                                        <th style="width: 30%">Modalidad</th>
+                                        <th>Categorias</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse ($modalidad->categorias as $categoria)
-                                        @php
-                                            $categoriaNombre = $formatCategoriaNombre($categoria->nombre);
-                                        @endphp
-                                        <tr>
-                                            <td style="vertical-align: middle;">
-                                                <strong>{{ $categoriaNombre }}</strong>
-                                            </td>
-                                            <td style="text-align: center; vertical-align: middle;">{{ $categoria->genero ?: '-' }}</td>
-                                            <td style="text-align: center; vertical-align: middle;">{{ $categoria->edad_desde ?? '-' }}</td>
-                                            <td style="text-align: center; vertical-align: middle;">{{ $categoria->edad_hasta ?? '-' }}</td>
-                                            <td style="text-align: center; vertical-align: middle;">
-                                                {{ $categoria->peso_hasta !== null ? rtrim(rtrim(number_format((float) $categoria->peso_hasta, 2, '.', ''), '0'), '.') . ' kg' : '-' }}
-                                            </td>
-                                            <td style="text-align: center; vertical-align: middle;">
-                                                <div class="d-flex justify-content-center gap-2">
-                                                    <button type="button" title="Editar" data-bs-toggle="modal" data-bs-target="#modal-edit-categoria-{{ $categoria->id }}" class="btn btn-sm btn-info text-white">
-                                                        <i class="bi bi-pencil-square"></i>
-                                                    </button>
-
-                                                    <form method="POST" action="{{ route('categorias.destroy', ['torneo' => $torneo, 'modalidad' => $modalidad, 'categoria' => $categoria, 'return' => request('return')]) }}" onsubmit='return confirm(@json("Seguro que desea eliminar la categoria {$categoriaNombre}?"))'>
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" title="Eliminar" class="btn btn-sm btn-danger">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="6">
-                                                <h5 class="text-center eventos-empty">
-                                                    <img src="{{ asset('images/empty.png') }}" width="120" alt="Sin resultados">
-                                                    <br><br>
-                                                    No hay categorias registradas
-                                                </h5>
-                                            </td>
-                                        </tr>
-                                    @endforelse
+                                    <tr>
+                                        <td style="vertical-align: middle;">
+                                            <strong>{{ $modalidad->nombre }}</strong>
+                                        </td>
+                                        <td>
+                                            @forelse ($modalidad->categorias as $categoria)
+                                                <div style="line-height: 1.6;">{{ $formatCategoriaNombre($categoria->nombre) }}</div>
+                                            @empty
+                                                <span class="text-muted">Sin categorias</span>
+                                            @endforelse
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>

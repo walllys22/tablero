@@ -8,6 +8,34 @@
     };
 @endphp
 
+<style>
+    .modalidad-toggle {
+        align-items: center;
+        background: transparent;
+        border: 0;
+        color: #343a40;
+        display: flex;
+        font: inherit;
+        font-weight: 700;
+        gap: 7px;
+        padding: 0;
+        text-align: left;
+        width: 100%;
+    }
+
+    .modalidad-toggle .bi-chevron-down {
+        transition: transform .15s ease-in-out;
+    }
+
+    .modalidad-toggle.collapsed .bi-chevron-down {
+        transform: rotate(-90deg);
+    }
+
+    .categoria-collapse {
+        min-height: 0;
+    }
+</style>
+
 <div class="col-md-12">
     <div class="table-responsive">
         <table id="dataTable" class="table table-bordered table-hover eventos-table">
@@ -22,17 +50,29 @@
                 @forelse ($data as $item)
                     <tr>
                         <td style="vertical-align: middle;">
-                            <strong>{{ $item->nombre }}</strong>
+                            <button
+                                type="button"
+                                class="modalidad-toggle collapsed"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#categorias-modalidad-{{ $item->id }}"
+                                aria-expanded="false"
+                                aria-controls="categorias-modalidad-{{ $item->id }}"
+                            >
+                                <i class="bi bi-chevron-down"></i>
+                                <span>{{ $item->nombre }}</span>
+                            </button>
                         </td>
 
                         <td style="vertical-align: middle;">
-                            @forelse ($item->categorias as $categoria)
-                                <div>
-                                    <strong>{{ $formatCategoriaNombre($categoria->nombre) }}</strong>
-                                </div>
-                            @empty
-                                <span class="text-muted">Sin categorias</span>
-                            @endforelse
+                            <div class="collapse categoria-collapse" id="categorias-modalidad-{{ $item->id }}">
+                                @forelse ($item->categorias as $categoria)
+                                    <div>
+                                        <strong>{{ $formatCategoriaNombre($categoria->nombre) }}</strong>
+                                    </div>
+                                @empty
+                                    <span class="text-muted">Sin categorias</span>
+                                @endforelse
+                            </div>
                         </td>
                         <td style="vertical-align: middle; width: 14%" class="text-end p-2">
                             <div class="d-flex flex-wrap justify-content-end gap-2">
