@@ -30,7 +30,7 @@ class CategoriaNameFormatter
 
         if (! $isKata && $categoria->peso_hasta !== null) {
             $operator = self::isPesoMinimo((string) $categoria->nombre) ? '≥' : '≤';
-            $parts[] = "{$operator} a " . number_format((float) $categoria->peso_hasta, 3, '.', '') . ' kilos';
+            $parts[] = "{$operator} a " . self::formatPeso((float) $categoria->peso_hasta);
         }
 
         return trim(implode(' ', $parts)) ?: self::cleanName((string) $categoria->nombre);
@@ -50,5 +50,22 @@ class CategoriaNameFormatter
         $name = mb_strtolower($name);
 
         return str_contains($name, 'mayor o igual') || str_contains($name, '≥');
+    }
+
+    private static function formatPeso(float $peso): string
+    {
+        $kilos = (int) floor($peso);
+        $gramos = (int) round(($peso - $kilos) * 1000);
+
+        if ($gramos === 1000) {
+            $kilos++;
+            $gramos = 0;
+        }
+
+        if ($gramos === 0) {
+            return "{$kilos} Kilos";
+        }
+
+        return "{$kilos} Kilos y {$gramos} gramos";
     }
 }

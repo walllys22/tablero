@@ -14,6 +14,25 @@
             </div>
         @endif
 
+        @if (session('warning'))
+            <div class="modal fade" id="modal-warning-modalidad" tabindex="-1" aria-labelledby="modalWarningModalidadLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title fw-bold" id="modalWarningModalidadLabel">No se puede eliminar</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            {{ session('warning') }}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Aceptar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         @if ($errors->any())
             <div class="alert alert-danger">
                 Revise los datos del formulario.
@@ -309,12 +328,29 @@
 
             if (! isKata && peso) {
                 let textoPeso = $('#peso_tipo_categoria').val() === 'min' ? '\u2265' : '\u2264';
-                parts.push(`${textoPeso} a ${Number(peso).toFixed(3)} kilos`);
+                parts.push(`${textoPeso} a ${formatPesoVisual(peso)}`);
             }
 
             let generatedName = parts.join(' ');
             nombreInput.val(generatedName);
             $('#nombre_categoria_hidden').val(generatedName);
+        }
+
+        function formatPesoVisual(peso) {
+            let value = Number(peso);
+            let kilos = Math.floor(value);
+            let gramos = Math.round((value - kilos) * 1000);
+
+            if (gramos === 1000) {
+                kilos++;
+                gramos = 0;
+            }
+
+            if (gramos === 0) {
+                return `${kilos} Kilos`;
+            }
+
+            return `${kilos} Kilos y ${gramos} gramos`;
         }
 
         function list(page = 1) {
@@ -344,6 +380,15 @@
             document.addEventListener('DOMContentLoaded', function () {
                 let modal = new bootstrap.Modal(document.getElementById('modal-create-modalidad'));
                 modal.show();
+            });
+        @endif
+
+        @if (session('warning'))
+            document.addEventListener('DOMContentLoaded', function () {
+                let warningModal = document.getElementById('modal-warning-modalidad');
+                if (warningModal) {
+                    new bootstrap.Modal(warningModal).show();
+                }
             });
         @endif
     </script>

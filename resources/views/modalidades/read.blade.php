@@ -323,12 +323,29 @@
 
             if (! isKata && peso) {
                 let textoPeso = modal.find('.js-edit-peso-tipo').val() === 'min' ? '\u2265' : '\u2264';
-                parts.push(`${textoPeso} a ${Number(peso).toFixed(3)} kilos`);
+                parts.push(`${textoPeso} a ${formatPesoVisual(peso)}`);
             }
 
             let generatedName = parts.join(' ');
             generatedName = generatedName.replace(/a(?:\u00c3\u0192\u00c2\u00b1|\u00c3\u00b1|n)os/g, 'años');
             modal.find('.js-edit-nombre-categoria, .js-edit-nombre-categoria-hidden').val(generatedName);
+        }
+
+        function formatPesoVisual(peso) {
+            let value = Number(peso);
+            let kilos = Math.floor(value);
+            let gramos = Math.round((value - kilos) * 1000);
+
+            if (gramos === 1000) {
+                kilos++;
+                gramos = 0;
+            }
+
+            if (gramos === 0) {
+                return `${kilos} Kilos`;
+            }
+
+            return `${kilos} Kilos y ${gramos} gramos`;
         }
     </script>
 @endpush

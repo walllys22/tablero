@@ -33,6 +33,7 @@ class ModalidadController extends Controller
             ->with(['categorias' => function ($query) {
                 $query->orderBy('nombre');
             }])
+            ->withCount('categorias')
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('id', $search)
@@ -236,6 +237,12 @@ class ModalidadController extends Controller
     public function destroy(Request $request, Torneo $torneo, Modalidad $modalidad)
     {
         abort_unless($modalidad->torneo_id === $torneo->id, 404);
+
+        if ($modalidad->categorias()->exists()) {
+            return redirect()
+                ->route('modalidades.index', ['torneo' => $torneo, 'return' => request('return')])
+                ->with('warning', 'No se puede eliminar la modalidad porque tiene categorias asignadas.');
+        }
 
         $modalidad->delete();
 

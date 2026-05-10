@@ -72,7 +72,13 @@
                                 <button type="button" title="Editar" data-bs-toggle="modal" data-bs-target="#modal-edit-modalidad-{{ $item->id }}" class="btn btn-sm btn-info text-white">
                                     <i class="bi bi-pencil-square"></i>
                                 </button>
-                                <button type="button" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete-modalidad-{{ $item->id }}" class="btn btn-sm btn-danger">
+                                <button
+                                    type="button"
+                                    title="Eliminar"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#{{ $item->categorias_count > 0 ? 'modal-warning-delete-modalidad-' . $item->id : 'modal-delete-modalidad-' . $item->id }}"
+                                    class="btn btn-sm btn-danger"
+                                >
                                     <i class="bi bi-trash"></i>
                                 </button>
                                 <button type="button" title="Categoria" data-bs-toggle="modal" data-bs-target="#modal-create-categoria" data-modalidad-id="{{ $item->id }}" data-modalidad-nombre="{{ $item->nombre }}" class="btn btn-sm btn-success">
@@ -150,28 +156,47 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modal-delete-modalidad-{{ $item->id }}" tabindex="-1" aria-labelledby="modalDeleteModalidadLabel{{ $item->id }}" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="POST" action="{{ route('modalidades.destroy', ['torneo' => $torneo, 'modalidad' => $item, 'return' => request('return')]) }}">
-                @csrf
-                @method('DELETE')
-
+    @if ($item->categorias_count > 0)
+        <div class="modal fade" id="modal-warning-delete-modalidad-{{ $item->id }}" tabindex="-1" aria-labelledby="modalWarningDeleteModalidadLabel{{ $item->id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title" id="modalDeleteModalidadLabel{{ $item->id }}">Eliminar modalidad</h5>
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title fw-bold" id="modalWarningDeleteModalidadLabel{{ $item->id }}">No se puede eliminar</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
-                        Seguro que desea eliminar la modalidad <strong>{{ $item->nombre }}</strong>?
+                        No se puede eliminar la modalidad <strong>{{ $item->nombre }}</strong> porque tiene categorias asignadas.
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                        <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Aceptar</button>
                     </div>
                 </div>
-            </form>
+            </div>
         </div>
-    </div>
+    @else
+        <div class="modal fade" id="modal-delete-modalidad-{{ $item->id }}" tabindex="-1" aria-labelledby="modalDeleteModalidadLabel{{ $item->id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ route('modalidades.destroy', ['torneo' => $torneo, 'modalidad' => $item, 'return' => request('return')]) }}">
+                    @csrf
+                    @method('DELETE')
+
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title" id="modalDeleteModalidadLabel{{ $item->id }}">Eliminar modalidad</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            Seguro que desea eliminar la modalidad <strong>{{ $item->nombre }}</strong>?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 @endforeach
 
 <script>
