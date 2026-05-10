@@ -92,7 +92,21 @@
                                         </td>
                                         <td>
                                             @forelse ($modalidad->categorias as $categoria)
-                                                <div style="line-height: 1.6;">{{ $formatCategoriaNombre($categoria->nombre) }}</div>
+                                                @php
+                                                    $categoriaNombre = $formatCategoriaNombre($categoria->nombre);
+                                                @endphp
+                                                <div class="d-flex align-items-center justify-content-between gap-2 py-1">
+                                                    <span style="line-height: 1.6;">{{ $categoriaNombre }}</span>
+                                                    <div class="d-flex gap-2">
+                                                        <button type="button" title="Editar" data-bs-toggle="modal" data-bs-target="#modal-edit-categoria-{{ $categoria->id }}" class="btn btn-sm btn-info text-white">
+                                                            <i class="bi bi-pencil-square"></i>
+                                                        </button>
+
+                                                        <button type="button" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete-categoria-{{ $categoria->id }}" class="btn btn-sm btn-danger">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             @empty
                                                 <span class="text-muted">Sin categorias</span>
                                             @endforelse
@@ -200,6 +214,41 @@
                     </form>
                 </div>
             </div>
+
+            <div class="modal fade" id="modal-delete-categoria-{{ $categoria->id }}" tabindex="-1" aria-labelledby="modalDeleteCategoriaLabel{{ $categoria->id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form method="POST" action="{{ route('categorias.destroy', ['torneo' => $torneo, 'modalidad' => $modalidad, 'categoria' => $categoria, 'return' => request('return')]) }}">
+                        @csrf
+                        @method('DELETE')
+
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title fw-bold" id="modalDeleteCategoriaLabel{{ $categoria->id }}">Eliminar categoria</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="mb-3">Seguro que desea eliminar la categoria <strong>{{ $categoriaNombre }}</strong>?</p>
+                                <div class="d-flex gap-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input js-confirm-delete-categoria" type="radio" name="confirm_delete_categoria_{{ $categoria->id }}" id="confirm_delete_categoria_si_{{ $categoria->id }}" value="si" data-target="#btn-delete-categoria-{{ $categoria->id }}">
+                                        <label class="form-check-label" for="confirm_delete_categoria_si_{{ $categoria->id }}">Si</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input js-confirm-delete-categoria" type="radio" name="confirm_delete_categoria_{{ $categoria->id }}" id="confirm_delete_categoria_no_{{ $categoria->id }}" value="no" data-target="#btn-delete-categoria-{{ $categoria->id }}" checked>
+                                        <label class="form-check-label" for="confirm_delete_categoria_no_{{ $categoria->id }}">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" id="btn-delete-categoria-{{ $categoria->id }}" class="btn btn-danger" disabled>
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         @endforeach
     </div>
 @endsection
@@ -213,6 +262,15 @@
 
             $('.js-edit-categoria-field').on('input change', function () {
                 updateEditCategoriaNombre($(this).closest('.js-modal-edit-categoria'));
+            });
+
+            $('.js-confirm-delete-categoria').on('change', function () {
+                let target = $($(this).data('target'));
+                target.prop('disabled', $(this).val() !== 'si' || ! this.checked);
+            });
+
+            $('.modal[id^="modal-delete-categoria-"]').on('hidden.bs.modal', function () {
+                $(this).find('.js-confirm-delete-categoria[value="no"]').prop('checked', true).trigger('change');
             });
 
             @if ($errors->any() && old('editing_categoria'))
