@@ -150,6 +150,23 @@
 </div>
 
 @foreach ($data as $item)
+    @php
+        $defaultPersonImage = asset('images/default.jpg');
+        $modalPersonImage = $defaultPersonImage;
+
+        if ($item->image) {
+            $imagePath = ltrim($item->image, '/');
+
+            if (\Illuminate\Support\Str::startsWith($imagePath, ['http://', 'https://'])) {
+                $modalPersonImage = $imagePath;
+            } elseif (\Illuminate\Support\Str::startsWith($imagePath, ['storage/', 'images/'])) {
+                $modalPersonImage = asset($imagePath);
+            } else {
+                $modalPersonImage = asset('storage/' . $imagePath);
+            }
+        }
+    @endphp
+
     @if ($item->status == 1)
         <div class="modal fade" id="modal-status-{{ $item->id }}" tabindex="-1" aria-labelledby="modalStatusLabel{{ $item->id }}" aria-hidden="true">
             <div class="modal-dialog modal-sm">
@@ -187,7 +204,7 @@
                 <div class="modal-body p-2" style="background: #eeeeee;">
                     <div class="d-flex gap-2 align-items-stretch flex-column flex-md-row">
                         <div class="flex-shrink-0 overflow-hidden" style="width: 165px; min-height: 170px; border-radius: 18px; background: #ff1717;">
-                            <img src="{{ $image }}" alt="{{ $item->first_name ?: 'Persona' }}" style="width: 100%; height: 100%; min-height: 170px; object-fit: cover;" onerror="this.src='{{ $defaultPersonImage }}'">
+                            <img src="{{ $modalPersonImage }}" alt="{{ $item->first_name ?: 'Persona' }}" style="width: 100%; height: 100%; min-height: 170px; object-fit: cover;" onerror="this.src='{{ $defaultPersonImage }}'">
                         </div>
 
                         <div class="flex-grow-1">
