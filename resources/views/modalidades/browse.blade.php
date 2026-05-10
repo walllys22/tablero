@@ -130,17 +130,6 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label for="nombre_categoria" class="form-label">Categoria</label>
-                                <input type="text" id="nombre_categoria" value="{{ old('creating_categoria') ? old('nombre') : '' }}" class="form-control @if(old('creating_categoria')) @error('nombre') is-invalid @enderror @endif" readonly>
-                                <input type="hidden" name="nombre" id="nombre_categoria_hidden" value="{{ old('creating_categoria') ? old('nombre') : '' }}">
-                                @if (old('creating_categoria'))
-                                    @error('nombre')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                @endif
-                            </div>
-
-                            <div class="col-md-6">
                                 <label for="genero_categoria" class="form-label">Genero</label>
                                 <select name="genero" id="genero_categoria" class="form-select">
                                     <option value="">Seleccione</option>
@@ -160,6 +149,17 @@
                                 <input type="number" name="edad_hasta" id="edad_hasta_categoria" value="{{ old('edad_hasta') }}" class="form-control @if(old('creating_categoria')) @error('edad_hasta') is-invalid @enderror @endif" min="0" max="99">
                                 @if (old('creating_categoria'))
                                     @error('edad_hasta')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+
+                            <div class="col-md-12">
+                                <label for="nombre_categoria" class="form-label">Categoria</label>
+                                <input type="text" id="nombre_categoria" value="{{ old('creating_categoria') ? old('nombre') : '' }}" class="form-control @if(old('creating_categoria')) @error('nombre') is-invalid @enderror @endif" readonly>
+                                <input type="hidden" name="nombre" id="nombre_categoria_hidden" value="{{ old('creating_categoria') ? old('nombre') : '' }}">
+                                @if (old('creating_categoria'))
+                                    @error('nombre')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 @endif
@@ -202,7 +202,7 @@
                 @csrf
 
                 <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
+                    <div class="modal-header bg-success text-white">
                         <h5 class="modal-title fw-bold" id="modalCreateModalidadLabel">Crear modalidad</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>

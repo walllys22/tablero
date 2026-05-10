@@ -200,10 +200,10 @@
                 </h2>
 
                 <div class="print-meta">
-                    <div>Pagina: 1 de 1</div>
-                    <div>Impreso</div>
-                    <div>{{ $printedAt }}</div>
-                    <div>{{ $user->email ?? $user->name ?? 'Sistema' }}</div>
+                    <div class="text-center">Pagina: 1 de 1</div>
+                    <div class="text-center">Impreso</div>
+                    <div class="text-center">{{ $printedAt }}</div>
+                    <div class="text-center">{{ $user->email ?? $user->name ?? 'Sistema' }}</div>
                 </div>
             </div>
 

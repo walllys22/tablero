@@ -24,6 +24,7 @@
     .categoria-collapse {
         min-height: 0;
     }
+
 </style>
 
 <div class="col-md-12">
@@ -76,7 +77,7 @@
                                     type="button"
                                     title="Eliminar"
                                     data-bs-toggle="modal"
-                                    data-bs-target="#{{ $item->categorias_count > 0 ? 'modal-warning-delete-modalidad-' . $item->id : 'modal-alert-delete-modalidad-' . $item->id }}"
+                                    data-bs-target="#{{ $item->categorias->isNotEmpty() ? 'modal-warning-delete-modalidad-' . $item->id : 'modal-delete-modalidad-' . $item->id }}"
                                     class="btn btn-sm btn-danger"
                                 >
                                     <i class="bi bi-trash"></i>
@@ -119,8 +120,12 @@
 </div>
 
 @foreach ($data as $item)
+    @php
+        $hasCategorias = $item->categorias->isNotEmpty();
+    @endphp
+
     <div class="modal fade" id="modal-edit-modalidad-{{ $item->id }}" tabindex="-1" aria-labelledby="modalEditModalidadLabel{{ $item->id }}" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered">
             <form method="POST" action="{{ route('modalidades.update', ['torneo' => $torneo, 'modalidad' => $item, 'return' => request('return')]) }}">
                 @csrf
                 @method('PATCH')
@@ -156,7 +161,7 @@
         </div>
     </div>
 
-    @if ($item->categorias_count > 0)
+    @if ($hasCategorias)
         <div class="modal fade" id="modal-warning-delete-modalidad-{{ $item->id }}" tabindex="-1" aria-labelledby="modalWarningDeleteModalidadLabel{{ $item->id }}" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -174,26 +179,6 @@
             </div>
         </div>
     @else
-        <div class="modal fade" id="modal-alert-delete-modalidad-{{ $item->id }}" tabindex="-1" aria-labelledby="modalAlertDeleteModalidadLabel{{ $item->id }}" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header bg-warning text-dark">
-                        <h5 class="modal-title fw-bold" id="modalAlertDeleteModalidadLabel{{ $item->id }}">Alerta de eliminacion</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                    </div>
-                    <div class="modal-body">
-                        No se Puede Liminar <strong>{{ $item->nombre }}</strong>. Tiene Categorias registradas. Elimine las Categorias para eliminar la Modalidad.
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="button" class="btn btn-warning" data-bs-target="#modal-delete-modalidad-{{ $item->id }}" data-bs-toggle="modal">
-                            Continuar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="modal fade" id="modal-delete-modalidad-{{ $item->id }}" tabindex="-1" aria-labelledby="modalDeleteModalidadLabel{{ $item->id }}" aria-hidden="true">
             <div class="modal-dialog">
                 <form method="POST" action="{{ route('modalidades.destroy', ['torneo' => $torneo, 'modalidad' => $item, 'return' => request('return')]) }}">
@@ -206,11 +191,21 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                         </div>
                         <div class="modal-body">
-                            Seguro que desea eliminar la modalidad <strong>{{ $item->nombre }}</strong>?
+                            <p class="mb-3">Esta seguro de eliminar la modalidad <strong>{{ $item->nombre }}</strong>?</p>
+                            <div class="d-flex gap-4">
+                                <div class="form-check">
+                                    <input class="form-check-input js-confirm-delete-modalidad" type="radio" name="confirm_delete_modalidad_{{ $item->id }}" id="confirm_delete_modalidad_si_{{ $item->id }}" value="si" data-target="#btn-delete-modalidad-{{ $item->id }}">
+                                    <label class="form-check-label" for="confirm_delete_modalidad_si_{{ $item->id }}">Si</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input js-confirm-delete-modalidad" type="radio" name="confirm_delete_modalidad_{{ $item->id }}" id="confirm_delete_modalidad_no_{{ $item->id }}" value="no" data-target="#btn-delete-modalidad-{{ $item->id }}" checked>
+                                    <label class="form-check-label" for="confirm_delete_modalidad_no_{{ $item->id }}">No</label>
+                                </div>
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                            <button type="submit" id="btn-delete-modalidad-{{ $item->id }}" class="btn btn-danger" disabled>Eliminar</button>
                         </div>
                     </div>
                 </form>
@@ -237,5 +232,14 @@
                 new bootstrap.Modal(editModal).show();
             }
         @endif
+
+        $('.js-confirm-delete-modalidad').on('change', function () {
+            let target = $($(this).data('target'));
+            target.prop('disabled', $(this).val() !== 'si' || ! this.checked);
+        });
+
+        $('.modal[id^="modal-delete-modalidad-"]').on('hidden.bs.modal', function () {
+            $(this).find('.js-confirm-delete-modalidad[value="no"]').prop('checked', true).trigger('change');
+        });
     });
 </script>

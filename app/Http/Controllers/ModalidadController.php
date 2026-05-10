@@ -11,11 +11,21 @@ use Illuminate\Validation\ValidationException;
 
 class ModalidadController extends Controller
 {
+    private function orderCategorias($query)
+    {
+        return $query
+            ->orderBy('edad_desde')
+            ->orderBy('edad_hasta')
+            ->orderBy('genero')
+            ->orderBy('peso_hasta')
+            ->orderBy('nombre');
+    }
+
     public function index(Torneo $torneo)
     {
         $modalidades = $torneo->modalidades()
             ->with(['categorias' => function ($query) {
-                $query->orderBy('nombre');
+                $this->orderCategorias($query);
             }])
             ->orderBy('nombre')
             ->get();
@@ -31,7 +41,7 @@ class ModalidadController extends Controller
 
         $data = $torneo->modalidades()
             ->with(['categorias' => function ($query) {
-                $query->orderBy('nombre');
+                $this->orderCategorias($query);
             }])
             ->withCount('categorias')
             ->when($search, function ($query, $search) {
@@ -60,7 +70,7 @@ class ModalidadController extends Controller
         abort_unless($modalidad->torneo_id === $torneo->id, 404);
 
         $modalidad->load(['categorias' => function ($query) {
-            $query->orderBy('nombre');
+            $this->orderCategorias($query);
         }]);
 
         return view('modalidades.read', compact('torneo', 'modalidad'));
@@ -70,7 +80,7 @@ class ModalidadController extends Controller
     {
         $modalidades = $torneo->modalidades()
             ->with(['categorias' => function ($query) {
-                $query->orderBy('nombre');
+                $this->orderCategorias($query);
             }])
             ->orderBy('nombre')
             ->get();
