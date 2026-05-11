@@ -262,28 +262,102 @@ button.sidebar-link {
 }
 
 .torneo-form-card {
-    border: 1.5px solid #1f4da1;
+    border: 1px solid #dce4f5;
     border-radius: 28px;
     background: #ffffff;
-    padding: 1.5rem;
+    padding: 1.75rem;
+    box-shadow: 0 24px 42px rgba(15, 23, 42, 0.08);
+}
+
+.torneo-form-card .form-label {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #1b365b;
+    margin-bottom: 0.75rem;
+}
+
+.torneo-form-card .form-control,
+.torneo-form-card .form-select {
+    border-radius: 18px;
+    border: 1px solid #e7edf9;
+    background: #f9fbff;
+    min-height: 54px;
+    padding: 1rem 1.05rem;
+}
+
+.torneo-form-card .form-control::placeholder,
+.torneo-form-card .form-select::placeholder {
+    color: #94a3b8;
+}
+
+.torneo-form-card .form-control:focus,
+.torneo-form-card .form-select:focus {
+    border-color: #5d7ff6;
+    box-shadow: 0 0 0 0.15rem rgba(93, 127, 246, 0.18);
 }
 
 .torneo-logo-preview {
-    width: 160px;
-    height: 160px;
-    object-fit: contain;
-    border: 1px solid #dee2e6;
-    border-radius: 18px;
-    background: #f8f9fa;
+    width: 100%;
+    max-width: 220px;
+    height: 220px;
+    object-fit: cover;
+    border: 1px solid #e7edf9;
+    border-radius: 28px;
+    background: #ffffff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+
+.torneo-view-card {
+    background: #ffffff;
+    border: 1px solid #e7edf9;
+    border-radius: 28px;
+    padding: 1.75rem;
+    box-shadow: 0 24px 42px rgba(15, 23, 42, 0.08);
+}
+
+.torneo-view-field {
+    background: #f8fbff;
+    border: 1px solid #e7edf9;
+    border-radius: 20px;
+    padding: 1rem 1.1rem;
+    min-height: 76px;
+}
+
+.torneo-view-field .field-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+}
+
+.torneo-view-field .field-value {
+    font-size: 0.96rem;
+    font-weight: 600;
+    color: #111827;
 }
 
 .torneo-contact-panel {
-    min-height: 110px;
-    border: 1px solid #dee2e6;
-    border-radius: 12px;
-    background: #f8f9fa;
+    min-height: 148px;
+    border: 1px solid #e7edf9;
+    border-radius: 22px;
+    background: #f8fbff;
+    box-shadow: inset 0 0 0 1px rgba(229, 236, 248, 0.9);
 }
 
+.torneo-contact-panel > div {
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.torneo-form-card .form-check {
+    gap: 0.75rem;
+}
+
+.torneo-form-card .form-check-label {
+    font-weight: 600;
+}
 
 .panel {
     background: #ffffff;

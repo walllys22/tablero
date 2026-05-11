@@ -27,7 +27,8 @@
                                 </h1>
                             </div>
                             <div class="col-md-4 text-end px-3 py-3">
-                                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-create">
+                                <button type="button" class="btn btn-success" data-bs-toggle="modal"
+                                    data-bs-target="#modal-create">
                                     <i class="bi bi-plus-lg"></i> <span>Crear</span>
                                 </button>
                                 <a href="{{ route('dashboard') }}" class="btn btn-warning text-white">
@@ -74,142 +75,197 @@
         <div class="modal-dialog modal-xl">
             <form method="POST" action="{{ route('torneos.store') }}" enctype="multipart/form-data">
                 @csrf
-                <div class="modal-content">
+                <div class="modal-content rounded-4 overflow-hidden">
                     <div class="modal-header bg-primary text-white">
                         <h5 class="modal-title fw-bold" id="modalCreateLabel">Crear torneo</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Cerrar"></button>
                     </div>
-                    <div class="modal-body">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label for="nombre" class="form-label">Nombre</label>
-                                <input type="text" name="nombre" id="nombre" value="{{ old('nombre') }}" class="form-control @error('nombre') is-invalid @enderror" maxlength="255" required>
-                                @error('nombre')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="ciudad" class="form-label">Ciudad</label>
-                                <input type="text" name="ciudad" id="ciudad" value="{{ old('ciudad') }}" class="form-control @error('ciudad') is-invalid @enderror" maxlength="255">
-                                @error('ciudad')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-4">
-                                <label for="organiza" class="form-label">Organiza</label>
-                                <input type="text" name="organiza" id="organiza" value="{{ old('organiza') }}" class="form-control @error('organiza') is-invalid @enderror" maxlength="255">
-                                @error('organiza')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-
-                            <div class="col-md-4">
-                                <label for="fecha_inicio" class="form-label">Fecha inicio</label>
-                                <input type="date" name="fecha_inicio" id="fecha_inicio" value="{{ old('fecha_inicio') }}" min="{{ now()->format('Y-m-d') }}" class="form-control @error('fecha_inicio') is-invalid @enderror">
-                                @error('fecha_inicio')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-4">
-                                <label for="fecha_fin" class="form-label">Fecha fin</label>
-                                <input type="date" name="fecha_fin" id="fecha_fin" value="{{ old('fecha_fin') }}" min="{{ old('fecha_inicio', now()->format('Y-m-d')) }}" class="form-control @error('fecha_fin') is-invalid @enderror">
-                                @error('fecha_fin')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-4">
-                                <label for="sistema_competencia" class="form-label">Sistema competencia</label>
-                                <select name="sistema_competencia" id="sistema_competencia" class="form-select @error('sistema_competencia') is-invalid @enderror" required>
-                                    <option value="tradicional" {{ old('sistema_competencia', 'tradicional') === 'tradicional' ? 'selected' : '' }}>Tradicional</option>
-                                    <option value="wkf" {{ old('sistema_competencia') === 'wkf' ? 'selected' : '' }}>WKF</option>
-                                    <option value="otro" {{ old('sistema_competencia') === 'otro' ? 'selected' : '' }}>Otro</option>
-                                </select>
-                                @error('sistema_competencia')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-
-
-                            <div class="col-md-8">
-                                <label for="direccion" class="form-label">Direccion</label>
-                                <input type="text" name="direccion" id="direccion" value="{{ old('direccion') }}" class="form-control @error('direccion') is-invalid @enderror" maxlength="1000">
-                                @error('direccion')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-4">
-                                <label for="modalidad_puntaje" class="form-label">Modalidad de puntaje</label>
-                                <input type="text" name="modalidad_puntaje" id="modalidad_puntaje" value="{{ old('modalidad_puntaje') }}" class="form-control @error('modalidad_puntaje') is-invalid @enderror" maxlength="100">
-                                @error('modalidad_puntaje')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="costo_inscripcion_organizacion" class="form-label">Inscripcion de Organizacion</label>
-                                <input type="number" name="costo_inscripcion_organizacion" id="costo_inscripcion_organizacion" value="{{ old('costo_inscripcion_organizacion', 0) }}" class="form-control @error('costo_inscripcion_organizacion') is-invalid @enderror" min="0" step="0.01">
-                                @error('costo_inscripcion_organizacion')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="costo_inscripcion_competidor" class="form-label">Inscripcion de Competidores</label>
-                                <input type="number" name="costo_inscripcion_competidor" id="costo_inscripcion_competidor" value="{{ old('costo_inscripcion_competidor', 0) }}" class="form-control @error('costo_inscripcion_competidor') is-invalid @enderror" min="0" step="0.01">
-                                @error('costo_inscripcion_competidor')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-
-
-
-
-
-                            <div class="col-md-6">
-                                <label for="persona_id" class="form-label">Responsable</label>
-                                <select name="persona_id" id="persona_id" class="form-select @error('persona_id') is-invalid @enderror" required>
-                                    <option value="">Seleccione</option>
-                                    @foreach ($personas as $persona)
-                                        <option value="{{ $persona->id }}" data-phone="{{ $persona->phone }}" data-email="{{ $persona->email }}" data-address="{{ $persona->address }}" {{ old('persona_id') == $persona->id ? 'selected' : '' }}>
-                                            {{ $persona->first_name }}{{ $persona->ci ? ' - CI ' . $persona->ci : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('persona_id')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">Contacto</label>
-                                <div class="text-center px-3 py-2" style="min-height: 110px; border: 1px solid #dee2e6; border-radius: 6px; background: #f8f9fa;">
-                                    <div id="responsable-phone" class="fw-bold" style="font-size: 13px;">No registrado</div>
-
-                                    <div id="responsable-email" class="mt-1" style="font-size: 13px;">No registrado</div>
-                                    <div id="responsable-address" class="text-muted mt-1" style="font-size: 13px;">No registrada</div>
+                    <div class="modal-body p-4" style="background: #f2f6ff;">
+                        <div class="torneo-form-card">
+                            <div class="row g-4">
+                                <div class="col-lg-4">
+                                    <div class="text-center mb-4">
+                                        <label class="form-label d-block">Logo Torneo</label>
+                                        <img id="logo_preview_create" src="{{ asset('images/icono.png') }}"
+                                            alt="Logo Torneo" class="torneo-logo-preview mb-3"
+                                            onerror="this.src='{{ asset('images/icono.png') }}'">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="logo" class="form-label">Seleccionar archivo</label>
+                                        <input type="file" name="logo" id="logo"
+                                            class="form-control @error('logo') is-invalid @enderror"
+                                            accept="image/jpeg,image/png,image/webp"
+                                            onchange="previewTorneoLogo(this, 'logo_preview_create')">
+                                        @error('logo')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="form-check form-switch mt-4">
+                                        <input type="checkbox" name="status" id="status" value="1"
+                                            class="form-check-input" {{ old('status', 1) ? 'checked' : '' }}>
+                                        <label for="status" class="form-check-label">Activo</label>
+                                    </div>
                                 </div>
-                            </div>
 
+                                <div class="col-lg-8">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="nombre" class="form-label">Nombre</label>
+                                            <input type="text" name="nombre" id="nombre" value="{{ old('nombre') }}"
+                                                class="form-control @error('nombre') is-invalid @enderror" maxlength="255"
+                                                required>
+                                            @error('nombre')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
 
+                                        <div class="col-md-6">
+                                            <label for="ciudad" class="form-label">Ciudad</label>
+                                            <input type="text" name="ciudad" id="ciudad"
+                                                value="{{ old('ciudad') }}"
+                                                class="form-control @error('ciudad') is-invalid @enderror"
+                                                maxlength="255">
+                                            @error('ciudad')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
 
+                                        <div class="col-md-8">
+                                            <label for="direccion" class="form-label">Direccion</label>
+                                            <input type="text" name="direccion" id="direccion"
+                                                value="{{ old('direccion') }}"
+                                                class="form-control @error('direccion') is-invalid @enderror"
+                                                maxlength="1000">
+                                            @error('direccion')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
 
+                                        <div class="col-md-4">
+                                            <label for="sistema_competencia" class="form-label">Sistema
+                                                competencia</label>
+                                            <select name="sistema_competencia" id="sistema_competencia"
+                                                class="form-select @error('sistema_competencia') is-invalid @enderror"
+                                                required>
+                                                <option value="tradicional"
+                                                    {{ old('sistema_competencia', 'tradicional') === 'tradicional' ? 'selected' : '' }}>
+                                                    Tradicional</option>
+                                                <option value="wkf"
+                                                    {{ old('sistema_competencia') === 'wkf' ? 'selected' : '' }}>WKF
+                                                </option>
+                                                <option value="otro"
+                                                    {{ old('sistema_competencia') === 'otro' ? 'selected' : '' }}>Otro
+                                                </option>
+                                            </select>
+                                            @error('sistema_competencia')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
 
-                            <div class="col-md-8">
-                                <label for="logo" class="form-label">Logo</label>
-                                <input type="file" name="logo" id="logo" class="form-control @error('logo') is-invalid @enderror" accept="image/jpeg,image/png,image/webp">
-                                @error('logo')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+                                        <div class="col-md-6">
+                                            <label for="modalidad_puntaje" class="form-label">Modalidad de puntaje</label>
+                                            <input type="text" name="modalidad_puntaje" id="modalidad_puntaje"
+                                                value="{{ old('modalidad_puntaje') }}"
+                                                class="form-control @error('modalidad_puntaje') is-invalid @enderror"
+                                                maxlength="100">
+                                            @error('modalidad_puntaje')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
 
-                            <div class="col-md-4 d-flex align-items-end">
-                                <div class="form-check form-switch mb-2">
-                                    <input type="checkbox" name="status" id="status" value="1" class="form-check-input" {{ old('status', 1) ? 'checked' : '' }}>
-                                    <label for="status" class="form-check-label">Activo</label>
+                                        <div class="col-md-6">
+                                            <label for="organiza" class="form-label">Organiza</label>
+                                            <input type="text" name="organiza" id="organiza"
+                                                value="{{ old('organiza') }}"
+                                                class="form-control @error('organiza') is-invalid @enderror"
+                                                maxlength="255">
+                                            @error('organiza')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label for="fecha_inicio" class="form-label">Fecha inicio</label>
+                                            <input type="date" name="fecha_inicio" id="fecha_inicio"
+                                                value="{{ old('fecha_inicio') }}" min="{{ now()->format('Y-m-d') }}"
+                                                class="form-control @error('fecha_inicio') is-invalid @enderror">
+                                            @error('fecha_inicio')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label for="fecha_fin" class="form-label">Fecha fin</label>
+                                            <input type="date" name="fecha_fin" id="fecha_fin"
+                                                value="{{ old('fecha_fin') }}"
+                                                min="{{ old('fecha_inicio', now()->format('Y-m-d')) }}"
+                                                class="form-control @error('fecha_fin') is-invalid @enderror">
+                                            @error('fecha_fin')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="costo_inscripcion_organizacion" class="form-label">Inscripcion de
+                                                Organizacion</label>
+                                            <input type="number" name="costo_inscripcion_organizacion"
+                                                id="costo_inscripcion_organizacion"
+                                                value="{{ old('costo_inscripcion_organizacion', 0) }}"
+                                                class="form-control @error('costo_inscripcion_organizacion') is-invalid @enderror"
+                                                min="0" step="0.01">
+                                            @error('costo_inscripcion_organizacion')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="costo_inscripcion_competidor" class="form-label">Inscripcion de
+                                                Competidores</label>
+                                            <input type="number" name="costo_inscripcion_competidor"
+                                                id="costo_inscripcion_competidor"
+                                                value="{{ old('costo_inscripcion_competidor', 0) }}"
+                                                class="form-control @error('costo_inscripcion_competidor') is-invalid @enderror"
+                                                min="0" step="0.01">
+                                            @error('costo_inscripcion_competidor')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3 pt-2"> <!-- Contenedor de fila para mantenerlos alineados -->
+                                    <div class="col-md-6">
+                                        <label for="persona_id" class="form-label">Responsable</label>
+                                        <select name="persona_id" id="persona_id"
+                                            class="form-select @error('persona_id') is-invalid @enderror" required>
+                                            <option value="">Seleccione</option>
+                                            @foreach ($personas as $persona)
+                                                <option value="{{ $persona->id }}" data-phone="{{ $persona->phone }}"
+                                                    data-email="{{ $persona->email }}"
+                                                    data-address="{{ $persona->address }}"
+                                                    {{ old('persona_id') == $persona->id ? 'selected' : '' }}>
+                                                    {{ $persona->first_name }}{{ $persona->ci ? ' - CI ' . $persona->ci : '' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('persona_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Contacto</label>
+                                        <div
+                                            class="torneo-contact-panel d-flex flex-column justify-content-center text-start px-3 py-3">
+                                            <div id="responsable-phone" class="fw-bold" style="font-size: 13px;">No
+                                                registrado</div>
+                                            <div id="responsable-email" class="mt-1" style="font-size: 13px;">No
+                                                registrado</div>
+                                            <div id="responsable-address" class="text-muted mt-1"
+                                                style="font-size: 13px;">No registrada</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -233,7 +289,8 @@
                 <div class="modal-content">
                     <div class="modal-header bg-danger text-white">
                         <h5 class="modal-title fw-bold" id="modalDeleteLabel">Eliminar torneo</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
                         Seguro que desea eliminar este torneo?
@@ -253,29 +310,29 @@
         var countPage = 10;
         var timeout = null;
 
-        $(document).ready(function () {
+        $(document).ready(function() {
             list();
 
-            $('#input-search').on('keyup', function (event) {
+            $('#input-search').on('keyup', function(event) {
                 if (event.keyCode === 13) {
                     clearTimeout(timeout);
                     list();
                 }
             });
 
-            $('#select-paginate').change(function () {
+            $('#select-paginate').change(function() {
                 countPage = $(this).val();
                 list();
             });
 
-            $('#input-search').on('input', function () {
+            $('#input-search').on('input', function() {
                 clearTimeout(timeout);
-                timeout = setTimeout(function () {
+                timeout = setTimeout(function() {
                     list();
                 }, 600);
             });
 
-            $('#fecha_inicio').on('change', function () {
+            $('#fecha_inicio').on('change', function() {
                 $('#fecha_fin').attr('min', this.value || '{{ now()->format('Y-m-d') }}');
             });
 
@@ -286,18 +343,20 @@
         function list(page = 1) {
             $('#div-results').html('<div class="col-12 text-center text-muted py-5">Cargando...</div>');
 
-            let url = '{{ route("torneos.ajax.list") }}';
+            let url = '{{ route('torneos.ajax.list') }}';
             let search = $('#input-search').val() ? $('#input-search').val() : '';
 
             $.ajax({
                 url: `${url}?search=${encodeURIComponent(search)}&paginate=${countPage}&page=${page}&_=${Date.now()}`,
                 type: 'get',
                 cache: false,
-                success: function (result) {
+                success: function(result) {
                     $('#div-results').html(result);
                 },
-                error: function () {
-                    $('#div-results').html('<div class="col-12"><div class="alert alert-danger mb-0">No se pudo cargar la lista.</div></div>');
+                error: function() {
+                    $('#div-results').html(
+                        '<div class="col-12"><div class="alert alert-danger mb-0">No se pudo cargar la lista.</div></div>'
+                        );
                 }
             });
         }
@@ -340,7 +399,7 @@
         }
 
         @if ($errors->any())
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 @if (!old('editing_torneo'))
                     let modal = new bootstrap.Modal(document.getElementById('modal-create'));
                     modal.show();
