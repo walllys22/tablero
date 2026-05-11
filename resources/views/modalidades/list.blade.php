@@ -58,8 +58,9 @@
                             <div class="collapse categoria-collapse" id="categorias-modalidad-{{ $item->id }}">
                                 @forelse ($item->categorias as $categoria)
                                     <div>
-                                        <strong>{{ \App\Support\CategoriaNameFormatter::format($categoria, $item->nombre) }}</strong>
+                                        <strong>{{ $categoria->nombre }}</strong>
                                     </div>
+                                    
                                 @empty
                                     <span class="text-muted">Sin categorias</span>
                                 @endforelse

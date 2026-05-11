@@ -94,9 +94,7 @@ class ModalidadController extends Controller
 
         $torneo->categorias()->create($data);
 
-        return redirect()
-            ->route('modalidades.show', ['torneo' => $torneo, 'modalidad' => $modalidad, 'return' => request('return')])
-            ->with('status', 'Categoria creada correctamente.');
+        return back()->with('status', 'Categoria creada correctamente.');
     }
 
     public function updateCategoria(Request $request, Torneo $torneo, Modalidad $modalidad, Categoria $categoria)
@@ -133,6 +131,7 @@ class ModalidadController extends Controller
                 Rule::exists('modalidades', 'id')->where('torneo_id', $torneo->id),
             ],
             'nombre' => ['nullable', 'string', 'max:255'],
+            'prefijo' => ['nullable', 'string', 'max:100'],
             'genero' => ['nullable', 'string', 'in:Masculino,Femenino,Mixto'],
             'edad_desde' => ['nullable', 'integer', 'min:0', 'max:99'],
             'edad_hasta' => ['nullable', 'integer', 'min:0', 'max:99', 'gte:edad_desde'],
@@ -144,7 +143,7 @@ class ModalidadController extends Controller
 
         $data = $request->validate($rules);
         $pesoTipo = $data['peso_tipo'] ?? 'max';
-        unset($data['creating_categoria'], $data['editing_categoria'], $data['peso_tipo']);
+        unset($data['creating_categoria'], $data['editing_categoria'], $data['peso_tipo'], $data['prefijo']);
 
         if (! $modalidad) {
             $modalidad = Modalidad::where('torneo_id', $torneo->id)
@@ -156,6 +155,10 @@ class ModalidadController extends Controller
 
         $isKata = str_contains(mb_strtolower($modalidad->nombre), 'kata');
         $nombreParts = [];
+
+        if ($isKata && ! empty($request->input('prefijo'))) {
+            $nombreParts[] = trim($request->input('prefijo'));
+        }
 
         if (! empty($data['edad_desde']) && ! empty($data['edad_hasta'])) {
             $nombreParts[] = "{$data['edad_desde']} a {$data['edad_hasta']} años";
@@ -217,9 +220,7 @@ class ModalidadController extends Controller
 
         $torneo->modalidades()->create($data);
 
-        return redirect()
-            ->route('modalidades.index', ['torneo' => $torneo, 'return' => request('return')])
-            ->with('status', 'Modalidad creada correctamente.');
+        return back()->with('status', 'Modalidad creada correctamente.');
     }
 
     public function update(Request $request, Torneo $torneo, Modalidad $modalidad)

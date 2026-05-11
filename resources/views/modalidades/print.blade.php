@@ -233,7 +233,10 @@
                             <td>
                                 <div class="collapse" id="categorias-modalidad-{{ $modalidad->id }}">
                                     @forelse ($modalidad->categorias as $categoria)
-                                        <div class="categoria-line">{{ $formatCategoriaNombre($categoria, $modalidad) }}</div>
+                                        <div class="categoria-line">
+                                            <strong>{{ $formatCategoriaNombre($categoria, $modalidad) }}</strong>
+                                            <span style="font-size: 0.8em;">({{ $categoria->nombre }})</span>
+                                        </div>
                                     @empty
                                         <span>Sin categorias</span>
                                     @endforelse

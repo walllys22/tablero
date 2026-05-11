@@ -129,6 +129,11 @@
                                 @endif
                             </div>
 
+                            <div class="col-md-12 js-prefijo-categoria d-none">
+                                <label for="prefijo_categoria" class="form-label">Prefijo (Nivel/Tipo)</label>
+                                <input type="text" name="prefijo" id="prefijo_categoria" value="{{ old('prefijo') }}" class="form-control" placeholder="Ej: Open, Principiante, Grado B">
+                            </div>
+
                             <div class="col-md-6">
                                 <label for="genero_categoria" class="form-label">Genero</label>
                                 <select name="genero" id="genero_categoria" class="form-select">
@@ -253,6 +258,7 @@
                 $('#modalidad_nombre_referencia').text(modalidadNombre);
                 $('#nombre_categoria, #nombre_categoria_hidden').val('');
                 $('#genero_categoria').val('');
+                $('#prefijo_categoria').val('');
                 $('#edad_desde_categoria, #edad_hasta_categoria, #peso_hasta_categoria').val('');
                 $('#peso_tipo_categoria').val('max');
                 togglePesoCategoria(modalidadNombre);
@@ -277,13 +283,17 @@
                 }, 600);
             });
 
-            $('#genero_categoria, #edad_desde_categoria, #edad_hasta_categoria, #peso_tipo_categoria, #peso_hasta_categoria').on('input change', updateCategoriaNombre);
+            $('#prefijo_categoria, #genero_categoria, #edad_desde_categoria, #edad_hasta_categoria, #peso_tipo_categoria, #peso_hasta_categoria').on('input change', updateCategoriaNombre);
         });
 
         function togglePesoCategoria(modalidadNombre) {
             let isKata = String(modalidadNombre || '').toLowerCase().includes('kata');
             $('.js-peso-categoria').toggleClass('d-none', isKata);
             $('#peso_tipo_categoria, #peso_hasta_categoria').prop('disabled', isKata);
+
+            // Toggle Prefijo
+            $('.js-prefijo-categoria').toggleClass('d-none', !isKata);
+            $('#prefijo_categoria').prop('disabled', !isKata);
 
             if (isKata) {
                 $('#peso_hasta_categoria').val('');
@@ -296,6 +306,7 @@
             let modalidadNombre = $('#modalidad_nombre_referencia').text();
             let nombreInput = $('#nombre_categoria');
             let isKata = String(modalidadNombre || '').toLowerCase().includes('kata');
+            let prefijo = $('#prefijo_categoria').val();
             let peso = $('#peso_hasta_categoria').val();
             let genero = $('#genero_categoria').val();
             let edadDesde = $('#edad_desde_categoria').val();
@@ -310,13 +321,17 @@
                 edadTexto = `hasta ${edadHasta} años`;
             }
 
-            if (! genero && ! edadTexto && (! peso || isKata)) {
+            if (! genero && ! edadTexto && (! peso || isKata) && (! prefijo || ! isKata)) {
                 nombreInput.val('');
                 $('#nombre_categoria_hidden').val('');
                 return;
             }
 
             let parts = [];
+
+            if (isKata && prefijo) {
+                parts.push(prefijo);
+            }
 
             if (edadTexto) {
                 parts.push(edadTexto);

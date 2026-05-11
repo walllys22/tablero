@@ -94,8 +94,10 @@
                                                 @php
                                                     $categoriaNombre = $formatCategoriaNombre($categoria);
                                                 @endphp
-                                                <div class="d-flex align-items-center justify-content-between gap-2 py-1">
-                                                    <span style="line-height: 1.6;">{{ $categoriaNombre }}</span>
+                                                <div class="d-flex align-items-center justify-content-between py-1">
+                                                    <div>
+                                                        <strong>{{ $categoria->nombre }}</strong>
+                                                    </div>
                                                     <div class="d-flex gap-2">
                                                         <button type="button" title="Editar" data-bs-toggle="modal" data-bs-target="#modal-edit-categoria-{{ $categoria->id }}" class="btn btn-sm btn-info text-white">
                                                             <i class="bi bi-pencil-square"></i>
