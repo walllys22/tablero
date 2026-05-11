@@ -261,6 +261,30 @@ button.sidebar-link {
     font-weight: 700;
 }
 
+.torneo-form-card {
+    border: 1.5px solid #1f4da1;
+    border-radius: 28px;
+    background: #ffffff;
+    padding: 1.5rem;
+}
+
+.torneo-logo-preview {
+    width: 160px;
+    height: 160px;
+    object-fit: contain;
+    border: 1px solid #dee2e6;
+    border-radius: 18px;
+    background: #f8f9fa;
+}
+
+.torneo-contact-panel {
+    min-height: 110px;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    background: #f8f9fa;
+}
+
+
 .panel {
     background: #ffffff;
     border: 1px solid #e5e7eb;
