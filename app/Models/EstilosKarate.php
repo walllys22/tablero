@@ -20,4 +20,9 @@ class EstilosKarate extends Model
     protected $casts = [
         'status' => 'integer',
     ];
+
+    public function organizaciones()
+    {
+        return $this->hasMany(Organizacion::class, 'estilo_id');
+    }
 }

@@ -146,7 +146,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
+                    <div class="modal-footer" style="background: #ffffff; border-top: 1px solid #dee2e6;">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-success">
                             <i class="bi bi-check-lg"></i> Guardar
