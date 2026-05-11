@@ -258,12 +258,12 @@
                                         <label class="form-label">Contacto</label>
                                         <div
                                             class="torneo-contact-panel d-flex flex-column justify-content-center text-start px-3 py-3">
-                                            <div id="responsable-phone" class="fw-bold" style="font-size: 13px;">No
-                                                registrado</div>
-                                            <div id="responsable-email" class="mt-1" style="font-size: 13px;">No
-                                                registrado</div>
-                                            <div id="responsable-address" class="text-muted mt-1"
-                                                style="font-size: 13px;">No registrada</div>
+                                            <div class="fw-bold" style="font-size: 13px;">
+                                                <i class="bi bi-telephone-fill"></i> <span id="responsable-phone">No registrado</span>
+                                            </div>
+                                            <div class="mt-1" style="font-size: 13px;">
+                                                <i class="bi bi-envelope-fill"></i> <span id="responsable-email">No registrado</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -385,7 +385,6 @@
 
             $('#responsable-phone').text(phone || 'No registrado');
             $('#responsable-email').text(email || 'No registrado');
-            $('#responsable-address').text(address || 'No registrada');
 
             if (whatsappPhone) {
                 $('#responsable-whatsapp')

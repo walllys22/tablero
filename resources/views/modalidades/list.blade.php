@@ -25,6 +25,11 @@
         min-height: 0;
     }
 
+    .categoria-resumen {
+        color: #6c757d;
+        font-weight: 600;
+    }
+
 </style>
 
 <div class="col-md-12">
@@ -55,6 +60,13 @@
                         </td>
 
                         <td style="vertical-align: middle;">
+                            <div class="categoria-resumen" id="resumen-categorias-modalidad-{{ $item->id }}">
+                                @if ($item->categorias->count() > 0)
+                                    Categorias Registradas: {{ $item->categorias->count() }}
+                                @else
+                                    No Registradas
+                                @endif
+                            </div>
                             <div class="collapse categoria-collapse" id="categorias-modalidad-{{ $item->id }}">
                                 @forelse ($item->categorias as $categoria)
                                     <div>

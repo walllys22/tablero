@@ -284,6 +284,14 @@
             });
 
             $('#prefijo_categoria, #genero_categoria, #edad_desde_categoria, #edad_hasta_categoria, #peso_tipo_categoria, #peso_hasta_categoria').on('input change', updateCategoriaNombre);
+
+            $(document).on('show.bs.collapse', '.categoria-collapse', function () {
+                $('#resumen-' + this.id).addClass('d-none');
+            });
+
+            $(document).on('hidden.bs.collapse', '.categoria-collapse', function () {
+                $('#resumen-' + this.id).removeClass('d-none');
+            });
         });
 
         function togglePesoCategoria(modalidadNombre) {

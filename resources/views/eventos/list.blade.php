@@ -303,11 +303,13 @@
                                         <div class="torneo-view-field d-flex flex-column">
                                             <div class="field-label">Responsable</div>
                                             <div class="field-value">
-                                                {{ $item->persona ? $item->persona->first_name : 'Sin responsable' }}
+                                                <span style="font-size: 1.25rem; font-weight: bold;">
+                                                    {{ $item->persona ? $item->persona->first_name : 'Sin responsable' }}
+                                                </span>
                                                 <br>
-                                                {{ $item->persona && $item->persona->phone ? $item->persona->phone : 'Sin telefono' }}
+                                                <i class="bi bi-telephone-fill"></i> {{ $item->persona && $item->persona->phone ? $item->persona->phone : 'Sin telefono' }}
                                                 -
-                                                {{ $item->persona && $item->persona->email ? $item->persona->email : 'Sin email' }}
+                                                <i class="bi bi-envelope-fill"></i> {{ $item->persona && $item->persona->email ? $item->persona->email : 'Sin email' }}
                                             </div>
                                         </div>
                                     </div>
@@ -446,12 +448,7 @@
                                             @enderror
                                         @endif
                                     </div>
-
-
-
-
                                 </div>
-
                                 <div class="col-lg-8">
                                     <div class="row g-3">
                                         <div class="col-md-6">
@@ -591,13 +588,9 @@
                                                     class="form-check-label ms-2">Activo</label>
                                             </div>
                                         </div>
-
-
-
                                     </div>
                                 </div>
                             </div>
-
                             <div class="row g-3 mt-2">
                                 <div class="col-md-6">
                                     <label for="costo_organizacion_edit_{{ $item->id }}"
@@ -629,7 +622,6 @@
                                     @endif
                                 </div>
                             </div>
-
                             <div class="row g-3 mt-2">
                                 <div class="col-lg-5">
                                     <label for="persona_edit_{{ $item->id }}" class="form-label">Responsable</label>
@@ -652,7 +644,6 @@
                                         @enderror
                                     @endif
                                 </div>
-
                                 <div class="col-lg-7">
                                     <label class="form-label">Contacto</label>
                                     <div class="torneo-contact-panel p-3" id="persona_contact_block_{{ $item->id }}">

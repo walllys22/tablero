@@ -36,8 +36,9 @@
                         <td style="vertical-align: middle;">
                             @if ($item->persona)
                                 <strong>{{ $item->persona->first_name }}</strong><br>
-                                <small
-                                    class="text-muted">{{ $item->persona->ci ? 'CI: ' . $item->persona->ci : 'Sin CI' }}</small>
+                                <small class="text-muted">
+                                    <i class="bi bi-telephone-fill"></i> {{ $item->persona->phone ? 'Telefono: ' . $item->persona->phone : 'Sin telefono' }}
+                                </small>
                             @else
                                 <span class="text-muted">Sin persona</span>
                             @endif
@@ -174,7 +175,7 @@
                         </div>
 
                         <div class="flex-grow-1">
-                            <div class="row g-2">
+                            <div class="row g-2 p-1">
                                 <div class="col-md-6">
                                     <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
                                         <div class="fw-bold" style="line-height: 1;">Organizacion
@@ -189,7 +190,22 @@
                                             {{ $item->persona ? $item->persona->first_name : 'Sin persona' }}</div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                            </div>
+                            <div class="row g-2 p-1">
+                                <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                    <div class="fw-bold" style="line-height: 1;">Contacto</div>
+                                    <div class="fw-semibold" style="font-size: 14px;">
+                                        <i class="bi bi-telephone-fill"></i>
+                                        {{ $item->persona ? $item->persona->phone ? 'Telefono: ' . $item->persona->phone: 'Sin Registro' : 'Sin Registro' }}
+                                        &nbsp;&nbsp;&nbsp;&nbsp;
+                                        <i class="bi bi-envelope-fill"></i>
+                                        {{ $item->persona ? $item->persona->email ? 'Email: ' . $item->persona->email : 'Sin Registro' : 'Sin Registro' }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-2 p-1">
+                                <div class="col-md-9">
                                     <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
                                         <div class="fw-bold" style="line-height: 1;">Estilo</div>
                                         <div class="fw-semibold" style="font-size: 14px;">
@@ -197,13 +213,15 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
                                         <div class="fw-bold" style="line-height: 1;">Estado</div>
                                         <div class="fw-semibold" style="font-size: 14px;">
                                             {{ $item->status == 1 ? 'Activo' : 'Inactivo' }}</div>
                                     </div>
-                                </div>
+                                </div>                            
+                            </div>
+                            <div class="row g-2 p-1">
                                 <div class="col-md-6">
                                     <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
                                         <div class="fw-bold" style="line-height: 1;">Inscripciones
@@ -220,7 +238,7 @@
                                             {{ $item->created_at ? $item->created_at->format('d/m/Y') : 'No registrada' }}
                                         </div>
                                     </div>
-                                </div>
+                                </div>                                
                             </div>
                         </div>
                     </div>

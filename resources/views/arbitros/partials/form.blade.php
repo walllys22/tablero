@@ -18,7 +18,7 @@
                                 <option value="">Seleccione</option>
                                 @foreach ($personas as $persona)
                                     <option value="{{ $persona->id }}" {{ old('persona_id', $arbitro?->persona_id) == $persona->id ? 'selected' : '' }}>
-                                        {{ $persona->first_name }}{{ $persona->ci ? ' - CI ' . $persona->ci : '' }}
+                                        {{ $persona->first_name }}
                                     </option>
                                 @endforeach
                             </select>

@@ -19,10 +19,13 @@ class ArbitroController extends Controller
             ->with(['persona', 'licenciaTipo'])
             ->join('personas', 'personas.id', '=', 'arbitros.persona_id')
             ->orderBy('personas.first_name')
+            ->orderBy('arbitros.modalidad')
+            ->orderBy('arbitros.rango')
             ->select('arbitros.*')
             ->get();
+        $jueces = $arbitros->groupBy('persona_id');
 
-        return view('arbitros.index', compact('torneo', 'personas', 'licencias', 'arbitros'));
+        return view('arbitros.index', compact('torneo', 'personas', 'licencias', 'arbitros', 'jueces'));
     }
 
     public function store(Request $request, Torneo $torneo)
@@ -58,14 +61,21 @@ class ArbitroController extends Controller
             'persona_id' => [
                 'required',
                 Rule::exists('personas', 'id'),
-                Rule::unique('arbitros', 'persona_id')
-                    ->where('torneo_id', $torneo->id)
-                    ->ignore($arbitro?->id),
             ],
             'cargo' => ['required', 'string', 'in:Juez,Referee'],
             'modalidad' => ['required', 'string', 'in:Kata,Kumite,Kumite-Kata'],
             'rango' => ['required', 'string', 'in:A,B,C'],
-            'licencia_tipo_id' => ['required', Rule::exists('licencia_tipos', 'id')],
+            'licencia_tipo_id' => [
+                'required',
+                Rule::exists('licencia_tipos', 'id'),
+                Rule::unique('arbitros', 'licencia_tipo_id')
+                    ->where('torneo_id', $torneo->id)
+                    ->where('persona_id', $request->input('persona_id'))
+                    ->where('cargo', $request->input('cargo'))
+                    ->where('modalidad', $request->input('modalidad'))
+                    ->where('rango', $request->input('rango'))
+                    ->ignore($arbitro?->id),
+            ],
         ]);
     }
 }

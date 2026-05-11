@@ -26,6 +26,10 @@
         <div class="form-check mb-4">
             <input id="remember_me" type="checkbox" class="form-check-input" name="remember">
             <label class="form-check-label" for="remember_me">{{ __('Remember me') }}</label>
+            <br>
+            <span>Usuario: admin@torneos.com</span>
+            <br>
+            <span>Contraseña: password123</span>
         </div>
 
         <div class="d-flex justify-content-between align-items-center gap-3">
