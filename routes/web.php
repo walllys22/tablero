@@ -10,8 +10,10 @@ use App\Http\Controllers\EstilosKarateController;
 use App\Http\Controllers\ModalidadController;
 use App\Http\Controllers\OrganizacionController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TableroController;
 use App\Http\Controllers\TorneoController;
+use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -115,6 +117,18 @@ Route::middleware('auth')->group(function () {
     Route::patch('/katas/{kata}', [KataController::class, 'update'])->name('katas.update');
     Route::patch('/katas/{kata}/estado', [KataController::class, 'toggleStatus'])->name('katas.toggle-status');
     Route::delete('/katas/{kata}', [KataController::class, 'destroy'])->name('katas.destroy');
+
+    Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
+    Route::get('/roles/ajax/list', [RoleController::class, 'ajaxList'])->name('roles.ajax.list');
+    Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
+    Route::patch('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+    Route::patch('/roles/{role}/estado', [RoleController::class, 'toggleStatus'])->name('roles.toggle-status');
+
+    Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
+    Route::get('/usuarios/ajax/list', [UsuarioController::class, 'ajaxList'])->name('usuarios.ajax.list');
+    Route::post('/usuarios', [UsuarioController::class, 'store'])->name('usuarios.store');
+    Route::patch('/usuarios/{usuario}', [UsuarioController::class, 'update'])->name('usuarios.update');
+    Route::patch('/usuarios/{usuario}/estado', [UsuarioController::class, 'toggleStatus'])->name('usuarios.toggle-status');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

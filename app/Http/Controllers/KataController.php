@@ -11,9 +11,7 @@ class KataController extends Controller
 {
     public function index()
     {
-        $sistemas = SistemaCompetencia::where('estado', 'Activo')
-            ->orderBy('nombre')
-            ->get();
+        $sistemas = SistemaCompetencia::orderBy('nombre')->get();
 
         return view('katas.browse', compact('sistemas'));
     }
@@ -21,29 +19,37 @@ class KataController extends Controller
     public function ajaxList(Request $request)
     {
         $search = trim((string) $request->input('search', ''));
-        $paginate = (int) $request->input('paginate', 10);
-        $paginate = in_array($paginate, [10, 25, 50, 100], true) ? $paginate : 10;
 
-        $data = Kata::query()
-            ->with('sistema')
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where('id', $search)
-                    ->orWhere('nombre', 'like', "%{$search}%")
-                    ->orWhere('estado', 'like', "%{$search}%")
-                    ->orWhereHas('sistema', function ($query) use ($search) {
-                        $query->where('nombre', 'like', "%{$search}%");
-                    });
-            })
-            ->orderBy('nombre')
-            ->paginate($paginate)
-            ->withQueryString();
-
-        $sistemas = SistemaCompetencia::where('estado', 'Activo')
+        $sistemas = SistemaCompetencia::with(['katas' => function ($query) {
+                $query->orderBy('id');
+            }])
             ->orderBy('nombre')
             ->get();
 
+        if ($search !== '') {
+            $sistemas = $sistemas
+                ->map(function ($sistema) use ($search) {
+                    $matchesSistema = stripos($sistema->nombre, $search) !== false;
+
+                    if (! $matchesSistema) {
+                        $sistema->setRelation('katas', $sistema->katas->filter(function ($kata) use ($search) {
+                            return (string) $kata->id === $search
+                                || stripos($kata->nombre, $search) !== false;
+                        })->values());
+                    }
+
+                    return $sistema;
+                })
+                ->filter(function ($sistema) {
+                    return $sistema->katas->isNotEmpty();
+                })
+                ->values();
+        }
+
+        $sistemasDisponibles = SistemaCompetencia::orderBy('nombre')->get();
+
         return response()
-            ->view('katas.list', compact('data', 'sistemas'))
+            ->view('katas.list', compact('sistemas', 'sistemasDisponibles'))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');

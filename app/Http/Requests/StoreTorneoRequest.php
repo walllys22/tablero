@@ -27,7 +27,7 @@ class StoreTorneoRequest extends FormRequest
             'nombre' => ['required', 'string', 'max:255'],
             'ciudad' => ['nullable', 'string', 'max:255'],
             'direccion' => ['nullable', 'string', 'max:1000'],
-            'sistema_competencia' => ['required', 'string', 'in:tradicional,wkf,otro'],
+            'sistema_competencia' => ['required', 'exists:sistema_competencia,id'],
             'modalidad_puntaje' => ['nullable', 'string', 'max:100'],
             'costo_inscripcion_organizacion' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'costo_inscripcion_competidor' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],

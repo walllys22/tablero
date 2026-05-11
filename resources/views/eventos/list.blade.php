@@ -64,7 +64,7 @@
                         </td>
                         <td style="text-align: center; vertical-align: middle;">
                             <label
-                                class="label label-info">{{ strtoupper($item->sistema_competencia ?: 'tradicional') }}</label>
+                                class="label label-info">{{ strtoupper($item->sistemaCompetencia?->nombre ?: 'Sin sistema') }}</label>
                             @if ($item->modalidad_puntaje)
                                 <br><small class="text-muted">{{ $item->modalidad_puntaje }}</small>
                             @endif
@@ -338,7 +338,7 @@
                                     <div class="torneo-view-field">
                                         <div class="field-label">Sistema</div>
                                         <div class="field-value">
-                                            {{ strtoupper($item->sistema_competencia ?: 'tradicional') }}</div>
+                                            {{ strtoupper($item->sistemaCompetencia?->nombre ?: 'Sin sistema') }}</div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -499,18 +499,17 @@
                                         <div class="col-md-4">
                                             <label for="sistema_competencia_edit_{{ $item->id }}"
                                                 class="form-label">Sistema competencia</label>
-                                            @php $sistemaActual = old('editing_torneo') == $item->id ? old('sistema_competencia') : ($item->sistema_competencia ?: 'tradicional'); @endphp
+                                            @php $sistemaActual = old('editing_torneo') == $item->id ? old('sistema_competencia') : $item->sistema_competencia; @endphp
                                             <select name="sistema_competencia"
                                                 id="sistema_competencia_edit_{{ $item->id }}"
                                                 class="form-select @if (old('editing_torneo') == $item->id) @error('sistema_competencia') is-invalid @enderror @endif"
                                                 required>
-                                                <option value="tradicional"
-                                                    {{ $sistemaActual === 'tradicional' ? 'selected' : '' }}>
-                                                    Tradicional</option>
-                                                <option value="wkf"
-                                                    {{ $sistemaActual === 'wkf' ? 'selected' : '' }}>WKF</option>
-                                                <option value="otro"
-                                                    {{ $sistemaActual === 'otro' ? 'selected' : '' }}>Otro</option>
+                                                <option value="">Seleccione</option>
+                                                @foreach ($sistemasCompetencia as $sistema)
+                                                    <option value="{{ $sistema->id }}" {{ (string) $sistemaActual === (string) $sistema->id ? 'selected' : '' }}>
+                                                        {{ $sistema->nombre }}
+                                                    </option>
+                                                @endforeach
                                             </select>
                                             @if (old('editing_torneo') == $item->id)
                                                 @error('sistema_competencia')

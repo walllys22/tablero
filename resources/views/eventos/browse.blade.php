@@ -145,18 +145,18 @@
                                         <div class="col-md-4">
                                             <label for="sistema_competencia" class="form-label">Sistema
                                                 competencia</label>
+                                            @php
+                                                $sistemaDefault = old('sistema_competencia', optional($sistemasCompetencia->first())->id);
+                                            @endphp
                                             <select name="sistema_competencia" id="sistema_competencia"
                                                 class="form-select @error('sistema_competencia') is-invalid @enderror"
                                                 required>
-                                                <option value="tradicional"
-                                                    {{ old('sistema_competencia', 'tradicional') === 'tradicional' ? 'selected' : '' }}>
-                                                    Tradicional</option>
-                                                <option value="wkf"
-                                                    {{ old('sistema_competencia') === 'wkf' ? 'selected' : '' }}>WKF
-                                                </option>
-                                                <option value="otro"
-                                                    {{ old('sistema_competencia') === 'otro' ? 'selected' : '' }}>Otro
-                                                </option>
+                                                <option value="">Seleccione</option>
+                                                @foreach ($sistemasCompetencia as $sistema)
+                                                    <option value="{{ $sistema->id }}" {{ (string) $sistemaDefault === (string) $sistema->id ? 'selected' : '' }}>
+                                                        {{ $sistema->nombre }}
+                                                    </option>
+                                                @endforeach
                                             </select>
                                             @error('sistema_competencia')
                                                 <div class="invalid-feedback">{{ $message }}</div>

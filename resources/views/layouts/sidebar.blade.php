@@ -46,10 +46,10 @@
         [
             'label' => 'Usuario',
             'icon' => 'fa-solid fa-user-gear',
-            'active' => request()->is('usuarios*') || request()->is('roles*'),
+            'active' => request()->routeIs('usuarios.*') || request()->routeIs('roles.*'),
             'children' => [
-                ['label' => 'Roles', 'icon' => 'fa-solid fa-user-shield', 'route' => 'dashboard', 'active' => false],
-                ['label' => 'Usuarios', 'icon' => 'fa-solid fa-users', 'route' => 'dashboard', 'active' => false],
+                ['label' => 'Roles', 'icon' => 'fa-solid fa-user-shield', 'route' => 'roles.index', 'active' => request()->routeIs('roles.*')],
+                ['label' => 'Usuarios', 'icon' => 'fa-solid fa-users', 'route' => 'usuarios.index', 'active' => request()->routeIs('usuarios.*')],
             ],
         ],
 

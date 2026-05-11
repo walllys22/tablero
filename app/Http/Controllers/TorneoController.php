@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTorneoRequest;
 use App\Http\Requests\UpdateTorneoRequest;
 use App\Models\Persona;
+use App\Models\SistemaCompetencia;
 use App\Models\Torneo;
 use App\Support\DefaultTournamentCatalog;
 use Illuminate\Http\Request;
@@ -22,7 +23,11 @@ class TorneoController extends Controller
             ->orderBy('first_name')
             ->get();
 
-        return view('eventos.browse', compact('personas'));
+        $sistemasCompetencia = SistemaCompetencia::where('estado', 'Activo')
+            ->orderBy('nombre')
+            ->get();
+
+        return view('eventos.browse', compact('personas', 'sistemasCompetencia'));
     }
 
     public function ajaxList(Request $request)
@@ -32,14 +37,16 @@ class TorneoController extends Controller
         $paginate = in_array($paginate, [10, 25, 50, 100], true) ? $paginate : 10;
 
         $data = Torneo::query()
-            ->with('persona')
+            ->with(['persona', 'sistemaCompetencia'])
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('id', $search)
                         ->orWhere('nombre', 'like', "%{$search}%")
                         ->orWhere('ciudad', 'like', "%{$search}%")
                         ->orWhere('direccion', 'like', "%{$search}%")
-                        ->orWhere('sistema_competencia', 'like', "%{$search}%")
+                        ->orWhereHas('sistemaCompetencia', function ($query) use ($search) {
+                            $query->where('nombre', 'like', "%{$search}%");
+                        })
                         ->orWhere('organiza', 'like', "%{$search}%")
                         ->orWhere('lugar', 'like', "%{$search}%")
                         ->orWhere('fecha_inicio', 'like', "%{$search}%")
@@ -58,8 +65,12 @@ class TorneoController extends Controller
             ->orderBy('first_name')
             ->get();
 
+        $sistemasCompetencia = SistemaCompetencia::where('estado', 'Activo')
+            ->orderBy('nombre')
+            ->get();
+
         return response()
-            ->view('eventos.list', compact('data', 'personas'))
+            ->view('eventos.list', compact('data', 'personas', 'sistemasCompetencia'))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');

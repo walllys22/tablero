@@ -2,6 +2,28 @@
 
 @section('title', 'Listado Katas')
 
+@push('styles')
+    <style>
+        .katas-tabs {
+            background: #e9e9e9;
+            border: 0;
+            padding: 0;
+        }
+
+        .katas-tabs .nav-link {
+            border: 0;
+            border-radius: 0;
+            color: #8b93a3;
+            padding: 0.85rem 1.25rem;
+        }
+
+        .katas-tabs .nav-link.active {
+            color: #ffffff;
+            background: #5aa7ee;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="container-fluid pt-0 pb-3 eventos-browse">
         @if (session('status'))
@@ -44,20 +66,8 @@
             <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <div class="row mb-3 align-items-center">
-                            <div class="col-sm-9">
-                                <label class="d-flex align-items-center gap-2 mb-0">
-                                    Mostrar
-                                    <select id="select-paginate" class="form-select form-select-sm w-auto">
-                                        <option value="10">10</option>
-                                        <option value="25">25</option>
-                                        <option value="50">50</option>
-                                        <option value="100">100</option>
-                                    </select>
-                                    registros
-                                </label>
-                            </div>
-                            <div class="col-sm-3 mt-2 mt-sm-0">
+                        <div class="row mb-3 align-items-center justify-content-end">
+                            <div class="col-sm-3">
                                 <input type="text" id="input-search" placeholder="Buscar..." class="form-control">
                             </div>
                         </div>
@@ -91,7 +101,8 @@
                             </div>
                             <div class="col-md-4">
                                 <label for="sistema_id" class="form-label">Sistema</label>
-                                <select name="sistema_id" id="sistema_id" class="form-select @if(!old('editing_kata')) @error('sistema_id') is-invalid @enderror @endif" required>
+                                <input type="hidden" name="sistema_id" id="sistema_id_hidden" value="{{ old('sistema_id', 1) }}">
+                                <select id="sistema_id" class="form-select @if(!old('editing_kata')) @error('sistema_id') is-invalid @enderror @endif" disabled>
                                     <option value="">Seleccione</option>
                                     @foreach ($sistemas as $sistema)
                                         <option value="{{ $sistema->id }}" {{ old('sistema_id', 1) == $sistema->id ? 'selected' : '' }}>
@@ -155,22 +166,27 @@
 
 @push('scripts')
     <script>
-        var countPage = 10;
         var timeout = null;
 
         $(document).ready(function () {
             list();
+
+            $('#modal-create').on('show.bs.modal', function () {
+                let activeTab = document.querySelector('#katas-system-tabs .nav-link.active');
+                if (!activeTab) {
+                    return;
+                }
+
+                let sistemaId = activeTab.dataset.sistemaId;
+                $('#sistema_id').val(sistemaId);
+                $('#sistema_id_hidden').val(sistemaId);
+            });
 
             $('#input-search').on('keyup', function (event) {
                 if (event.keyCode === 13) {
                     clearTimeout(timeout);
                     list();
                 }
-            });
-
-            $('#select-paginate').change(function () {
-                countPage = $(this).val();
-                list();
             });
 
             $('#input-search').on('input', function () {
@@ -181,18 +197,23 @@
             });
         });
 
-        function list(page = 1) {
+        function list() {
             $('#div-results').html('<div class="col-12 text-center text-muted py-5">Cargando...</div>');
 
             let url = '{{ route("katas.ajax.list") }}';
             let search = $('#input-search').val() ? $('#input-search').val() : '';
 
             $.ajax({
-                url: `${url}?search=${encodeURIComponent(search)}&paginate=${countPage}&page=${page}&_=${Date.now()}`,
+                url: `${url}?search=${encodeURIComponent(search)}&_=${Date.now()}`,
                 type: 'get',
                 cache: false,
                 success: function (result) {
                     $('#div-results').html(result);
+                    let activeTab = document.querySelector('#katas-system-tabs .nav-link.active');
+                    if (activeTab) {
+                        $('#sistema_id').val(activeTab.dataset.sistemaId);
+                        $('#sistema_id_hidden').val(activeTab.dataset.sistemaId);
+                    }
                 },
                 error: function () {
                     $('#div-results').html('<div class="col-12"><div class="alert alert-danger mb-0">No se pudo cargar la lista.</div></div>');

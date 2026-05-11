@@ -31,6 +31,7 @@ class Torneo extends Model
     protected $casts = [
         'fecha_inicio' => 'date',
         'fecha_fin' => 'date',
+        'sistema_competencia' => 'integer',
         'costo_inscripcion_organizacion' => 'decimal:2',
         'costo_inscripcion_competidor' => 'decimal:2',
         'status' => 'integer',
@@ -44,6 +45,11 @@ class Torneo extends Model
     public function persona()
     {
         return $this->belongsTo(Persona::class);
+    }
+
+    public function sistemaCompetencia()
+    {
+        return $this->belongsTo(SistemaCompetencia::class, 'sistema_competencia');
     }
 
     public function categorias()
