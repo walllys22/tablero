@@ -90,12 +90,12 @@ class ModalidadController extends Controller
 
     public function storeCategoria(Request $request, Torneo $torneo)
     {
-        [$data] = $this->categoriaData($request, $torneo);
+        [$data, $modalidad] = $this->categoriaData($request, $torneo);
 
         $torneo->categorias()->create($data);
 
         return redirect()
-            ->route('modalidades.index', ['torneo' => $torneo, 'return' => request('return')])
+            ->route('modalidades.show', ['torneo' => $torneo, 'modalidad' => $modalidad, 'return' => request('return')])
             ->with('status', 'Categoria creada correctamente.');
     }
 

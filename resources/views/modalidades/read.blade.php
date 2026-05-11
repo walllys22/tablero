@@ -34,6 +34,9 @@
                                 <small class="text-muted">{{ $torneo->nombre ?: 'Torneo sin nombre' }}</small>
                             </div>
                             <div class="col-md-4 text-end pe-3 pb-3">
+                                <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#modal-create-categoria">
+                                    <i class="bi bi-plus-lg"></i> <span>Crear</span>
+                                </button>
                                 <a href="{{ route('modalidades.index', ['torneo' => $torneo, 'return' => request('return')]) }}" class="btn btn-warning text-white">
                                     <i class="bi bi-arrow-left"></i> <span>Volver</span>
                                 </a>
@@ -246,6 +249,89 @@
                 </div>
             </div>
         @endforeach
+
+        {{-- Modal para Crear Categoría --}}
+        <div class="modal fade" id="modal-create-categoria" tabindex="-1" aria-labelledby="modalCreateCategoriaLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <form method="POST" action="{{ route('categorias.store', ['torneo' => $torneo, 'return' => request('return')]) }}">
+                    @csrf
+                    <input type="hidden" name="modalidad_id" value="{{ $modalidad->id }}">
+                    <input type="hidden" name="creating_categoria" value="1">
+
+                    <div class="modal-content">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title fw-bold" id="modalCreateCategoriaLabel">
+                                <i class="bi bi-plus-circle me-2"></i>{{ $modalidad->nombre }} - Nueva Categoría
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <div class="alert alert-info py-2 mb-0">
+                                        <i class="bi bi-info-circle me-2"></i>Los datos se usarán para generar el nombre de la categoría automáticamente.
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="genero_categoria_create" class="form-label">Género</label>
+                                    <select name="genero" id="genero_categoria_create" class="form-select js-create-categoria-field">
+                                        <option value="">Seleccione</option>
+                                        <option value="Masculino" {{ old('genero') === 'Masculino' ? 'selected' : '' }}>Masculino</option>
+                                        <option value="Femenino" {{ old('genero') === 'Femenino' ? 'selected' : '' }}>Femenino</option>
+                                        <option value="Mixto" {{ old('genero') === 'Mixto' ? 'selected' : '' }}>Mixto</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label for="edad_desde_categoria_create" class="form-label">Edad desde</label>
+                                    <input type="number" name="edad_desde" id="edad_desde_categoria_create" value="{{ old('edad_desde') }}" class="form-control js-create-categoria-field" min="0" max="99">
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label for="edad_hasta_categoria_create" class="form-label">Edad hasta</label>
+                                    <input type="number" name="edad_hasta" id="edad_hasta_categoria_create" value="{{ old('edad_hasta') }}" class="form-control js-create-categoria-field @if(old('creating_categoria')) @error('edad_hasta') is-invalid @enderror @endif" min="0" max="99">
+                                    @if (old('creating_categoria')) @error('edad_hasta') <div class="invalid-feedback">{{ $message }}</div> @enderror @endif
+                                </div>
+
+                                <div class="col-md-12">
+                                    <label for="nombre_categoria_create" class="form-label fw-bold">Nombre Generado</label>
+                                    <input type="text" id="nombre_categoria_create" value="{{ old('creating_categoria') ? old('nombre') : '' }}" class="form-control bg-light @if(old('creating_categoria')) @error('nombre') is-invalid @enderror @endif" readonly>
+                                    <input type="hidden" name="nombre" id="nombre_categoria_hidden_create" value="{{ old('creating_categoria') ? old('nombre') : '' }}">
+                                    @if (old('creating_categoria')) @error('nombre') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror @endif
+                                </div>
+
+                                @php $isKata = str_contains(mb_strtolower($modalidad->nombre), 'kata'); @endphp
+                                <div class="col-md-6 {{ $isKata ? 'd-none' : '' }}">
+                                    <label for="peso_tipo_categoria_create" class="form-label">Condición de Peso</label>
+                                    <select name="peso_tipo" id="peso_tipo_categoria_create" class="form-select js-create-categoria-field" {{ $isKata ? 'disabled' : '' }}>
+                                        <option value="max" {{ old('peso_tipo', 'max') === 'max' ? 'selected' : '' }}>Menor o igual (≤)</option>
+                                        <option value="min" {{ old('peso_tipo') === 'min' ? 'selected' : '' }}>Mayor o igual (≥)</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 {{ $isKata ? 'd-none' : '' }}">
+                                    <label for="peso_hasta_categoria_create" class="form-label">Peso referencia (Kg)</label>
+                                    <div class="input-group">
+                                        <input type="number" name="peso_hasta" id="peso_hasta_categoria_create" value="{{ old('peso_hasta') }}" class="form-control js-create-categoria-field @if(old('creating_categoria')) @error('peso_hasta') is-invalid @enderror @endif" min="0" step="0.001" {{ $isKata ? 'disabled' : '' }}>
+                                        <span class="input-group-text">kg</span>
+                                    </div>
+                                    @if (old('creating_categoria')) @error('peso_hasta') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror @endif
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-1"></i>Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-check-lg me-1"></i>Guardar Categoría
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 @endsection
 
@@ -258,6 +344,10 @@
 
             $('.js-edit-categoria-field').on('input change', function () {
                 updateEditCategoriaNombre($(this).closest('.js-modal-edit-categoria'));
+            });
+
+            $('.js-create-categoria-field').on('input change', function () {
+                updateCreateCategoriaNombre();
             });
 
             $('.js-confirm-delete-categoria').on('change', function () {
@@ -274,6 +364,11 @@
                 if (editCategoriaModal) {
                     new bootstrap.Modal(editCategoriaModal).show();
                 }
+            @endif
+
+            @if ($errors->any() && old('creating_categoria'))
+                let createCategoriaModal = new bootstrap.Modal(document.getElementById('modal-create-categoria'));
+                createCategoriaModal.show();
             @endif
         });
 
@@ -329,6 +424,41 @@
             let generatedName = parts.join(' ');
             generatedName = generatedName.replace(/a(?:\u00c3\u0192\u00c2\u00b1|\u00c3\u00b1|n)os/g, 'años');
             modal.find('.js-edit-nombre-categoria, .js-edit-nombre-categoria-hidden').val(generatedName);
+        }
+
+        function updateCreateCategoriaNombre() {
+            let modal = $('#modal-create-categoria');
+            let modalidadNombre = "{{ $modalidad->nombre }}";
+            let isKata = String(modalidadNombre).toLowerCase().includes('kata');
+            let peso = modal.find('#peso_hasta_categoria_create').val();
+            let genero = modal.find('#genero_categoria_create').val();
+            let edadDesde = modal.find('#edad_desde_categoria_create').val();
+            let edadHasta = modal.find('#edad_hasta_categoria_create').val();
+            let edadTexto = '';
+
+            if (edadDesde && edadHasta) {
+                edadTexto = `${edadDesde} a ${edadHasta} años`;
+            } else if (edadDesde) {
+                edadTexto = `desde ${edadDesde} años`;
+            } else if (edadHasta) {
+                edadTexto = `hasta ${edadHasta} años`;
+            }
+
+            if (! genero && ! edadTexto && (! peso || isKata)) {
+                modal.find('#nombre_categoria_create, #nombre_categoria_hidden_create').val('');
+                return;
+            }
+
+            let parts = [];
+            if (edadTexto) parts.push(edadTexto);
+            if (genero) parts.push(genero);
+            if (! isKata && peso) {
+                let textoPeso = modal.find('#peso_tipo_categoria_create').val() === 'min' ? '\u2265' : '\u2264';
+                parts.push(`${textoPeso} a ${formatPesoVisual(peso)}`);
+            }
+
+            let generatedName = parts.join(' ');
+            modal.find('#nombre_categoria_create, #nombre_categoria_hidden_create').val(generatedName);
         }
 
         function formatPesoVisual(peso) {
