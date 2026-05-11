@@ -305,7 +305,8 @@
                                             <div class="field-value">
                                                 {{ $item->persona ? $item->persona->first_name : 'Sin responsable' }}
                                                 <br>
-                                                {{ $item->persona && $item->persona->phone ? $item->persona->phone : 'Sin telefono' }}  -  
+                                                {{ $item->persona && $item->persona->phone ? $item->persona->phone : 'Sin telefono' }}
+                                                -
                                                 {{ $item->persona && $item->persona->email ? $item->persona->email : 'Sin email' }}
                                             </div>
                                         </div>
@@ -344,7 +345,7 @@
                                         <div class="field-value">{{ $item->modalidad_puntaje ?: 'No registrada' }}
                                         </div>
                                     </div>
-                                </div>                                
+                                </div>
 
                                 <div class="row g-3">
                                     <div class="col-md-6">
@@ -366,7 +367,8 @@
                                         <div class="torneo-view-field">
                                             <div class="field-label">Inscripción de Organización</div>
                                             <div class="field-value">
-                                                {{ number_format((float) $item->costo_inscripcion_organizacion, 2) }}</div>
+                                                {{ number_format((float) $item->costo_inscripcion_organizacion, 2) }}
+                                            </div>
                                         </div>
                                     </div>
 
@@ -374,7 +376,8 @@
                                         <div class="torneo-view-field">
                                             <div class="field-label">Inscripción de Competidores</div>
                                             <div class="field-value">
-                                                {{ number_format((float) $item->costo_inscripcion_competidor, 2) }}</div>
+                                                {{ number_format((float) $item->costo_inscripcion_competidor, 2) }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -392,7 +395,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>                                    
+                                </div>
 
                             </div>
                         </div>
@@ -407,7 +410,7 @@
 
     <div class="modal fade" id="modal-edit-{{ $item->id }}" tabindex="-1"
         aria-labelledby="modalEditLabel{{ $item->id }}" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-dialog modal-xl">
             <form method="POST" action="{{ route('torneos.update', $item) }}" enctype="multipart/form-data">
                 @csrf
                 @method('PATCH')
@@ -443,13 +446,10 @@
                                             @enderror
                                         @endif
                                     </div>
-                                    <div class="form-check form-switch mt-4">
-                                        <input type="checkbox" name="status" id="status_edit_{{ $item->id }}"
-                                            value="1" class="form-check-input"
-                                            {{ old('editing_torneo') == $item->id ? (old('status') ? 'checked' : '') : ($item->status == 1 ? 'checked' : '') }}>
-                                        <label for="status_edit_{{ $item->id }}"
-                                            class="form-check-label">Activo</label>
-                                    </div>
+
+
+
+
                                 </div>
 
                                 <div class="col-lg-8">
@@ -592,66 +592,97 @@
                                             </div>
                                         </div>
 
-                                        <div class="col-md-6">
-                                            <label for="costo_inscripcion_organizacion_edit_{{ $item->id }}"
-                                                class="form-label">Inscripcion de Organizacion</label>
-                                            <input type="number" name="costo_inscripcion_organizacion"
-                                                id="costo_inscripcion_organizacion_edit_{{ $item->id }}"
-                                                value="{{ old('editing_torneo') == $item->id ? old('costo_inscripcion_organizacion') : $item->costo_inscripcion_organizacion }}"
-                                                class="form-control @if (old('editing_torneo') == $item->id) @error('costo_inscripcion_organizacion') is-invalid @enderror @endif"
-                                                min="0" step="0.01">
-                                            @if (old('editing_torneo') == $item->id)
-                                                @error('costo_inscripcion_organizacion')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            @endif
-                                        </div>
 
-                                        <div class="col-md-6">
-                                            <label for="costo_inscripcion_competidor_edit_{{ $item->id }}"
-                                                class="form-label">Inscripcion de Competidores</label>
-                                            <input type="number" name="costo_inscripcion_competidor"
-                                                id="costo_inscripcion_competidor_edit_{{ $item->id }}"
-                                                value="{{ old('editing_torneo') == $item->id ? old('costo_inscripcion_competidor') : $item->costo_inscripcion_competidor }}"
-                                                class="form-control @if (old('editing_torneo') == $item->id) @error('costo_inscripcion_competidor') is-invalid @enderror @endif"
-                                                min="0" step="0.01">
-                                            @if (old('editing_torneo') == $item->id)
-                                                @error('costo_inscripcion_competidor')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            @endif
-                                        </div>
 
-                                        <div class="col-md-12">
-                                            <label for="persona_edit_{{ $item->id }}"
-                                                class="form-label">Responsable</label>
-                                            <select name="persona_id" id="persona_edit_{{ $item->id }}"
-                                                class="form-select @if (old('editing_torneo') == $item->id) @error('persona_id') is-invalid @enderror @endif"
-                                                required>
-                                                <option value="">Seleccione</option>
-                                                @foreach ($personas as $persona)
-                                                    <option value="{{ $persona->id }}"
-                                                        {{ (old('editing_torneo') == $item->id ? old('persona_id') : $item->persona_id) == $persona->id ? 'selected' : '' }}>
-                                                        {{ $persona->first_name }}{{ $persona->ci ? ' - CI ' . $persona->ci : '' }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            @if (old('editing_torneo') == $item->id)
-                                                @error('persona_id')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-6">
+                                    <label for="costo_organizacion_edit_{{ $item->id }}"
+                                        class="form-label">Inscripcion de Organizacion</label>
+                                    <input type="number" name="costo_inscripcion_organizacion"
+                                        id="costo_organizacion_edit_{{ $item->id }}"
+                                        value="{{ old('editing_torneo') == $item->id ? old('costo_inscripcion_organizacion') : $item->costo_inscripcion_organizacion ?? 0 }}"
+                                        class="form-control @if (old('editing_torneo') == $item->id) @error('costo_inscripcion_organizacion') is-invalid @enderror @endif"
+                                        min="0" step="0.01" required>
+                                    @if (old('editing_torneo') == $item->id)
+                                        @error('costo_inscripcion_organizacion')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    @endif
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="costo_competidor_edit_{{ $item->id }}"
+                                        class="form-label">Inscripcion de Competidores</label>
+                                    <input type="number" name="costo_inscripcion_competidor"
+                                        id="costo_competidor_edit_{{ $item->id }}"
+                                        value="{{ old('editing_torneo') == $item->id ? old('costo_inscripcion_competidor') : $item->costo_inscripcion_competidor ?? 0 }}"
+                                        class="form-control @if (old('editing_torneo') == $item->id) @error('costo_inscripcion_competidor') is-invalid @enderror @endif"
+                                        min="0" step="0.01" required>
+                                    @if (old('editing_torneo') == $item->id)
+                                        @error('costo_inscripcion_competidor')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mt-2">
+                                <div class="col-lg-5">
+                                    <label for="persona_edit_{{ $item->id }}" class="form-label">Responsable</label>
+                                    <select name="persona_id" id="persona_edit_{{ $item->id }}"
+                                        class="form-select @if (old('editing_torneo') == $item->id) @error('persona_id') is-invalid @enderror @endif"
+                                        required>
+                                        <option value="">Seleccione</option>
+                                        @foreach ($personas as $persona)
+                                            <option value="{{ $persona->id }}"
+                                                data-phone="{{ $persona->phone }}"
+                                                data-email="{{ $persona->email }}"
+                                                {{ (old('editing_torneo') == $item->id ? old('persona_id') : $item->persona_id) == $persona->id ? 'selected' : '' }}>
+                                                {{ $persona->first_name }}{{ $persona->ci ? ' - CI ' . $persona->ci : '' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @if (old('editing_torneo') == $item->id)
+                                        @error('persona_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    @endif
+                                </div>
+
+                                <div class="col-lg-7">
+                                    <label class="form-label">Contacto</label>
+                                    <div class="torneo-contact-panel p-3" id="persona_contact_block_{{ $item->id }}">
+                                        @php
+                                            $phoneValue = $item->persona ? ($item->persona->phone ?: 'No registrado') : 'No registrado';
+                                            $emailValue = $item->persona ? ($item->persona->email ?: 'No registrado') : 'No registrado';
+                                        @endphp
+                                        <div class="text-muted d-flex align-items-center gap-2" id="persona_contact_phone_{{ $item->id }}">
+                                            <i class="bi bi-telephone-fill"></i>
+                                            <span><strong>Teléfono:</strong> {{ $phoneValue }}</span>
+                                        </div>
+                                        <div class="text-muted d-flex align-items-center gap-2 mt-2" id="persona_contact_email_{{ $item->id }}">
+                                            <i class="bi bi-envelope-fill"></i>
+                                            <span><strong>Mail:</strong> {{ $emailValue }}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
+
+
                         </div>
                     </div>
-                    <div class="modal-footer py-3" style="background: #f2f6ff; border-top: 0;">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success">
+                    <div class="modal-footer py-2" style="background: #f2f6ff; border-top: 0;">
+                        <button type="submit" class="btn btn-success fw-bold px-3"
+                            style="box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);">
                             <i class="bi bi-check-lg"></i> Actualizar
                         </button>
+                        <button type="button" class="btn btn-secondary fw-bold px-4"
+                            style="box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);" data-bs-dismiss="modal">Cerrar</button>
                     </div>
                 </div>
             </form>
@@ -669,6 +700,30 @@
                 let url = new URL(link, window.location.origin);
                 list(url.searchParams.get('page') || 1);
             }
+        });
+
+        function updatePersonaContact(itemId, selectedOption) {
+            const phone = selectedOption.data('phone');
+            const email = selectedOption.data('email');
+
+            $('#persona_contact_block_' + itemId).html(
+                `<div class="text-muted d-flex align-items-center gap-2" id="persona_contact_phone_${itemId}"><i class="bi bi-telephone-fill"></i><span><strong>Teléfono:</strong> ${phone || 'No registrado'}</span></div>` +
+                `<div class="text-muted d-flex align-items-center gap-2 mt-2" id="persona_contact_email_${itemId}"><i class="bi bi-envelope-fill"></i><span><strong>Mail:</strong> ${email || 'No registrado'}</span></div>`
+            );
+        }
+
+        // Handle persona select change
+        $('select[id^="persona_edit_"]').on('change', function() {
+            const selectedOption = $(this).find('option:selected');
+            const itemId = $(this).attr('id').split('_').pop();
+            updatePersonaContact(itemId, selectedOption);
+        });
+
+        // Initialize details for pre-selected options
+        $('select[id^="persona_edit_"]').each(function() {
+            const selectedOption = $(this).find('option:selected');
+            const itemId = $(this).attr('id').split('_').pop();
+            updatePersonaContact(itemId, selectedOption);
         });
 
         @if ($errors->any() && old('editing_torneo'))
