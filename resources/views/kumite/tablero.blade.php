@@ -644,7 +644,7 @@
 
             $('#btn-start').addClass('hidden');
             $('#btn-pause').removeClass('hidden');
-            toggleTimerControls(true);
+            toggleTimerControls();
         }
 
         function pauseTimer() {
@@ -652,7 +652,7 @@
             timerInterval = null;
             $('#btn-start').removeClass('hidden');
             $('#btn-pause').addClass('hidden');
-            toggleTimerControls(false);
+            toggleTimerControls();
         }
 
         function resetTimer() {
@@ -663,10 +663,7 @@
             updateTimerDisplay();
         }
 
-        function toggleTimerControls(disabled) {
-            $('#btn-reset, .btn-Reloj, #btnCerrar, #btnNuevoCombate')
-                .prop('disabled', disabled);
-
+        function toggleTimerControls() {
             controlarEstadoBoton();
         }
 
@@ -884,16 +881,47 @@
         function controlarEstadoBoton() {
             const btnNuevo = document.getElementById('btnNuevoCombate');
             const btnGanador = document.getElementById('btnMuestraGanador');
+            const btnStart = document.getElementById('btn-start');
+            const btnPause = document.getElementById('btn-pause');
+            const btnReset = document.getElementById('btn-reset');
+            const btnCerrar = document.getElementById('btnCerrar');
+            const ajusteButtons = document.querySelectorAll('.btn-Reloj');
+            const combateButtons = document.querySelectorAll('.suma, .resta, .btn-senshu, .btn-hantei, .btn-falta');
             const isTimeZero = timerSeconds === 0;
-            const isPaused = timerInterval === null;
+            const isRunning = timerInterval !== null;
+            const isPaused = !isRunning;
 
-            if (btnNuevo && !timerInterval) {
-                btnNuevo.disabled = !isTimeZero;
-                btnNuevo.style.color = '#000000';
+            if (isRunning) {
+                if (btnStart) btnStart.disabled = true;
+                if (btnPause) btnPause.disabled = false;
+                if (btnReset) btnReset.disabled = true;
+                if (btnCerrar) btnCerrar.disabled = true;
+                if (btnNuevo) btnNuevo.disabled = true;
+                if (btnGanador) btnGanador.disabled = true;
+                ajusteButtons.forEach(function (button) {
+                    button.disabled = true;
+                });
+                combateButtons.forEach(function (button) {
+                    button.disabled = true;
+                });
+                return;
             }
 
-            if (btnGanador) {
-                btnGanador.disabled = !(isTimeZero || isPaused);
+            if (btnStart) btnStart.disabled = false;
+            if (btnPause) btnPause.disabled = true;
+            if (btnReset) btnReset.disabled = false;
+            if (btnCerrar) btnCerrar.disabled = false;
+            if (btnGanador) btnGanador.disabled = !(isTimeZero || isPaused);
+            ajusteButtons.forEach(function (button) {
+                button.disabled = false;
+            });
+            combateButtons.forEach(function (button) {
+                button.disabled = false;
+            });
+
+            if (btnNuevo) {
+                btnNuevo.disabled = !isTimeZero;
+                btnNuevo.style.color = '#000000';
             }
         }
     </script>

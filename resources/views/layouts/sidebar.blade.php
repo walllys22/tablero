@@ -37,6 +37,7 @@
             'icon' => 'fa-solid fa-calendar-days',
             'active' => request()->routeIs('tablero.*'),
             'children' => [
+                
                 ['label' => 'Tablero Kumite', 'icon' => 'fa-solid fa-keyboard', 'route' => 'tablero.kumite', 'active' => request()->routeIs('tablero.kumite')],
                 ['label' => 'Tablero Kata', 'icon' => 'fa-solid fa-chalkboard', 'route' => 'tablero.kata', 'active' => request()->routeIs('tablero.kata')],
             ],
