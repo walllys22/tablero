@@ -150,6 +150,11 @@
                                         </div>
                                     </div>
 
+                                    <div class="col-md-12 js-edit-prefijo-categoria {{ $isKata ? '' : 'd-none' }}">
+                                        <label for="prefijo_categoria_{{ $categoria->id }}" class="form-label">Prefijo (Nivel/Tipo)</label>
+                                        <input type="text" name="prefijo" id="prefijo_categoria_{{ $categoria->id }}" value="{{ old('editing_categoria') == $categoria->id ? old('prefijo') : '' }}" class="form-control js-edit-prefijo js-edit-categoria-field" placeholder="Ej: Open, Principiante, Grado B" {{ $isKata ? '' : 'disabled' }}>
+                                    </div>
+
                                     <div class="col-md-6">
                                         <label for="nombre_categoria_{{ $categoria->id }}" class="form-label">Categoria</label>
                                         <input type="text" id="nombre_categoria_{{ $categoria->id }}" value="{{ $isEditing ? old('nombre') : $categoriaNombre }}" class="form-control js-edit-nombre-categoria @if($isEditing) @error('nombre') is-invalid @enderror @endif" readonly>
@@ -379,6 +384,10 @@
             modal.find('.js-edit-peso-categoria').toggleClass('d-none', isKata);
             modal.find('.js-edit-peso-tipo, .js-edit-peso-hasta').prop('disabled', isKata);
 
+            // Manejo de visibilidad y estado del Prefijo
+            modal.find('.js-edit-prefijo-categoria').toggleClass('d-none', !isKata);
+            modal.find('.js-edit-prefijo').prop('disabled', !isKata);
+
             if (isKata) {
                 modal.find('.js-edit-peso-hasta').val('');
             }
@@ -389,6 +398,7 @@
         function updateEditCategoriaNombre(modal) {
             let modalidadNombre = modal.data('modalidad-nombre') || '';
             let isKata = String(modalidadNombre).toLowerCase().includes('kata');
+            let prefijo = modal.find('.js-edit-prefijo').val();
             let peso = modal.find('.js-edit-peso-hasta').val();
             let genero = modal.find('.js-edit-genero-categoria').val();
             let edadDesde = modal.find('.js-edit-edad-desde-categoria').val();
@@ -403,12 +413,16 @@
                 edadTexto = `hasta ${edadHasta} aÃ±os`;
             }
 
-            if (! genero && ! edadTexto && (! peso || isKata)) {
+            if (! genero && ! edadTexto && (! peso || isKata) && (! prefijo || ! isKata)) {
                 modal.find('.js-edit-nombre-categoria, .js-edit-nombre-categoria-hidden').val('');
                 return;
             }
 
             let parts = [];
+
+            if (isKata && prefijo) {
+                parts.push(prefijo);
+            }
 
             if (edadTexto) {
                 parts.push(edadTexto);

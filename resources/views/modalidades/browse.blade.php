@@ -130,7 +130,7 @@
                             </div>
 
                             <div class="col-md-12 js-prefijo-categoria d-none">
-                                <label for="prefijo_categoria" class="form-label">Prefijo (Nivel/Tipo)</label>
+                                <label for="prefijo_categoria" class="form-label">Prefijo</label>
                                 <input type="text" name="prefijo" id="prefijo_categoria" value="{{ old('prefijo') }}" class="form-control" placeholder="Ej: Open, Principiante, Grado B">
                             </div>
 
