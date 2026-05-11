@@ -6,15 +6,16 @@
         [
             'label' => 'Administracion',
             'icon' => 'fa-solid fa-file-lines',
-            'active' => request()->routeIs('torneos.*') || request()->routeIs('modalidades.*') || request()->routeIs('organizaciones.*') || request()->routeIs('estiloskarate.*') || request()->routeIs('licencias.*'),
+            'active' => request()->routeIs('torneos.*') || request()->routeIs('modalidades.*') || request()->routeIs('organizaciones.*') || request()->routeIs('estiloskarate.*') || request()->routeIs('licencias.*') || request()->routeIs('sistema-competencia.*') || request()->routeIs('katas.*'),
             'children' => [
                 ['label' => 'Torneos', 'icon' => 'fa-solid fa-trophy', 'route' => 'torneos.index', 'active' => request()->routeIs('torneos.*')],
                 ['label' => 'Modalidades', 'icon' => 'fa-brands fa-markdown', 'modal' => 'modal-modalidades-sidebar', 'active' => request()->routeIs('modalidades.*')],
-                ['label' => 'Listado Katas', 'icon' => 'fa-solid fa-clipboard-list', 'route' => 'dashboard', 'active' => false],
+                ['label' => 'Listado Katas', 'icon' => 'fa-solid fa-clipboard-list', 'route' => 'katas.index', 'active' => request()->routeIs('katas.*')],
                 ['label' => 'Personas', 'icon' => 'fa-solid fa-people-group', 'route' => 'people.browse', 'active' => request()->routeIs('people.*')],
                 ['label' => 'Organizacion', 'icon' => 'fa-solid fa-torii-gate', 'route' => 'organizaciones.index', 'active' => request()->routeIs('organizaciones.*')],
                 ['label' => 'Estilos Karate', 'icon' => 'fa-solid fa-hand-rock', 'route' => 'estiloskarate.index', 'active' => request()->routeIs('estiloskarate.*')],
                 ['label' => 'Licencias', 'icon' => 'fa-solid fa-award', 'route' => 'licencias.index', 'active' => request()->routeIs('licencias.*')],
+                ['label' => 'Sistema Competencia', 'icon' => 'fa-solid fa-sitemap', 'route' => 'sistema-competencia.index', 'active' => request()->routeIs('sistema-competencia.*')],
             ],
         ],
 

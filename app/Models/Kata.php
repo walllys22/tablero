@@ -5,21 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SistemaCompetencia extends Model
+class Kata extends Model
 {
     use HasFactory;
 
-    protected $table = 'sistema_competencia';
+    protected $table = 'katas';
 
     public $timestamps = false;
 
     protected $fillable = [
         'nombre',
+        'sistema_id',
         'estado',
     ];
 
-    public function katas()
+    public function sistema()
     {
-        return $this->hasMany(Kata::class, 'sistema_id');
+        return $this->belongsTo(SistemaCompetencia::class, 'sistema_id');
     }
 }

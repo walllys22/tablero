@@ -3,7 +3,9 @@
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\ArbitroController;
 use App\Http\Controllers\InscripcionController;
+use App\Http\Controllers\KataController;
 use App\Http\Controllers\LicenciaTipoController;
+use App\Http\Controllers\SistemaCompetenciaController;
 use App\Http\Controllers\EstilosKarateController;
 use App\Http\Controllers\ModalidadController;
 use App\Http\Controllers\OrganizacionController;
@@ -99,6 +101,20 @@ Route::middleware('auth')->group(function () {
     Route::post('/licencias', [LicenciaTipoController::class, 'store'])->name('licencias.store');
     Route::patch('/licencias/{licencia}', [LicenciaTipoController::class, 'update'])->name('licencias.update');
     Route::delete('/licencias/{licencia}', [LicenciaTipoController::class, 'destroy'])->name('licencias.destroy');
+
+    Route::get('/sistema-competencia', [SistemaCompetenciaController::class, 'index'])->name('sistema-competencia.index');
+    Route::get('/sistema-competencia/ajax/list', [SistemaCompetenciaController::class, 'ajaxList'])->name('sistema-competencia.ajax.list');
+    Route::post('/sistema-competencia', [SistemaCompetenciaController::class, 'store'])->name('sistema-competencia.store');
+    Route::patch('/sistema-competencia/{sistemaCompetencia}', [SistemaCompetenciaController::class, 'update'])->name('sistema-competencia.update');
+    Route::patch('/sistema-competencia/{sistemaCompetencia}/estado', [SistemaCompetenciaController::class, 'toggleStatus'])->name('sistema-competencia.toggle-status');
+    Route::delete('/sistema-competencia/{sistemaCompetencia}', [SistemaCompetenciaController::class, 'destroy'])->name('sistema-competencia.destroy');
+
+    Route::get('/katas', [KataController::class, 'index'])->name('katas.index');
+    Route::get('/katas/ajax/list', [KataController::class, 'ajaxList'])->name('katas.ajax.list');
+    Route::post('/katas', [KataController::class, 'store'])->name('katas.store');
+    Route::patch('/katas/{kata}', [KataController::class, 'update'])->name('katas.update');
+    Route::patch('/katas/{kata}/estado', [KataController::class, 'toggleStatus'])->name('katas.toggle-status');
+    Route::delete('/katas/{kata}', [KataController::class, 'destroy'])->name('katas.destroy');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

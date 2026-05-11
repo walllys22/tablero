@@ -84,6 +84,12 @@ class SistemaCompetenciaController extends Controller
 
     public function destroy(SistemaCompetencia $sistemaCompetencia)
     {
+        if ($sistemaCompetencia->katas()->exists()) {
+            return redirect()
+                ->route('sistema-competencia.index')
+                ->withErrors(['sistema_competencia' => 'No se puede eliminar un sistema de competencia usado por katas.']);
+        }
+
         $sistemaCompetencia->delete();
 
         return redirect()
