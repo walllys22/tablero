@@ -171,6 +171,14 @@
                                 <div class="fw-semibold" style="font-size: 14px;">{{ $item->persona ? $item->persona->first_name : 'Sin persona' }}</div>
                             </div>
                         </div>
+                        <div class="col-md-6">
+                            <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                <div class="fw-bold" style="font-size: 12px; line-height: 1;">Estilo</div>
+                                <div class="fw-semibold" style="font-size: 14px;">
+                                    {{ $item->estilo ? $item->estilo->nombre . ($item->estilo->descripcion ? ' - ' . $item->estilo->descripcion : '') : 'Sin estilo' }}
+                                </div>
+                            </div>
+                        </div>
                         <div class="col-md-4">
                             <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
                                 <div class="fw-bold" style="font-size: 12px; line-height: 1;">Estado</div>
@@ -201,7 +209,7 @@
     </div>
 
     <div class="modal fade" id="modal-edit-{{ $item->id }}" tabindex="-1" aria-labelledby="modalEditLabel{{ $item->id }}" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <form method="POST" action="{{ route('organizaciones.update', $item) }}" enctype="multipart/form-data">
                 @csrf
                 @method('PATCH')
@@ -236,7 +244,23 @@
                                 <img id="logo_preview_edit_{{ $item->id }}" src="{{ $logoPreviewUrl }}" alt="{{ $item->nombre ?: 'Logo organizacion' }}" style="width: 72px; height: 72px; object-fit: contain; border: 1px solid #ced4da; background: #f8f9fa;" onerror="this.src='{{ asset('images/icono.png') }}'">
                             </div>
                             <div class="col-md-4">
-                                <label for="persona_edit_{{ $item->id }}" class="form-label">Persona</label>
+                                <label for="estilo_id_edit_{{ $item->id }}" class="form-label">Estilo</label>
+                                <select name="estilo_id" id="estilo_id_edit_{{ $item->id }}" class="form-select @if(old('editing_organizacion') == $item->id) @error('estilo_id') is-invalid @enderror @endif">
+                                    <option value="">Seleccione</option>
+                                    @foreach ($estilos as $estilo)
+                                        <option value="{{ $estilo->id }}" {{ (old('editing_organizacion') == $item->id ? old('estilo_id') : $item->estilo_id) == $estilo->id ? 'selected' : '' }}>
+                                            {{ $estilo->nombre }}{{ $estilo->descripcion ? ' - ' . $estilo->descripcion : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if (old('editing_organizacion') == $item->id)
+                                    @error('estilo_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+                            <div class="col-md-4">
+                                <label for="persona_edit_{{ $item->id }}" class="form-label">Responsable</label>
                                 <select name="persona_id" id="persona_edit_{{ $item->id }}" class="form-select @if(old('editing_organizacion') == $item->id) @error('persona_id') is-invalid @enderror @endif" required>
                                     <option value="">Seleccione</option>
                                     @foreach ($personas as $persona)
@@ -247,6 +271,19 @@
                                 </select>
                                 @if (old('editing_organizacion') == $item->id)
                                     @error('persona_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+                                    <option value="">Seleccione</option>
+                                    @foreach ($estilos as $estilo)
+                                        <option value="{{ $estilo->id }}" {{ (old('editing_organizacion') == $item->id ? old('estilo_id') : $item->estilo_id) == $estilo->id ? 'selected' : '' }}>
+                                            {{ $estilo->nombre }}{{ $estilo->descripcion ? ' - ' . $estilo->descripcion : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if (old('editing_organizacion') == $item->id)
+                                    @error('estilo_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 @endif

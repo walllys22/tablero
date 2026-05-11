@@ -151,8 +151,8 @@
                                     </div>
 
                                     <div class="col-md-12 js-edit-prefijo-categoria {{ $isKata ? '' : 'd-none' }}">
-                                        <label for="prefijo_categoria_{{ $categoria->id }}" class="form-label">Prefijo (Nivel/Tipo)</label>
-                                        <input type="text" name="prefijo" id="prefijo_categoria_{{ $categoria->id }}" value="{{ old('editing_categoria') == $categoria->id ? old('prefijo') : '' }}" class="form-control js-edit-prefijo js-edit-categoria-field" placeholder="Ej: Open, Principiante, Grado B" {{ $isKata ? '' : 'disabled' }}>
+                                        <label for="prefijo_categoria_{{ $categoria->id }}" class="form-label">Prefijo</label>
+                                        <input type="text" name="prefijo" id="prefijo_categoria_{{ $categoria->id }}" value="{{ old('editing_categoria') == $categoria->id ? old('prefijo') : '' }}" class="form-control js-edit-prefijo js-edit-categoria-field" placeholder="" {{ $isKata ? '' : 'disabled' }}>
                                     </div>
 
                                     <div class="col-md-6">
@@ -280,6 +280,13 @@
                                     </div>
                                 </div>
 
+                                @php $isKata = str_contains(mb_strtolower($modalidad->nombre), 'kata'); @endphp
+
+                                <div class="col-md-12 {{ $isKata ? '' : 'd-none' }}">
+                                    <label for="prefijo_categoria_create" class="form-label">Prefijo</label>
+                                    <input type="text" name="prefijo" id="prefijo_categoria_create" value="{{ old('prefijo') }}" class="form-control js-create-categoria-field" placeholder="" {{ $isKata ? '' : 'disabled' }}>
+                                </div>
+
                                 <div class="col-md-6">
                                     <label for="genero_categoria_create" class="form-label">Género</label>
                                     <select name="genero" id="genero_categoria_create" class="form-select js-create-categoria-field">
@@ -308,7 +315,6 @@
                                     @if (old('creating_categoria')) @error('nombre') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror @endif
                                 </div>
 
-                                @php $isKata = str_contains(mb_strtolower($modalidad->nombre), 'kata'); @endphp
                                 <div class="col-md-6 {{ $isKata ? 'd-none' : '' }}">
                                     <label for="peso_tipo_categoria_create" class="form-label">Condición de Peso</label>
                                     <select name="peso_tipo" id="peso_tipo_categoria_create" class="form-select js-create-categoria-field" {{ $isKata ? 'disabled' : '' }}>
@@ -446,6 +452,7 @@
             let modal = $('#modal-create-categoria');
             let modalidadNombre = "{{ $modalidad->nombre }}";
             let isKata = String(modalidadNombre).toLowerCase().includes('kata');
+            let prefijo = modal.find('#prefijo_categoria_create').val();
             let peso = modal.find('#peso_hasta_categoria_create').val();
             let genero = modal.find('#genero_categoria_create').val();
             let edadDesde = modal.find('#edad_desde_categoria_create').val();
@@ -460,12 +467,17 @@
                 edadTexto = `hasta ${edadHasta} años`;
             }
 
-            if (! genero && ! edadTexto && (! peso || isKata)) {
+            if (! genero && ! edadTexto && (! peso || isKata) && (! prefijo || ! isKata)) {
                 modal.find('#nombre_categoria_create, #nombre_categoria_hidden_create').val('');
                 return;
             }
 
             let parts = [];
+
+            if (isKata && prefijo) {
+                parts.push(prefijo);
+            }
+
             if (edadTexto) parts.push(edadTexto);
             if (genero) parts.push(genero);
             if (! isKata && peso) {

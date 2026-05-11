@@ -4,6 +4,7 @@ use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\ArbitroController;
 use App\Http\Controllers\InscripcionController;
 use App\Http\Controllers\LicenciaTipoController;
+use App\Http\Controllers\EstilosKarateController;
 use App\Http\Controllers\ModalidadController;
 use App\Http\Controllers\OrganizacionController;
 use App\Http\Controllers\ProfileController;
@@ -86,6 +87,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/torneos/{torneo}/modalidades', [ModalidadController::class, 'store'])->name('modalidades.store');
     Route::patch('/torneos/{torneo}/modalidades/{modalidad}', [ModalidadController::class, 'update'])->name('modalidades.update');
     Route::delete('/torneos/{torneo}/modalidades/{modalidad}', [ModalidadController::class, 'destroy'])->name('modalidades.destroy');
+
+    Route::get('/estiloskarate', [EstilosKarateController::class, 'index'])->name('estiloskarate.index');
+    Route::get('/estiloskarate/ajax/list', [EstilosKarateController::class, 'ajaxList'])->name('estiloskarate.ajax.list');
+    Route::post('/estiloskarate', [EstilosKarateController::class, 'store'])->name('estiloskarate.store');
+    Route::patch('/estiloskarate/{estiloskarate}', [EstilosKarateController::class, 'update'])->name('estiloskarate.update');
+    Route::patch('/estiloskarate/{estiloskarate}/estado', [EstilosKarateController::class, 'toggleStatus'])->name('estiloskarate.toggle-status');
+    Route::delete('/estiloskarate/{estiloskarate}', [EstilosKarateController::class, 'destroy'])->name('estiloskarate.destroy');
 
     Route::get('/licencias', [LicenciaTipoController::class, 'index'])->name('licencias.index');
     Route::post('/licencias', [LicenciaTipoController::class, 'store'])->name('licencias.store');

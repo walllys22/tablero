@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Organizaciones')
+@section('title', 'Estilos Karate')
 
 @section('content')
     <div class="container-fluid py-4 eventos-browse">
@@ -23,7 +23,7 @@
                         <div class="row g-0 align-items-center">
                             <div class="col-md-8 px-3 py-3">
                                 <h1 class="h3 mb-0 text-dark">
-                                    <i class="fa-solid fa-torii-gate"></i> Organizaciones
+                                    <i class="fa-solid fa-hand-rock"></i> Estilos Karate
                                 </h1>
                             </div>
                             <div class="col-md-4 text-end px-3 py-3">
@@ -70,72 +70,34 @@
     </div>
 
     <div class="modal fade" id="modal-create" tabindex="-1" aria-labelledby="modalCreateLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
-            <form method="POST" action="{{ route('organizaciones.store') }}" enctype="multipart/form-data">
+        <div class="modal-dialog modal-lg">
+            <form method="POST" action="{{ route('estiloskarate.store') }}">
                 @csrf
                 <div class="modal-content">
                     <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title fw-bold" id="modalCreateLabel">Crear organizacion</h5>
+                        <h5 class="modal-title fw-bold" id="modalCreateLabel">Crear Estilo Karate</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="nombre" class="form-label">Organizacion</label>
-                                <input type="text" name="nombre" id="nombre" value="{{ old('nombre') }}" class="form-control @if(!old('editing_organizacion')) @error('nombre') is-invalid @enderror @endif" maxlength="255" required>
-                                @if (!old('editing_organizacion'))
+                                <label for="nombre" class="form-label">Nombre</label>
+                                <input type="text" name="nombre" id="nombre" value="{{ old('nombre') }}" class="form-control @if(!old('editing_estilo')) @error('nombre') is-invalid @enderror @endif" maxlength="255" required>
+                                @if (!old('editing_estilo'))
                                     @error('nombre')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 @endif
                             </div>
 
-                            <div class="col-md-3">
-                                <label for="estilo_id" class="form-label">Estilo</label>
-                                <select name="estilo_id" id="estilo_id" class="form-select @if(!old('editing_organizacion')) @error('estilo_id') is-invalid @enderror @endif">
-                                    <option value="">Seleccione</option>
-                                    @foreach ($estilos as $estilo)
-                                        <option value="{{ $estilo->id }}" {{ old('estilo_id') == $estilo->id ? 'selected' : '' }}>
-                                            {{ $estilo->nombre }}{{ $estilo->descripcion ? ' - ' . $estilo->descripcion : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @if (!old('editing_organizacion'))
-                                    @error('estilo_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                @endif
-                            </div>
-
-                            <div class="col-md-3">
-                                <label for="persona_id" class="form-label">Responsable</label>
-                                <select name="persona_id" id="persona_id" class="form-select @if(!old('editing_organizacion')) @error('persona_id') is-invalid @enderror @endif" required>
-                                    <option value="">Seleccione</option>
-                                    @foreach ($personas as $persona)
-                                        <option value="{{ $persona->id }}" {{ old('persona_id') == $persona->id ? 'selected' : '' }}>
-                                            {{ $persona->first_name }}{{ $persona->ci ? ' - CI ' . $persona->ci : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @if (!old('editing_organizacion'))
-                                    @error('persona_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                @endif
-                            </div>
-
                             <div class="col-md-6">
-                                <label for="logo" class="form-label">Logo</label>
-                                <input type="file" name="logo" id="logo" class="form-control @if(!old('editing_organizacion')) @error('logo') is-invalid @enderror @endif" accept="image/jpeg,image/png,image/webp" onchange="previewOrganizacionLogo(this, 'logo_preview_create')">
-                                @if (!old('editing_organizacion'))
-                                    @error('logo')
+                                <label for="descripcion" class="form-label">Linea</label>
+                                <input type="text" name="descripcion" id="descripcion" value="{{ old('descripcion') }}" class="form-control @if(!old('editing_estilo')) @error('descripcion') is-invalid @enderror @endif" maxlength="255">
+                                @if (!old('editing_estilo'))
+                                    @error('descripcion')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 @endif
-                            </div>
-
-                            <div class="col-md-2 text-center">
-                                <img id="logo_preview_create" src="{{ asset('images/icono.png') }}" alt="Logo organizacion" style="width: 72px; height: 72px; object-fit: contain; border: 1px solid #ced4da; background: #f8f9fa;">
                             </div>
 
                             <div class="col-md-2 d-flex align-items-end">
@@ -151,28 +113,6 @@
                         <button type="submit" class="btn btn-success">
                             <i class="bi bi-check-lg"></i> Guardar
                         </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modal-delete" tabindex="-1" aria-labelledby="modalDeleteLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <form id="delete_form" method="POST" action="">
-                @csrf
-                @method('DELETE')
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalDeleteLabel">Eliminar organizacion</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                    </div>
-                    <div class="modal-body">
-                        Seguro que desea eliminar esta organizacion?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-danger">Eliminar</button>
                     </div>
                 </div>
             </form>
@@ -211,7 +151,7 @@
         function list(page = 1) {
             $('#div-results').html('<div class="col-12 text-center text-muted py-5">Cargando...</div>');
 
-            let url = '{{ route("organizaciones.ajax.list") }}';
+            let url = '{{ route("estiloskarate.ajax.list") }}';
             let search = $('#input-search').val() ? $('#input-search').val() : '';
 
             $.ajax({
@@ -231,20 +171,9 @@
             $('#delete_form').attr('action', url);
         }
 
-        function previewOrganizacionLogo(input, previewId) {
-            let file = input.files && input.files[0];
-            let preview = document.getElementById(previewId);
-
-            if (!file || !preview) {
-                return;
-            }
-
-            preview.src = URL.createObjectURL(file);
-        }
-
         @if ($errors->any())
             document.addEventListener('DOMContentLoaded', function () {
-                @if (!old('editing_organizacion'))
+                @if (!old('editing_estilo'))
                     let modal = new bootstrap.Modal(document.getElementById('modal-create'));
                     modal.show();
                 @endif

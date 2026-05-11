@@ -90,26 +90,13 @@
             font-weight: 700;
         }
 
-        .modalidad-toggle {
-            align-items: center;
-            background: transparent;
-            border: 0;
-            color: #24292f;
-            display: flex;
-            font: inherit;
+        .modalidad-name {
             font-weight: 700;
-            gap: 7px;
-            padding: 0;
-            text-align: left;
-            width: 100%;
+            color: #24292f;
         }
 
-        .modalidad-toggle .bi-chevron-down {
-            transition: transform .15s ease-in-out;
-        }
-
-        .modalidad-toggle.collapsed .bi-chevron-down {
-            transform: rotate(-90deg);
+        .categoria-line {
+            line-height: 1.55;
         }
 
         .categoria-line {
@@ -218,24 +205,13 @@
                     @forelse ($modalidades as $modalidad)
                         <tr>
                             <td class="modalidad-name">
-                                <button
-                                    type="button"
-                                    class="modalidad-toggle collapsed"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#categorias-modalidad-{{ $modalidad->id }}"
-                                    aria-expanded="false"
-                                    aria-controls="categorias-modalidad-{{ $modalidad->id }}"
-                                >
-                                    <i class="bi bi-chevron-down"></i>
-                                    <span>{{ $modalidad->nombre }}</span>
-                                </button>
+                                {{ $modalidad->nombre }}
                             </td>
                             <td>
-                                <div class="collapse" id="categorias-modalidad-{{ $modalidad->id }}">
+                                <div>
                                     @forelse ($modalidad->categorias as $categoria)
                                         <div class="categoria-line">
                                             <strong>{{ $formatCategoriaNombre($categoria, $modalidad) }}</strong>
-                                            <span style="font-size: 0.8em;">({{ $categoria->nombre }})</span>
                                         </div>
                                     @empty
                                         <span>Sin categorias</span>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EstilosKarate;
 use App\Models\Organizacion;
 use App\Models\Persona;
 use Illuminate\Http\Request;
@@ -16,7 +17,11 @@ class OrganizacionController extends Controller
             ->orderBy('first_name')
             ->get();
 
-        return view('organizaciones.browse', compact('personas'));
+        $estilos = EstilosKarate::where('status', 1)
+            ->orderBy('nombre')
+            ->get();
+
+        return view('organizaciones.browse', compact('personas', 'estilos'));
     }
 
     public function ajaxList(Request $request)
@@ -26,7 +31,7 @@ class OrganizacionController extends Controller
         $paginate = in_array($paginate, [10, 25, 50, 100], true) ? $paginate : 10;
 
         $data = Organizacion::query()
-            ->with('persona')
+            ->with(['persona', 'estilo'])
             ->withCount('inscripciones')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
@@ -46,8 +51,12 @@ class OrganizacionController extends Controller
             ->orderBy('first_name')
             ->get();
 
+        $estilos = EstilosKarate::where('status', 1)
+            ->orderBy('nombre')
+            ->get();
+
         return response()
-            ->view('organizaciones.list', compact('data', 'personas'))
+            ->view('organizaciones.list', compact('data', 'personas', 'estilos'))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
@@ -57,6 +66,7 @@ class OrganizacionController extends Controller
     {
         $data = $request->validate([
             'nombre' => ['required', 'string', 'max:255', 'unique:organizaciones,nombre'],
+            'estilo_id' => ['nullable', Rule::exists('estiloskarate', 'id')],
             'persona_id' => ['required', Rule::exists('personas', 'id')],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'status' => ['nullable'],
@@ -84,6 +94,7 @@ class OrganizacionController extends Controller
                 'max:255',
                 Rule::unique('organizaciones', 'nombre')->ignore($organizacion->id),
             ],
+            'estilo_id' => ['nullable', Rule::exists('estiloskarate', 'id')],
             'persona_id' => ['required', Rule::exists('personas', 'id')],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'status' => ['nullable'],
