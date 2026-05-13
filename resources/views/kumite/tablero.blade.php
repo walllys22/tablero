@@ -22,6 +22,18 @@
             box-sizing: border-box;
         }
 
+        .bg-red {
+            background-color: #f5ec6a; /* Rojo intenso */
+            color: rgb(7, 0, 0);              /* Texto en blanco para mejor contraste */
+            padding: 15px;
+            border-radius: 8px;        /* Opcional: bordes redondeados */
+            text-align: center;        /* Opcional: centrar el contenido */
+        }
+
+        .bg-red h3, .bg-red h4 {
+            margin: 5px 0;             /* Ajusta el espacio entre líneas */
+        }
+
         html,
         body {
             width: 100%;
@@ -120,7 +132,7 @@
             display: block;
             width: 100%;
             min-height: 24px;
-            color: #0d6efd;
+            color: #fbfcfd;
             font-weight: 900;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -427,7 +439,6 @@
                     <span id="mirrorSpanYukoRojo">0</span>
                     <span id="mirrorSpanWazariRojo">0</span>
                     <span id="mirrorSpanIpponRojo">0</span>
-                    <span></span>
                 </div>
                 <div class="fila">
                     <button class="btn-personalizadoAzul resta" onclick="updateScore('aka', -1)">- Yuko</button>
@@ -460,7 +471,10 @@
         </section>
 
         <section class="timer-panel">
-            <span class="timer-panel-brand">Kaiteki - Torneos</span>
+            <div class="bg-red">
+                <h3>Modalidad: Kumite Individual</h3>
+                <h4>Categoría: </h4> 
+            </div>
             <div id="timer-display" class="timer-display">00:00</div>
 
             <div class="timer-grid">
