@@ -521,7 +521,7 @@
                     </button>
                 </div>
             </div>
-            <button id="btnCerrar" onclick="window.history.back()" class="btn-personalizado btn-cerrar-tablero">Cerrar</button>
+            <button id="btnCerrar" onclick="window.location.href='{{ route('dashboard') }}'" class="btn-personalizado btn-cerrar-tablero">Cerrar</button>
         </section>
 
         <section class="marcador marcador-ao">
