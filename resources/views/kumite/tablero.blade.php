@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kumite Temporizador</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ asset('images/icono.png') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -23,10 +24,10 @@
         }
 
         .bg-red {
-            background-color: #f5ec6a; /* Rojo intenso */
-            color: rgb(7, 0, 0);              /* Texto en blanco para mejor contraste */
+            background-color: #cc0000; /* Rojo intenso */
+            color: #ffffff;              /* Texto en blanco para mejor contraste */
             padding: 15px;
-            border-radius: 8px;        /* Opcional: bordes redondeados */
+            border-radius: 10px;        /* Opcional: bordes redondeados */
             text-align: center;        /* Opcional: centrar el contenido */
         }
 
@@ -179,9 +180,11 @@
         }
 
         .contadores-tecnicas {
-            color: #0d6efd;
-            font-size: 1rem;
+            color: #ffffff; /* Texto blanco para contraste con el fondo rojo */
+            font-family: 'Oswald', sans-serif; /* Aplicar fuente Oswald */
+            font-size: 10px;
             font-weight: 700;
+            font-variant-numeric: tabular-nums; /* Para que los números no se desplacen */
             text-align: center;
         }
 
