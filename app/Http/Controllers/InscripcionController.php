@@ -168,9 +168,39 @@ class InscripcionController extends Controller
 
         $torneo->load('persona');
         $inscripcion->load('organizacion.persona');
-        $personas = Persona::where('status', 1)->orderBy('first_name')->get();
         $categoriasDisponibles = $this->categoriasQuery($torneo, $request)->get();
-        $categorias = $torneo->categorias()->with('modalidad')->orderBy('nombre')->get();
+        $generosDisponibles = $categoriasDisponibles
+            ->pluck('genero')
+            ->filter()
+            ->unique()
+            ->values();
+        $categoriaIdsDisponibles = $categoriasDisponibles->pluck('id');
+        $personasNoDisponibles = collect();
+
+        if ($categoriaIdsDisponibles->isNotEmpty()) {
+            $personasNoDisponibles = InscripcionCompetidor::where('torneo_id', $torneo->id)
+                ->whereHas('modalidades', function ($query) use ($categoriaIdsDisponibles) {
+                    $query->whereIn('categoria_id', $categoriaIdsDisponibles);
+                })
+                ->pluck('persona_id');
+        }
+
+        $personas = Persona::where('status', 1)
+            ->when($generosDisponibles->isNotEmpty() && ! $generosDisponibles->contains('Mixto'), function ($query) use ($generosDisponibles) {
+                $query->whereIn('gender', $generosDisponibles);
+            })
+            ->when($personasNoDisponibles->isNotEmpty(), function ($query) use ($personasNoDisponibles) {
+                $query->whereNotIn('id', $personasNoDisponibles);
+            })
+            ->orderBy('first_name')
+            ->get();
+        $categorias = $torneo->categorias()
+            ->with('modalidad')
+            ->when($request->filled('modalidad_id'), function ($query) use ($request) {
+                $query->where('modalidad_id', $request->input('modalidad_id'));
+            })
+            ->orderBy('nombre')
+            ->get();
         $modalidades = $torneo->modalidades()->orderBy('nombre')->get();
         $competidores = $inscripcion->competidores()
             ->with(['persona', 'modalidades.modalidad', 'modalidades.categoria'])
@@ -193,7 +223,8 @@ class InscripcionController extends Controller
         abort_unless($inscripcion->torneo_id === $torneo->id, 404);
 
         $data = $request->validate([
-            'persona_id' => ['required', Rule::exists('personas', 'id')],
+            'persona_ids' => ['required', 'array', 'min:1'],
+            'persona_ids.*' => ['required', 'distinct', Rule::exists('personas', 'id')],
             'modalidades' => ['required', 'array', 'min:1'],
             'modalidades.*.id' => [
                 'required',
@@ -208,42 +239,96 @@ class InscripcionController extends Controller
             'modalidades.*.costo' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
         ]);
 
-        $alreadyRegistered = InscripcionCompetidor::where('torneo_id', $torneo->id)
-            ->where('persona_id', $data['persona_id'])
-            ->exists();
+        $personas = Persona::whereIn('id', $data['persona_ids'])
+            ->get()
+            ->keyBy('id');
+        $categoriasSeleccionadas = $torneo->categorias()
+            ->whereIn('id', collect($data['modalidades'])->pluck('categoria_id'))
+            ->get()
+            ->keyBy('id');
 
-        if ($alreadyRegistered) {
+        foreach ($data['modalidades'] as $modalidad) {
+            $categoria = $categoriasSeleccionadas->get($modalidad['categoria_id']);
+
+            if (! $categoria || (int) $categoria->modalidad_id !== (int) $modalidad['id']) {
+                return back()
+                    ->withErrors(['modalidades' => 'La categoria seleccionada no corresponde a la modalidad.'])
+                    ->withInput();
+            }
+
+            if ($categoria->genero && $categoria->genero !== 'Mixto') {
+                $invalidPerson = $personas->first(function ($persona) use ($categoria) {
+                    return $persona->gender !== $categoria->genero;
+                });
+
+                if ($invalidPerson) {
+                    return back()
+                        ->withErrors(['persona_ids' => 'Todos los competidores deben ser del mismo sexo que la categoria seleccionada.'])
+                        ->withInput();
+                }
+            }
+        }
+
+        $categoriasYaInscritas = InscripcionCompetidor::where('torneo_id', $torneo->id)
+            ->whereIn('persona_id', $data['persona_ids'])
+            ->whereHas('modalidades', function ($query) use ($data) {
+                $query->whereIn('categoria_id', collect($data['modalidades'])->pluck('categoria_id'));
+            })
+            ->with(['persona', 'modalidades' => function ($query) use ($data) {
+                $query->whereIn('categoria_id', collect($data['modalidades'])->pluck('categoria_id'));
+            }, 'modalidades.categoria'])
+            ->get();
+
+        if ($categoriasYaInscritas->isNotEmpty()) {
+            $names = $categoriasYaInscritas
+                ->map(function ($competidor) {
+                    return $competidor->persona->first_name;
+                })
+                ->filter()
+                ->join(', ');
+
             return back()
-                ->withErrors(['persona_id' => 'Este competidor ya esta inscrito en este campeonato.'])
+                ->withErrors(['persona_ids' => 'Ya estan inscritos en la categoria seleccionada: ' . $names])
                 ->withInput();
         }
 
         DB::transaction(function () use ($data, $torneo, $inscripcion) {
-            $competidor = InscripcionCompetidor::create([
-                'torneo_id' => $torneo->id,
-                'inscripcion_organizacion_id' => $inscripcion->id,
-                'persona_id' => $data['persona_id'],
-            ]);
+            foreach ($data['persona_ids'] as $personaId) {
+                $competidor = InscripcionCompetidor::firstOrCreate(
+                    [
+                        'torneo_id' => $torneo->id,
+                        'persona_id' => $personaId,
+                    ],
+                    [
+                        'inscripcion_organizacion_id' => $inscripcion->id,
+                    ]
+                );
 
-            foreach ($data['modalidades'] as $modalidad) {
-                $competidor->modalidades()->create([
-                    'modalidad_id' => $modalidad['id'],
-                    'categoria_id' => $modalidad['categoria_id'],
-                    'costo' => $modalidad['costo'],
-                ]);
+                foreach ($data['modalidades'] as $modalidad) {
+                    $competidor->modalidades()->create([
+                        'modalidad_id' => $modalidad['id'],
+                        'categoria_id' => $modalidad['categoria_id'],
+                        'costo' => $modalidad['costo'],
+                    ]);
+                }
             }
         });
 
         return redirect()
-            ->route('inscripciones.participantes', [$torneo, $inscripcion])
-            ->with('status', 'Participante inscrito correctamente.');
+            ->route('inscripciones.participantes', [
+                $torneo,
+                $inscripcion,
+                'modalidad_id' => $request->input('modalidad_filtro_id'),
+                'categoria_id' => $request->input('categoria_filtro_id'),
+            ])
+            ->with('status', 'Participantes inscritos correctamente.');
     }
 
     private function categoriasQuery(Torneo $torneo, Request $request)
     {
         return $torneo->categorias()
             ->with('modalidad')
-            ->when($request->filled('modalidad_id'), function ($query) use ($request) {
+            ->when($request->filled('modalidad_id') && ! $request->filled('categoria_id'), function ($query) use ($request) {
                 $query->where('modalidad_id', $request->input('modalidad_id'));
             })
             ->when($request->filled('categoria_id'), function ($query) use ($request) {

@@ -45,7 +45,11 @@
                         <select name="categoria_id" id="categoria_id" class="form-select">
                             <option value="">Todas</option>
                             @foreach ($categorias as $categoria)
-                                <option value="{{ $categoria->id }}" {{ (string) request('categoria_id') === (string) $categoria->id ? 'selected' : '' }}>
+                                <option
+                                    value="{{ $categoria->id }}"
+                                    data-modalidad-id="{{ $categoria->modalidad_id }}"
+                                    {{ (string) request('categoria_id') === (string) $categoria->id ? 'selected' : '' }}
+                                >
                                     {{ $categoria->nombre }}
                                 </option>
                             @endforeach
@@ -70,17 +74,21 @@
                         @else
                             <form method="POST" action="{{ route('inscripciones.participantes.store', [$torneo, $inscripcion]) }}">
                                 @csrf
+                                <input type="hidden" name="modalidad_filtro_id" value="{{ request('modalidad_id') }}">
+                                <input type="hidden" name="categoria_filtro_id" value="{{ request('categoria_id') }}">
                                 <div class="mb-3">
-                                    <label for="persona_id" class="form-label">Competidor</label>
-                                    <select name="persona_id" id="persona_id" class="form-select @error('persona_id') is-invalid @enderror" required>
-                                        <option value="">Seleccione</option>
+                                    <label for="persona_ids" class="form-label">Competidores</label>
+                                    <select name="persona_ids[]" id="persona_ids" class="form-select @error('persona_ids') is-invalid @enderror @error('persona_ids.*') is-invalid @enderror" multiple required>
                                         @foreach ($personas as $persona)
-                                            <option value="{{ $persona->id }}" {{ old('persona_id') == $persona->id ? 'selected' : '' }}>
+                                            <option value="{{ $persona->id }}" {{ collect(old('persona_ids', []))->contains((string) $persona->id) ? 'selected' : '' }}>
                                                 {{ $persona->first_name }}{{ $persona->ci ? ' - CI ' . $persona->ci : '' }}
                                             </option>
                                         @endforeach
                                     </select>
-                                    @error('persona_id')
+                                    @error('persona_ids')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    @error('persona_ids.*')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -99,18 +107,19 @@
                                                 @php
                                                     $oldModalidades = collect(old('modalidades', []));
                                                     $oldMatch = $oldModalidades->firstWhere('categoria_id', (string) $categoria->id) ?: $oldModalidades->firstWhere('categoria_id', $categoria->id);
+                                                    $shouldCheck = $oldMatch || $categoriasDisponibles->count() === 1;
                                                 @endphp
                                                 <tr>
                                                     <td class="text-center">
-                                                        <input type="checkbox" class="form-check-input js-modalidad-check" name="modalidades[{{ $index }}][categoria_id]" value="{{ $categoria->id }}" {{ $oldMatch ? 'checked' : '' }}>
-                                                        <input type="hidden" class="js-modalidad-id" name="modalidades[{{ $index }}][id]" value="{{ $categoria->modalidad_id }}" {{ $oldMatch ? '' : 'disabled' }}>
+                                                        <input type="checkbox" class="form-check-input js-modalidad-check" name="modalidades[{{ $index }}][categoria_id]" value="{{ $categoria->id }}" {{ $shouldCheck ? 'checked' : '' }}>
+                                                        <input type="hidden" class="js-modalidad-id" name="modalidades[{{ $index }}][id]" value="{{ $categoria->modalidad_id }}" {{ $shouldCheck ? '' : 'disabled' }}>
                                                     </td>
                                                     <td>
                                                         <strong>{{ $categoria->modalidad->nombre ?? 'Sin modalidad' }}</strong>{{ $categoria->genero ? ' - ' . $categoria->genero : '' }}<br>
                                                         <small class="text-muted">{{ $categoria->nombre }}</small>
                                                     </td>
                                                     <td>
-                                                        <input type="number" class="form-control form-control-sm js-modalidad-costo" name="modalidades[{{ $index }}][costo]" value="{{ $oldMatch['costo'] ?? $torneo->costo_inscripcion_competidor }}" min="0" step="0.01" {{ $oldMatch ? '' : 'disabled' }}>
+                                                        <input type="number" class="form-control form-control-sm js-modalidad-costo" name="modalidades[{{ $index }}][costo]" value="{{ $oldMatch['costo'] ?? $torneo->costo_inscripcion_competidor }}" min="0" step="0.01" {{ $shouldCheck ? '' : 'disabled' }}>
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -182,10 +191,35 @@
 @push('scripts')
     <script>
         $(document).ready(function () {
+            $('#modalidad_id').on('change', filterCategoriasByModalidad);
             $('.js-modalidad-check').on('change', syncModalidadCosts);
             $('.js-modalidad-costo').on('input', updateCompetidorTotal);
+            filterCategoriasByModalidad();
             syncModalidadCosts();
         });
+
+        function filterCategoriasByModalidad() {
+            const modalidadId = $('#modalidad_id').val();
+            const categoriaSelect = $('#categoria_id');
+            const selectedCategoria = categoriaSelect.find('option:selected');
+            let selectedStillVisible = !selectedCategoria.val();
+
+            categoriaSelect.find('option').each(function () {
+                const option = $(this);
+                const optionModalidadId = option.data('modalidad-id');
+                const visible = !option.val() || !modalidadId || String(optionModalidadId) === String(modalidadId);
+
+                option.prop('hidden', !visible).prop('disabled', !visible);
+
+                if (visible && option.is(':selected')) {
+                    selectedStillVisible = true;
+                }
+            });
+
+            if (!selectedStillVisible) {
+                categoriaSelect.val('');
+            }
+        }
 
         function updateCompetidorTotal() {
             let total = 0;

@@ -24,15 +24,24 @@
         }
 
         .bg-red {
-            background-color: #cc0000; /* Rojo intenso */
-            color: #ffffff;              /* Texto en blanco para mejor contraste */
+            background-color: #ecf1bd; /* Rojo intenso */
+            color: #000000;              /* Texto en negro */
             padding: 15px;
-            border-radius: 10px;        /* Opcional: bordes redondeados */
+            border-radius: 10px;
             text-align: center;        /* Opcional: centrar el contenido */
         }
 
         .bg-red h3, .bg-red h4 {
             margin: 5px 0;             /* Ajusta el espacio entre líneas */
+        }
+
+        .toast-senshu-arriba {
+            width: 340px !important;
+            margin-top: 18px !important;
+            background: #ffff00 !important;
+            color: #000000 !important;
+            font-weight: 800 !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28) !important;
         }
 
         html,
@@ -112,6 +121,8 @@
         }
 
         .pantalla-puntos {
+            position: relative;
+            z-index: 0;
             display: flex;
             flex: 1 1 auto;
             min-height: 0;
@@ -119,6 +130,7 @@
             align-items: center;
             justify-content: center;
             text-align: center;
+            pointer-events: none;
             transform: translateY(-8%);
         }
 
@@ -143,7 +155,7 @@
         .puntos-gigantes {
             color: inherit;
             font-family: "Arial Black", Arial, Helvetica, sans-serif;
-            font-size: clamp(14rem, 26vh, 10rem);
+            font-size: clamp(20rem, 26vh, 10rem);
             font-weight: 900;
             line-height: 0.86;
             text-align: center;
@@ -160,6 +172,8 @@
         }
 
         .panel-control {
+            position: relative;
+            z-index: 2;
             display: flex;
             flex: 0 0 auto;
             flex-direction: column;
@@ -254,6 +268,8 @@
         }
 
         .proximo-combate {
+            position: relative;
+            z-index: 2;
             flex: 0 0 auto;
             width: 100%;
         }
@@ -634,6 +650,23 @@
             });
         }
 
+        function showCenteredToast(title, icon = 'warning') {
+            Swal.fire({
+                icon: icon,
+                title: title,
+                toast: true,
+                position: 'top',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                background: '#FFFF00',
+                color: '#000000',
+                customClass: {
+                    popup: 'toast-senshu-arriba'
+                }
+            });
+        }
+
         function updateTimerDisplay() {
             const minutes = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
             const seconds = (timerSeconds % 60).toString().padStart(2, '0');
@@ -737,15 +770,20 @@
         function toggleSenshu(side) {
             const config = sideConfig[side];
 
-            if (activeSenshu && activeSenshu !== side) {
-                $('#modal-senshu').css('display', 'flex');
-                return;
-            }
-
             if (activeSenshu === side) {
                 activeSenshu = null;
                 $(`#btn-senshu-${config.colorName}`).removeClass('senshu-activo');
                 $(`#contenedor-s-${config.colorName}`).empty();
+                return;
+            }
+
+            if (activeSenshu && activeSenshu !== side) {
+                showCenteredToast('EL OTRO COMPETIDOR YA TIENE SENSHU');
+                return;
+            }
+
+            if (scores[side] === 0) {
+                showToast('NO SE PUEDE DAR SENSHU SIN PUNTOS');
                 return;
             }
 
