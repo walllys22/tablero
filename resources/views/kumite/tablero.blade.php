@@ -106,6 +106,7 @@
             align-items: center;
             justify-content: center;
             text-align: center;
+            transform: translateY(-8%);
         }
 
         .estado-combate {
@@ -129,7 +130,7 @@
         .puntos-gigantes {
             color: inherit;
             font-family: "Arial Black", Arial, Helvetica, sans-serif;
-            font-size: clamp(10rem, 32vh, 22rem);
+            font-size: clamp(14rem, 26vh, 10rem);
             font-weight: 900;
             line-height: 0.86;
             text-align: center;
@@ -916,7 +917,7 @@
                 button.disabled = false;
             });
             combateButtons.forEach(function (button) {
-                button.disabled = false;
+                button.disabled = isTimeZero;
             });
 
             if (btnNuevo) {
