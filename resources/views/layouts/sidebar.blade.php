@@ -27,7 +27,6 @@
             'children' => [
                 ['label' => 'Jueces', 'icon' => 'fa-solid fa-user-tie', 'modal' => 'modal-arbitros-sidebar', 'active' => request()->routeIs('arbitros.*')],
                 ['label' => 'Inscripciones', 'icon' => 'fa-solid fa-address-book', 'modal' => 'modal-inscripciones-sidebar', 'active' => request()->routeIs('inscripciones.*')],
-                ['label' => 'Competidores', 'icon' => 'fa-solid fa-image-portrait', 'route' => 'dashboard', 'active' => false],
             ],
         ],
 
