@@ -123,6 +123,15 @@
                                             <a href="{{ route('sorteo-llaves.graphic', [$torneo, 'modalidad_id' => $sorteo->modalidad_id, 'categoria_id' => $sorteo->categoria_id, 'seed' => $sorteo->seed]) }}" class="btn btn-sm btn-primary p-1" title="Ver llaves">
                                                 <i class="bi bi-diagram-3"></i>
                                             </a>
+                                            @if (($sorteo->resultados_kumite_count ?? 0) > 0)
+                                                <a href="{{ route('sorteo-llaves.resultados', [$torneo, $sorteo]) }}" class="btn btn-sm btn-info text-white p-1" title="Llaves realizadas">
+                                                    <i class="bi bi-clipboard-check"></i>
+                                                </a>
+                                            @else
+                                                <button type="button" class="btn btn-sm btn-secondary p-1" title="Sin llaves realizadas" disabled>
+                                                    <i class="bi bi-clipboard-check"></i>
+                                                </button>
+                                            @endif
                                             @if (($torneo->cantidad_areas ?? 1) >= 2)
                                                 <button type="button" class="btn btn-sm btn-success p-1" title="Designar area"
                                                     data-bs-toggle="modal" data-bs-target="#modal-area-{{ $sorteo->id }}">

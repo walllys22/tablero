@@ -613,6 +613,11 @@
         let proximoIndiceCombateKumite = null;
         const combateInicialKumite = @json($combateInicialKumite);
         const combatesKumite = @json($combatesKumite);
+        const csrfToken = @json(csrf_token());
+        const guardarCombateUrl = @json(route('tablero.kumite.combates.store'));
+        const podioKumiteUrl = combateInicialKumite.sorteo_id
+            ? @json(route('tablero.kumite.podio')) + `?sorteo_id=${combateInicialKumite.sorteo_id}`
+            : null;
 
         const sideConfig = {
             ao: {
@@ -669,7 +674,9 @@
         }
 
         function cargarPrimerCombateDesdeLlave() {
-            return cargarCombateDesdeLlave(0);
+            const primerIndice = encontrarSiguienteCombateValido(0);
+
+            return primerIndice !== null ? cargarCombateDesdeLlave(primerIndice) : false;
         }
 
         function cargarCombateDesdeLlave(index) {
@@ -704,7 +711,7 @@
 
         function encontrarSiguienteCombateValido(desde) {
             for (let index = desde; index < combatesKumite.length; index++) {
-                if (!esCombateBye(combatesKumite[index])) {
+                if (!combatesKumite[index].realizado && !esCombateBye(combatesKumite[index])) {
                     return index;
                 }
             }
@@ -844,8 +851,7 @@
         function scheduleAutoWinner(side) {
             pauseTimer();
             autoWinnerTimeout = setTimeout(function () {
-                const config = sideConfig[side];
-                mostrarModalGanador(config.title, $(`#${config.nameId}`).text(), config.background, '#ffffff');
+                registrarGanador(side);
             }, 5000);
         }
 
@@ -912,7 +918,7 @@
             });
         }
 
-        function declararGanador() {
+        async function declararGanador() {
             const winner = resolveWinner();
 
             if (winner === 'hantei') {
@@ -920,8 +926,7 @@
                 return;
             }
 
-            const config = sideConfig[winner];
-            mostrarModalGanador(config.title, $(`#${config.nameId}`).text(), config.background, '#ffffff');
+            await registrarGanador(winner);
         }
 
         function resolveWinner() {
@@ -958,6 +963,150 @@
             $('#modal-ganador').css('display', 'none');
         }
 
+        async function registrarGanador(side) {
+            const config = sideConfig[side];
+            const nombreGanador = $(`#${config.nameId}`).text();
+
+            if (combateInicialKumite.sorteo_id && indiceCombateKumite >= 0) {
+                const guardado = await guardarResultadoCombate(side, nombreGanador);
+
+                if (!guardado) {
+                    return;
+                }
+
+                if (combatesKumite[indiceCombateKumite]) {
+                    combatesKumite[indiceCombateKumite].realizado = true;
+                    combatesKumite[indiceCombateKumite].ganador = nombreGanador;
+                    propagarGanadorLocal(side, nombreGanador);
+                }
+            }
+
+            mostrarModalGanador(config.title, nombreGanador, config.background, '#ffffff');
+            limpiarDatosCombate();
+            avanzarSiguienteCombate();
+        }
+
+        function propagarGanadorLocal(side, nombreGanador) {
+            const combateActual = combatesKumite[indiceCombateKumite] || null;
+
+            if (!combateActual) {
+                return;
+            }
+
+            const siguiente = combatesKumite.find(function (combate) {
+                return combate.round_index === combateActual.round_index + 1
+                    && combate.match_index === Math.floor(combateActual.match_index / 2);
+            });
+
+            if (!siguiente) {
+                return;
+            }
+
+            const ladoDestino = combateActual.match_index % 2 === 0 ? 'rojo' : 'azul';
+            siguiente[ladoDestino] = nombreGanador;
+            siguiente.bye = false;
+        }
+
+        async function guardarResultadoCombate(side, nombreGanador) {
+            const combateActual = combatesKumite[indiceCombateKumite] || {};
+
+            try {
+                const response = await fetch(guardarCombateUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({
+                        sorteo_id: combateInicialKumite.sorteo_id,
+                        numero_llave: combateActual.numero_llave || (indiceCombateKumite + 1),
+                        indice_combate: indiceCombateKumite,
+                        round_index: combateActual.round_index || 0,
+                        match_index: combateActual.match_index || 0,
+                        competidor_rojo: $('#mirrorSpanRojo').text().trim(),
+                        competidor_azul: $('#mirrorSpanAzul').text().trim(),
+                        puntaje_rojo: scores.aka,
+                        puntaje_azul: scores.ao,
+                        faltas_rojo: faltasActivas('aka'),
+                        faltas_azul: faltasActivas('ao'),
+                        senshu: activeSenshu === 'aka' ? 'rojo' : (activeSenshu === 'ao' ? 'azul' : null),
+                        tecnicas_rojo: tecnicasCompetidor('Rojo'),
+                        tecnicas_azul: tecnicasCompetidor('Azul'),
+                        ganador: nombreGanador,
+                        ganador_color: side === 'aka' ? 'rojo' : 'azul',
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('No se pudo guardar el resultado del combate.');
+                }
+
+                return true;
+            } catch (error) {
+                showToast(error.message || 'NO SE PUDO GUARDAR EL RESULTADO.', 'error');
+
+                return false;
+            }
+        }
+
+        function faltasActivas(side) {
+            return penalties[side]
+                .map(function (active, index) {
+                    return active ? penaltyNames[index] : null;
+                })
+                .filter(Boolean);
+        }
+
+        function tecnicasCompetidor(sideName) {
+            return {
+                yuko: parseInt($(`#mirrorSpanYuko${sideName}`).text(), 10) || 0,
+                wazari: parseInt($(`#mirrorSpanWazari${sideName}`).text(), 10) || 0,
+                ippon: parseInt($(`#mirrorSpanIppon${sideName}`).text(), 10) || 0,
+            };
+        }
+
+        function limpiarDatosCombate() {
+            scores = { ao: 0, aka: 0 };
+            penalties = {
+                ao: [false, false, false, false, false],
+                aka: [false, false, false, false, false]
+            };
+            activeSenshu = null;
+            clearTimeout(autoWinnerTimeout);
+            autoWinnerTimeout = null;
+            timerSeconds = 0;
+
+            $('#puntosAzul, #puntosRojo').text('0');
+            $('#mirrorSpanYukoAzul, #mirrorSpanWazariAzul, #mirrorSpanIpponAzul, #mirrorSpanYukoRojo, #mirrorSpanWazariRojo, #mirrorSpanIpponRojo').text('0');
+            $('#btn-senshu-azul, #btn-senshu-rojo').removeClass('senshu-activo');
+            $('#btn-hantei-azul, #btn-hantei-rojo').removeClass('hantei-activo');
+            $('#contenedor-s-azul, #contenedor-s-rojo').empty();
+            renderPenalties('ao');
+            renderPenalties('aka');
+            updateTimerDisplay();
+        }
+
+        function avanzarSiguienteCombate() {
+            const siguienteIndice = encontrarSiguienteCombateValido(indiceCombateKumite + 1);
+
+            if (siguienteIndice === null) {
+                $('#mirrorSpanRojo, #mirrorSpanAzul').text('---');
+                proximoIndiceCombateKumite = null;
+                cargarSiguienteCombateEnCampos();
+
+                if (podioKumiteUrl) {
+                    setTimeout(function () {
+                        window.location.href = podioKumiteUrl;
+                    }, 1800);
+                }
+
+                return;
+            }
+
+            cargarCombateDesdeLlave(siguienteIndice);
+        }
+
         function logicaHantei(side) {
             const config = sideConfig[side];
             const otherSide = side === 'ao' ? 'aka' : 'ao';
@@ -984,7 +1133,7 @@
             const nombreAzul = inputAzul.value.trim();
             const nombreRojo = inputRojo.value.trim();
 
-            if (!nombreAzul || !nombreRojo) {
+            if (!nombreAzul && !nombreRojo) {
                 const esPrimerCombate = $('#mirrorSpanAzul').text().trim() === '---'
                     && $('#mirrorSpanRojo').text().trim() === '---';
 
@@ -996,12 +1145,11 @@
                     }
                 }
 
-                showToast('POR FAVOR, INGRESA LOS NOMBRES DE AMBOS COMPETIDORES.');
                 return;
             }
 
-            $('#mirrorSpanAzul').text(nombreAzul);
-            $('#mirrorSpanRojo').text(nombreRojo);
+            $('#mirrorSpanAzul').text(nombreAzul || '---');
+            $('#mirrorSpanRojo').text(nombreRojo || '---');
 
             scores = { ao: 0, aka: 0 };
             penalties = {

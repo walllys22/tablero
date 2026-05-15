@@ -35,6 +35,8 @@ Route::get('/', function () {
 });
 
 Route::get('/kumite/tablero', [TableroController::class, 'kumite'])->name('tablero.kumite');
+Route::post('/kumite/tablero/combates', [TableroController::class, 'guardarCombateKumite'])->name('tablero.kumite.combates.store');
+Route::get('/kumite/podio', [TableroController::class, 'podioKumite'])->name('tablero.kumite.podio');
 
 Route::get('/kata/tablero', [TableroController::class, 'kata'])->name('tablero.kata');
 
@@ -93,6 +95,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/torneos/{torneo}/sorteo-llaves', [SorteoLlaveController::class, 'index'])->name('sorteo-llaves.index');
     Route::get('/torneos/{torneo}/sorteo-llaves/categorias-disponibles', [SorteoLlaveController::class, 'categoriasDisponibles'])->name('sorteo-llaves.categorias');
     Route::get('/torneos/{torneo}/sorteo-llaves/grafico', [SorteoLlaveController::class, 'graphic'])->name('sorteo-llaves.graphic');
+    Route::get('/torneos/{torneo}/sorteo-llaves/{sorteo}/resultados', [SorteoLlaveController::class, 'resultados'])->name('sorteo-llaves.resultados');
     Route::patch('/torneos/{torneo}/sorteo-llaves/{sorteo}/area', [SorteoLlaveController::class, 'updateArea'])->name('sorteo-llaves.area.update');
     Route::delete('/torneos/{torneo}/sorteo-llaves/{sorteo}', [SorteoLlaveController::class, 'destroy'])->name('sorteo-llaves.destroy');
     Route::get('/torneos/{torneo}/modalidades', [ModalidadController::class, 'index'])->name('modalidades.index');

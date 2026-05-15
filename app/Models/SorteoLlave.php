@@ -40,4 +40,9 @@ class SorteoLlave extends Model
     {
         return $this->belongsTo(Categoria::class);
     }
+
+    public function resultadosKumite()
+    {
+        return $this->hasMany(KumiteCombateResultado::class, 'sorteo_llave_id');
+    }
 }

@@ -18,6 +18,7 @@ class SorteoLlaveController extends Controller
         $llaves = [];
         $seed = (int) $request->input('seed', random_int(100000, 999999));
         $sorteos = SorteoLlave::with(['modalidad', 'categoria'])
+            ->withCount('resultadosKumite')
             ->where('torneo_id', $torneo->id)
             ->latest()
             ->get();
@@ -53,6 +54,7 @@ class SorteoLlaveController extends Controller
                         'area' => ((int) ($torneo->cantidad_areas ?? 1)) === 1 ? 1 : null,
                     ]);
                     $sorteos = SorteoLlave::with(['modalidad', 'categoria'])
+                        ->withCount('resultadosKumite')
                         ->where('torneo_id', $torneo->id)
                         ->latest()
                         ->get();
@@ -104,7 +106,7 @@ class SorteoLlaveController extends Controller
             'seed' => ['required', 'integer'],
         ]);
 
-        $sorteo = SorteoLlave::with(['modalidad', 'categoria.modalidad'])
+        $sorteo = SorteoLlave::with(['modalidad', 'categoria.modalidad', 'resultadosKumite'])
             ->where('torneo_id', $torneo->id)
             ->where('categoria_id', $request->input('categoria_id'))
             ->first();
@@ -120,8 +122,24 @@ class SorteoLlaveController extends Controller
         $llaves = $sorteo
             ? $sorteo->llaves
             : ($competidores->count() >= 2 ? $this->crearLlaves($competidores, (int) $request->input('seed')) : []);
+        $llaves = $sorteo ? $this->llavesConPases($llaves, $sorteo) : $llaves;
 
         return view('sorteo_llaves.graphic', compact('torneo', 'categoria', 'competidores', 'llaves', 'sorteo'));
+    }
+
+    public function resultados(Torneo $torneo, SorteoLlave $sorteo)
+    {
+        abort_unless((int) $sorteo->torneo_id === (int) $torneo->id, 404);
+
+        $sorteo->load([
+            'modalidad',
+            'categoria',
+            'resultadosKumite' => function ($query) {
+                $query->orderBy('numero_llave');
+            },
+        ]);
+
+        return view('sorteo_llaves.resultados', compact('torneo', 'sorteo'));
     }
 
     public function updateArea(Request $request, Torneo $torneo, SorteoLlave $sorteo)
@@ -177,6 +195,85 @@ class SorteoLlaveController extends Controller
             })
             ->unique('id')
             ->values();
+    }
+
+    private function llavesConPases(array $llaves, SorteoLlave $sorteo): array
+    {
+        $llaves = $this->propagarByes($llaves);
+
+        foreach ($sorteo->resultadosKumite->sortBy('indice_combate') as $resultado) {
+            $position = $this->posicionCombatePorIndice($llaves, (int) $resultado->indice_combate);
+
+            if (! $position) {
+                continue;
+            }
+
+            [$roundIndex, $matchIndex] = $position;
+            $combate = $llaves[$roundIndex]['combates'][$matchIndex];
+            $ganadorSide = $resultado->ganador_color === 'rojo' ? 'a' : 'b';
+            $ganadorCompetidor = $combate[$ganadorSide] ?? [
+                'nombre' => $resultado->ganador,
+                'organizacion' => '',
+                'organizacion_id' => null,
+            ];
+
+            $nextRound = $roundIndex + 1;
+            $nextMatch = (int) floor($matchIndex / 2);
+            $nextSide = $matchIndex % 2 === 0 ? 'a' : 'b';
+
+            if (isset($llaves[$nextRound]['combates'][$nextMatch])) {
+                $llaves[$nextRound]['combates'][$nextMatch][$nextSide] = $ganadorCompetidor;
+            }
+        }
+
+        return $llaves;
+    }
+
+    private function propagarByes(array $llaves): array
+    {
+        foreach ($llaves as $roundIndex => $ronda) {
+            if (! isset($llaves[$roundIndex + 1])) {
+                continue;
+            }
+
+            foreach (($ronda['combates'] ?? []) as $matchIndex => $combate) {
+                if (! ($combate['bye'] ?? false)) {
+                    continue;
+                }
+
+                $ganador = $combate['a'] ?? $combate['b'] ?? null;
+
+                if (! $ganador) {
+                    continue;
+                }
+
+                $nextMatch = (int) floor($matchIndex / 2);
+                $nextSide = $matchIndex % 2 === 0 ? 'a' : 'b';
+
+                if (isset($llaves[$roundIndex + 1]['combates'][$nextMatch])) {
+                    $llaves[$roundIndex + 1]['combates'][$nextMatch][$nextSide] = $ganador;
+                }
+            }
+        }
+
+        return $llaves;
+    }
+
+    private function posicionCombatePorIndice(array $llaves, int $indice): ?array
+    {
+        $actual = 0;
+
+        foreach ($llaves as $roundIndex => $ronda) {
+            foreach (($ronda['combates'] ?? []) as $matchIndex => $combate) {
+                if ($actual === $indice) {
+                    return [$roundIndex, $matchIndex];
+                }
+
+                $actual++;
+            }
+        }
+
+        return null;
     }
 
     private function asignarAreaUnica(Torneo $torneo, $sorteos): void

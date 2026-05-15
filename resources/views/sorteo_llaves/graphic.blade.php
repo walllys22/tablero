@@ -45,6 +45,22 @@
 
                 $matchHeight = 117;
                 $baseGap = 18;
+                $resultadosPorIndice = $sorteo
+                    ? $sorteo->resultadosKumite->keyBy('indice_combate')
+                    : collect();
+                $resultadosPorLlave = $sorteo
+                    ? $sorteo->resultadosKumite->keyBy('numero_llave')
+                    : collect();
+                $ganadoresPorLlave = [];
+
+                if ($sorteo) {
+                    foreach ($sorteo->resultadosKumite as $resultado) {
+                        $ganadoresPorLlave[$resultado->numero_llave] = [
+                            'nombre' => $resultado->ganador ?: 'Ganador ' . $resultado->numero_llave,
+                            'organizacion' => '',
+                        ];
+                    }
+                }
 
                 $competidorTexto = function ($competidor) {
                     return [
@@ -53,14 +69,14 @@
                     ];
                 };
 
-                $slotTexto = function ($roundIndex, $matchIndex, $side, $combate) use ($matchNumbers, $competidorTexto) {
+                $slotTexto = function ($roundIndex, $matchIndex, $side, $combate) use ($llaves, $matchNumbers, $competidorTexto, $ganadoresPorLlave) {
+                    $competidor = $side === 'a' ? ($combate['a'] ?? null) : ($combate['b'] ?? null);
+
+                    if ($competidor) {
+                        return $competidorTexto($competidor);
+                    }
+
                     if ($roundIndex === 0) {
-                        $competidor = $side === 'a' ? $combate['a'] : $combate['b'];
-
-                        if ($competidor) {
-                            return $competidorTexto($competidor);
-                        }
-
                         return [
                             'nombre' => $combate['bye'] ? 'BYE' : 'Competidor',
                             'organizacion' => '',
@@ -70,11 +86,85 @@
                     $sourceIndex = ($matchIndex * 2) + ($side === 'a' ? 0 : 1);
                     $sourceNumber = $matchNumbers[$roundIndex - 1][$sourceIndex] ?? null;
 
+                    if ($sourceNumber && isset($ganadoresPorLlave[$sourceNumber])) {
+                        return $ganadoresPorLlave[$sourceNumber];
+                    }
+
+                    $sourceCombat = $llaves[$roundIndex - 1]['combates'][$sourceIndex] ?? null;
+                    $byeWinner = ($sourceCombat['bye'] ?? false)
+                        ? ($sourceCombat['a'] ?? $sourceCombat['b'] ?? null)
+                        : null;
+
+                    if ($byeWinner) {
+                        return $competidorTexto($byeWinner);
+                    }
+
                     return [
                         'nombre' => $sourceNumber ? 'Ganador ' . $sourceNumber : 'Ganador',
                         'organizacion' => '',
                     ];
                 };
+
+                $podio = [
+                    'oro' => '',
+                    'plata' => '',
+                    'bronce_1' => '',
+                    'bronce_2' => '',
+                ];
+                $nombreRealPodio = function ($slot) {
+                    $nombre = $slot['nombre'] ?? '';
+
+                    if (! $nombre || str_starts_with($nombre, 'Ganador') || in_array($nombre, ['BYE', 'Competidor'], true)) {
+                        return '';
+                    }
+
+                    return $nombre;
+                };
+
+                $finalRoundIndex = count($llaves) - 1;
+                $finalNumber = $matchNumbers[$finalRoundIndex][0] ?? null;
+                $finalResultado = $finalNumber ? $resultadosPorLlave->get($finalNumber) : null;
+
+                if ($finalResultado && isset($llaves[$finalRoundIndex]['combates'][0])) {
+                    $finalCombate = $llaves[$finalRoundIndex]['combates'][0];
+                    $finalRojo = $slotTexto($finalRoundIndex, 0, 'a', $finalCombate);
+                    $finalAzul = $slotTexto($finalRoundIndex, 0, 'b', $finalCombate);
+
+                    if ($finalResultado->ganador_color === 'rojo') {
+                        $podio['oro'] = $nombreRealPodio($finalRojo);
+                        $podio['plata'] = $nombreRealPodio($finalAzul);
+                    } else {
+                        $podio['oro'] = $nombreRealPodio($finalAzul);
+                        $podio['plata'] = $nombreRealPodio($finalRojo);
+                    }
+                }
+
+                $semifinalRoundIndex = count($llaves) >= 2 ? count($llaves) - 2 : null;
+                $bronces = [];
+
+                if ($semifinalRoundIndex !== null && isset($llaves[$semifinalRoundIndex])) {
+                    foreach ($llaves[$semifinalRoundIndex]['combates'] as $semifinalIndex => $semifinalCombate) {
+                        $semifinalNumber = $matchNumbers[$semifinalRoundIndex][$semifinalIndex] ?? null;
+                        $semifinalResultado = $semifinalNumber ? $resultadosPorLlave->get($semifinalNumber) : null;
+
+                        if (! $semifinalResultado) {
+                            continue;
+                        }
+
+                        $semifinalRojo = $slotTexto($semifinalRoundIndex, $semifinalIndex, 'a', $semifinalCombate);
+                        $semifinalAzul = $slotTexto($semifinalRoundIndex, $semifinalIndex, 'b', $semifinalCombate);
+                        $perdedor = $semifinalResultado->ganador_color === 'rojo'
+                            ? $nombreRealPodio($semifinalAzul)
+                            : $nombreRealPodio($semifinalRojo);
+
+                        if ($perdedor) {
+                            $bronces[] = $perdedor;
+                        }
+                    }
+                }
+
+                $podio['bronce_1'] = $bronces[0] ?? '';
+                $podio['bronce_2'] = $bronces[1] ?? '';
             @endphp
 
             <div class="graphic-sheet">
@@ -101,6 +191,7 @@
                                     $blueSlot = $slotTexto($roundIndex, $matchIndex, 'b', $combate);
                                     $matchNumber = $matchNumbers[$roundIndex][$matchIndex];
                                     $matchPosition = $matchIndex % 2 === 0 ? 'match-top' : 'match-bottom';
+                                    $resultadoMatch = $roundIndex === 0 ? $resultadosPorIndice->get($matchIndex) : null;
                                 @endphp
 
                                 <div class="graphic-match {{ $roundIndex === 0 ? 'first-round' : '' }} {{ $matchPosition }}">
@@ -117,11 +208,35 @@
                                         @endif
                                     </div>
                                     <div class="graphic-match-number">{{ $matchNumber }}</div>
+                                    @if ($resultadoMatch)
+                                        <div class="graphic-result">
+                                            {{ $resultadoMatch->puntaje_rojo }} - {{ $resultadoMatch->puntaje_azul }}
+                                        </div>
+                                    @endif
                                     <span class="graphic-pair-exit" aria-hidden="true"></span>
                                 </div>
                             @endforeach
                         </div>
                     @endforeach
+                </div>
+
+                <div class="podium-row">
+                    <div class="podium-box gold">
+                        <span>1er lugar - Oro</span>
+                        <strong>{{ $podio['oro'] ?: 'Pendiente' }}</strong>
+                    </div>
+                    <div class="podium-box silver">
+                        <span>2do lugar - Plata</span>
+                        <strong>{{ $podio['plata'] ?: 'Pendiente' }}</strong>
+                    </div>
+                    <div class="podium-box bronze">
+                        <span>3er lugar - Bronce</span>
+                        <strong>{{ $podio['bronce_1'] ?: 'Pendiente' }}</strong>
+                    </div>
+                    <div class="podium-box bronze">
+                        <span>3er lugar - Bronce</span>
+                        <strong>{{ $podio['bronce_2'] ?: 'Pendiente' }}</strong>
+                    </div>
                 </div>
             </div>
         @else
@@ -276,18 +391,47 @@
             text-align: center;
         }
 
+        .graphic-result {
+            border: 1px solid #111;
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 4px;
+            padding: 2px 8px;
+        }
+
         .podium-row {
             display: flex;
-            justify-content: space-around;
-            margin-top: 18px;
+            gap: 14px;
+            justify-content: center;
+            margin-top: 22px;
             min-width: 760px;
         }
 
         .podium-box {
             border: 1px solid #111;
-            font-weight: 700;
-            padding: 10px 22px;
+            min-width: 190px;
+            padding: 8px 12px;
             text-align: center;
+        }
+
+        .podium-box span,
+        .podium-box strong {
+            display: block;
+        }
+
+        .podium-box span {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .podium-box strong {
+            border-top: 1px solid #111;
+            font-size: 13px;
+            margin-top: 6px;
+            min-height: 24px;
+            padding-top: 6px;
         }
 
         .podium-box.gold {
