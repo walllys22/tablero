@@ -27,8 +27,7 @@
                             <div style="display: flex; align-items: center;">
                                 <img src="{{ $image }}" alt="{{ $persona->first_name ?? 'Competidor' }}" class="image-expandable" style="width: 60px; height: 60px; border-radius: 30px; margin-right: 10px; object-fit: cover;" onerror="this.src='{{ asset('images/default.jpg') }}'">
                                 <div>
-                                    <strong>{{ strtoupper($persona->first_name ?? 'Sin nombre') }}</strong><br>
-                                    <small class="text-muted">ID persona: {{ $persona->id ?? 'N/A' }}</small>
+                                    <strong>{{ strtoupper($persona->first_name ?? 'Sin nombre') }}</strong>
                                 </div>
                             </div>
                         </td>
@@ -40,7 +39,8 @@
                                 <span class="text-muted">Sin fecha de nacimiento</span><br>
                             @endif
                             <small><strong>Genero:</strong> {{ $persona->gender ?? 'No registrado' }}</small><br>
-                            <small><strong>Tipo sangre:</strong> {{ $persona->sangre ?? 'No registrado' }}</small>
+                            <small><strong>Tipo sangre:</strong> {{ $persona->sangre ?? 'No registrado' }}</small><br>
+                            <small><strong>Peso:</strong> {{ $item->peso !== null ? number_format((float) $item->peso, 3) . ' Kg' : 'No registrado' }}</small>
                         </td>
                         <td style="text-align: center; vertical-align: middle;">
                             @if ($persona && ($persona->phone || $persona->email || $persona->address))
@@ -192,6 +192,12 @@
                                     <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
                                         <div class="fw-bold" style="font-size: 12px; line-height: 1;">Estado</div>
                                         <div class="fw-semibold" style="font-size: 14px;">{{ $item->status == 1 ? 'Activo' : 'Inactivo' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
+                                        <div class="fw-bold" style="font-size: 12px; line-height: 1;">Peso</div>
+                                        <div class="fw-semibold" style="font-size: 14px;">{{ $item->peso !== null ? number_format((float) $item->peso, 3) . ' Kg' : 'No registrado' }}</div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">

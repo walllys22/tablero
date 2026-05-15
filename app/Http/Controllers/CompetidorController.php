@@ -6,6 +6,7 @@ use App\Models\Competidor;
 use App\Models\Organizacion;
 use App\Models\Persona;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Validator;
 use Illuminate\Validation\Rule;
 
 class CompetidorController extends Controller
@@ -49,7 +50,7 @@ class CompetidorController extends Controller
 
     public function store(Request $request, Organizacion $organizacion)
     {
-        $data = $request->validate([
+        $validator = validator($request->all(), [
             'persona_ids' => ['required', 'array', 'min:1'],
             'persona_ids.*' => [
                 'required',
@@ -57,15 +58,28 @@ class CompetidorController extends Controller
                 Rule::exists('personas', 'id')->where('status', 1),
                 Rule::unique('competidores', 'persona_id'),
             ],
+            'pesos' => ['nullable', 'array'],
+            'pesos.*' => ['nullable', 'numeric', 'min:0', 'max:999.999'],
             'status' => ['nullable'],
         ], [
             'persona_ids.required' => 'Seleccione al menos una persona.',
             'persona_ids.*.unique' => 'Una de las personas seleccionadas ya pertenece a una organizacion.',
         ]);
+        $validator->after(function (Validator $validator) use ($request) {
+            $responsables = Organizacion::whereIn('persona_id', $request->input('persona_ids', []))
+                ->pluck('persona_id');
+
+            if ($responsables->isNotEmpty()) {
+                $validator->errors()->add('persona_ids', 'No se puede agregar como competidor a responsables de organizacion.');
+            }
+        });
+
+        $data = $validator->validate();
 
         foreach ($data['persona_ids'] as $personaId) {
             $organizacion->competidores()->create([
                 'persona_id' => $personaId,
+                'peso' => $data['pesos'][$personaId] ?? null,
                 'status' => $request->has('status') ? 1 : 0,
             ]);
         }
@@ -103,6 +117,7 @@ class CompetidorController extends Controller
     {
         return Persona::where('status', 1)
             ->whereDoesntHave('competidores')
+            ->whereDoesntHave('organizaciones')
             ->orderBy('first_name')
             ->get();
     }

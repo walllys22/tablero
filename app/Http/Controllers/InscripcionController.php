@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\InscripcionCompetidor;
 use App\Models\InscripcionCompetidorModalidad;
 use App\Models\InscripcionOrganizacion;
+use App\Models\Competidor;
 use App\Models\Organizacion;
 use App\Models\Persona;
 use App\Models\Torneo;
@@ -20,6 +21,9 @@ class InscripcionController extends Controller
         $personas = Persona::where('status', 1)->orderBy('first_name')->get();
         $organizaciones = Organizacion::with('persona')
             ->where('status', 1)
+            ->whereDoesntHave('inscripciones', function ($query) use ($torneo) {
+                $query->where('torneo_id', $torneo->id);
+            })
             ->orderBy('nombre')
             ->get();
         $categorias = $torneo->categorias()
@@ -62,7 +66,7 @@ class InscripcionController extends Controller
             ->paginate($paginate)
             ->withQueryString();
 
-        return view('inscripciones.list', compact('organizaciones', 'torneo'));
+        return view('inscripciones.list', compact('organizaciones', 'torneo', 'search'));
     }
 
     public function print(Torneo $torneo)
@@ -215,6 +219,8 @@ class InscripcionController extends Controller
             ? $categoriasDisponibles->firstWhere('id', (int) $request->input('categoria_id'))
             : null;
         $personasNoDisponibles = collect();
+        $filtrarPeso = $categoriaSeleccionada && $this->categoriaRequierePeso($categoriaSeleccionada);
+        $pesoEsMinimo = $filtrarPeso && $this->categoriaPesoEsMinimo($categoriaSeleccionada);
 
         // Con una categoria especifica, no mostramos competidores que ya estan
         // inscritos en esa misma categoria del campeonato.
@@ -229,6 +235,14 @@ class InscripcionController extends Controller
         $personas = $inscripcion->organizacion->competidores()
             ->with('persona')
             ->where('competidores.status', 1)
+            ->when($filtrarPeso, function ($query) use ($categoriaSeleccionada, $pesoEsMinimo) {
+                $query->whereNotNull('competidores.peso')
+                    ->when($pesoEsMinimo, function ($query) use ($categoriaSeleccionada) {
+                        $query->where('competidores.peso', '>=', $categoriaSeleccionada->peso_hasta);
+                    }, function ($query) use ($categoriaSeleccionada) {
+                        $query->where('competidores.peso', '<=', $categoriaSeleccionada->peso_hasta);
+                    });
+            })
             ->whereHas('persona', function ($query) use ($categoriaSeleccionada, $personasNoDisponibles) {
                 $query->where('status', 1)
                     ->when($categoriaSeleccionada && $categoriaSeleccionada->genero && $categoriaSeleccionada->genero !== 'Mixto', function ($query) use ($categoriaSeleccionada) {
@@ -259,6 +273,14 @@ class InscripcionController extends Controller
             ->orderBy('nombre')
             ->get();
         $modalidades = $torneo->modalidades()->orderBy('nombre')->get();
+        $modalidadSeleccionada = $request->filled('modalidad_id')
+            ? $modalidades->firstWhere('id', (int) $request->input('modalidad_id'))
+            : null;
+        $mostrarPesoFiltro = $modalidadSeleccionada
+            ? str_contains(mb_strtolower((string) $modalidadSeleccionada->nombre), 'kumite')
+            : false;
+        $pesosCompetidores = $inscripcion->organizacion->competidores()
+            ->pluck('peso', 'persona_id');
         $competidores = $inscripcion->competidores()
             ->with(['persona', 'modalidades.modalidad', 'modalidades.categoria'])
             ->latest()
@@ -271,6 +293,8 @@ class InscripcionController extends Controller
             'categoriasDisponibles',
             'categorias',
             'modalidades',
+            'mostrarPesoFiltro',
+            'pesosCompetidores',
             'competidores'
         ));
     }
@@ -279,10 +303,11 @@ class InscripcionController extends Controller
     {
         abort_unless($inscripcion->torneo_id === $torneo->id, 404);
 
-        $personaIdsOrganizacion = $inscripcion->organizacion->competidores()
+        $competidoresOrganizacion = $inscripcion->organizacion->competidores()
             ->where('status', 1)
-            ->pluck('persona_id')
-            ->all();
+            ->get()
+            ->keyBy('persona_id');
+        $personaIdsOrganizacion = $competidoresOrganizacion->keys()->all();
 
         $data = $request->validate([
             'persona_ids' => ['required', 'array', 'min:1'],
@@ -348,6 +373,24 @@ class InscripcionController extends Controller
                         ->withInput();
                 }
             }
+
+            if ($this->categoriaRequierePeso($categoria)) {
+                $invalidPerson = $personas->first(function ($persona) use ($categoria, $competidoresOrganizacion) {
+                    $competidor = $competidoresOrganizacion->get($persona->id);
+
+                    if (! $competidor || $competidor->peso === null) {
+                        return true;
+                    }
+
+                    return ! $this->pesoCumpleCategoria((float) $competidor->peso, $categoria);
+                });
+
+                if ($invalidPerson) {
+                    return back()
+                        ->withErrors(['persona_ids' => 'Todos los competidores deben tener un peso registrado que cumpla con la categoria seleccionada.'])
+                        ->withInput();
+                }
+            }
         }
 
         $categoriasYaInscritas = InscripcionCompetidor::where('torneo_id', $torneo->id)
@@ -386,11 +429,15 @@ class InscripcionController extends Controller
                 );
 
                 foreach ($data['modalidades'] as $modalidad) {
-                    $competidor->modalidades()->create([
-                        'modalidad_id' => $modalidad['id'],
-                        'categoria_id' => $modalidad['categoria_id'],
-                        'costo' => $modalidad['costo'],
-                    ]);
+                    $competidor->modalidades()->firstOrCreate(
+                        [
+                            'modalidad_id' => $modalidad['id'],
+                            'categoria_id' => $modalidad['categoria_id'],
+                        ],
+                        [
+                            'costo' => $modalidad['costo'],
+                        ]
+                    );
                 }
             }
         });
@@ -419,5 +466,28 @@ class InscripcionController extends Controller
             ->orderBy('categorias.nombre')
             ->orderBy('modalidades.nombre')
             ->select('categorias.*');
+    }
+
+    private function categoriaRequierePeso($categoria): bool
+    {
+        $modalidadNombre = mb_strtolower((string) optional($categoria->modalidad)->nombre);
+
+        return str_contains($modalidadNombre, 'kumite') && $categoria->peso_hasta !== null;
+    }
+
+    private function categoriaPesoEsMinimo($categoria): bool
+    {
+        $nombre = mb_strtolower((string) $categoria->nombre);
+
+        return str_contains($nombre, 'mayor o igual') || str_contains($nombre, '>=');
+    }
+
+    private function pesoCumpleCategoria(float $peso, $categoria): bool
+    {
+        if ($this->categoriaPesoEsMinimo($categoria)) {
+            return $peso >= (float) $categoria->peso_hasta;
+        }
+
+        return $peso <= (float) $categoria->peso_hasta;
     }
 }

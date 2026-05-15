@@ -12,6 +12,7 @@ use App\Http\Controllers\ModalidadController;
 use App\Http\Controllers\OrganizacionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SorteoLlaveController;
 use App\Http\Controllers\TableroController;
 use App\Http\Controllers\TorneoController;
 use App\Http\Controllers\UsuarioController;
@@ -59,6 +60,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/organizaciones', [OrganizacionController::class, 'index'])->name('organizaciones.index');
     Route::get('/organizaciones/ajax/list', [OrganizacionController::class, 'ajaxList'])->name('organizaciones.ajax.list');
+    Route::get('/organizaciones/personas/search', [OrganizacionController::class, 'searchPersonas'])->name('organizaciones.personas.search');
     Route::post('/organizaciones', [OrganizacionController::class, 'store'])->name('organizaciones.store');
     Route::patch('/organizaciones/{organizacion}', [OrganizacionController::class, 'update'])->name('organizaciones.update');
     Route::patch('/organizaciones/{organizacion}/estado', [OrganizacionController::class, 'toggleStatus'])->name('organizaciones.toggle-status');
@@ -88,6 +90,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/torneos/{torneo}/inscripciones/competidores', [InscripcionController::class, 'storeCompetidor'])->name('inscripciones.competidores.store');
     Route::get('/torneos/{torneo}/inscripciones/{inscripcion}/participantes', [InscripcionController::class, 'participantes'])->name('inscripciones.participantes');
     Route::post('/torneos/{torneo}/inscripciones/{inscripcion}/participantes', [InscripcionController::class, 'storeParticipante'])->name('inscripciones.participantes.store');
+    Route::get('/torneos/{torneo}/sorteo-llaves', [SorteoLlaveController::class, 'index'])->name('sorteo-llaves.index');
+    Route::get('/torneos/{torneo}/sorteo-llaves/categorias-disponibles', [SorteoLlaveController::class, 'categoriasDisponibles'])->name('sorteo-llaves.categorias');
+    Route::get('/torneos/{torneo}/sorteo-llaves/grafico', [SorteoLlaveController::class, 'graphic'])->name('sorteo-llaves.graphic');
+    Route::patch('/torneos/{torneo}/sorteo-llaves/{sorteo}/area', [SorteoLlaveController::class, 'updateArea'])->name('sorteo-llaves.area.update');
+    Route::delete('/torneos/{torneo}/sorteo-llaves/{sorteo}', [SorteoLlaveController::class, 'destroy'])->name('sorteo-llaves.destroy');
     Route::get('/torneos/{torneo}/modalidades', [ModalidadController::class, 'index'])->name('modalidades.index');
     Route::get('/torneos/{torneo}/modalidades/ajax/list', [ModalidadController::class, 'ajaxList'])->name('modalidades.ajax.list');
     Route::get('/torneos/{torneo}/modalidades/imprimir', [ModalidadController::class, 'print'])->name('modalidades.print');

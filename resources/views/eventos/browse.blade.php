@@ -175,6 +175,17 @@
                                         </div>
 
                                         <div class="col-md-6">
+                                            <label for="cantidad_areas" class="form-label">Cantidad de areas</label>
+                                            <input type="number" name="cantidad_areas" id="cantidad_areas"
+                                                value="{{ old('cantidad_areas', 1) }}"
+                                                class="form-control @error('cantidad_areas') is-invalid @enderror"
+                                                min="1" max="99" step="1" required>
+                                            @error('cantidad_areas')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="col-md-6">
                                             <label for="organiza" class="form-label">Organiza</label>
                                             <input type="text" name="organiza" id="organiza"
                                                 value="{{ old('organiza') }}"

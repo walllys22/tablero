@@ -109,14 +109,22 @@
 
                             <div class="col-md-3">
                                 <label for="persona_id" class="form-label">Responsable</label>
-                                <select name="persona_id" id="persona_id" class="form-select @if(!old('editing_organizacion')) @error('persona_id') is-invalid @enderror @endif" required>
-                                    <option value="">Seleccione</option>
-                                    @foreach ($personas as $persona)
-                                        <option value="{{ $persona->id }}" {{ old('persona_id') == $persona->id ? 'selected' : '' }}>
-                                            {{ $persona->first_name }}{{ $persona->ci ? ' - CI ' . $persona->ci : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                @php
+                                    $personaCreateSeleccionada = old('persona_id')
+                                        ? $personas->firstWhere('id', (int) old('persona_id'))
+                                        : null;
+                                    $personaCreateTexto = $personaCreateSeleccionada
+                                        ? $personaCreateSeleccionada->first_name . ($personaCreateSeleccionada->ci ? ' - CI ' . $personaCreateSeleccionada->ci : '')
+                                        : '';
+                                @endphp
+                                <div class="persona-search-wrapper">
+                                    <input type="hidden" name="persona_id" id="persona_id" value="{{ old('persona_id') }}">
+                                    <input type="text" id="persona_search_create"
+                                        class="form-control persona-search-input @if(!old('editing_organizacion')) @error('persona_id') is-invalid @enderror @endif"
+                                        value="{{ $personaCreateTexto }}" placeholder="Buscar responsable..." autocomplete="off" required
+                                        data-target="#persona_id">
+                                    <div class="persona-search-results d-none"></div>
+                                </div>
                                 @if (!old('editing_organizacion'))
                                     @error('persona_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -242,6 +250,66 @@
             preview.src = URL.createObjectURL(file);
         }
 
+        $(document).on('input', '.persona-search-input', function () {
+            const input = $(this);
+            const wrapper = input.closest('.persona-search-wrapper');
+            const results = wrapper.find('.persona-search-results');
+            const target = $(input.data('target'));
+            const query = input.val().trim();
+
+            clearTimeout(input.data('search-timeout'));
+            target.val('');
+
+            if (query.length < 1) {
+                results.addClass('d-none').empty();
+                return;
+            }
+
+            input.data('search-timeout', setTimeout(function () {
+                $.ajax({
+                    url: '{{ route("organizaciones.personas.search") }}',
+                    type: 'get',
+                    data: { q: query },
+                    success: function (items) {
+                        results.empty();
+
+                        if (!items.length) {
+                            results.append('<button type="button" class="persona-search-item text-muted" disabled>Sin coincidencias</button>');
+                        } else {
+                            items.forEach(function (item) {
+                                results.append(
+                                    `<button type="button" class="persona-search-item" data-id="${item.id}" data-text="${item.text}">${item.text}</button>`
+                                );
+                            });
+                        }
+
+                        results.removeClass('d-none');
+                    },
+                    error: function () {
+                        results.html('<button type="button" class="persona-search-item text-danger" disabled>No se pudo buscar</button>')
+                            .removeClass('d-none');
+                    }
+                });
+            }, 300));
+        });
+
+        $(document).on('click', '.persona-search-item[data-id]', function () {
+            const item = $(this);
+            const wrapper = item.closest('.persona-search-wrapper');
+            const input = wrapper.find('.persona-search-input');
+            const target = $(input.data('target'));
+
+            input.val(item.data('text'));
+            target.val(item.data('id'));
+            wrapper.find('.persona-search-results').addClass('d-none').empty();
+        });
+
+        $(document).on('click', function (event) {
+            if (!$(event.target).closest('.persona-search-wrapper').length) {
+                $('.persona-search-results').addClass('d-none');
+            }
+        });
+
         @if ($errors->any())
             document.addEventListener('DOMContentLoaded', function () {
                 @if (!old('editing_organizacion'))
@@ -251,4 +319,40 @@
             });
         @endif
     </script>
+@endpush
+
+@push('styles')
+    <style>
+        .persona-search-wrapper {
+            position: relative;
+        }
+
+        .persona-search-results {
+            background: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 0 0 6px 6px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+            left: 0;
+            max-height: 220px;
+            overflow-y: auto;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            z-index: 1060;
+        }
+
+        .persona-search-item {
+            background: #fff;
+            border: 0;
+            display: block;
+            padding: 8px 12px;
+            text-align: left;
+            width: 100%;
+        }
+
+        .persona-search-item:hover:not(:disabled) {
+            background: #0d6efd;
+            color: #fff;
+        }
+    </style>
 @endpush

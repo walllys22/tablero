@@ -322,17 +322,23 @@
                             </div>
                             <div class="col-md-5">
                                 <label for="persona_edit_{{ $item->id }}" class="form-label">Responsable</label>
-                                <select name="persona_id" id="persona_edit_{{ $item->id }}"
-                                    class="form-select @if (old('editing_organizacion') == $item->id) @error('persona_id') is-invalid @enderror @endif"
-                                    required>
-                                    <option value="">Seleccione</option>
-                                    @foreach ($personas as $persona)
-                                        <option value="{{ $persona->id }}"
-                                            {{ (old('editing_organizacion') == $item->id ? old('persona_id') : $item->persona_id) == $persona->id ? 'selected' : '' }}>
-                                            {{ $persona->first_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                @php
+                                    $personaEditId = old('editing_organizacion') == $item->id ? old('persona_id') : $item->persona_id;
+                                    $personaEdit = old('editing_organizacion') == $item->id && old('persona_id')
+                                        ? $personas->firstWhere('id', (int) old('persona_id'))
+                                        : $item->persona;
+                                    $personaEditTexto = $personaEdit
+                                        ? $personaEdit->first_name . ($personaEdit->ci ? ' - CI ' . $personaEdit->ci : '')
+                                        : '';
+                                @endphp
+                                <div class="persona-search-wrapper">
+                                    <input type="hidden" name="persona_id" id="persona_edit_{{ $item->id }}" value="{{ $personaEditId }}">
+                                    <input type="text"
+                                        class="form-control persona-search-input @if (old('editing_organizacion') == $item->id) @error('persona_id') is-invalid @enderror @endif"
+                                        value="{{ $personaEditTexto }}" placeholder="Buscar responsable..." autocomplete="off" required
+                                        data-target="#persona_edit_{{ $item->id }}">
+                                    <div class="persona-search-results d-none"></div>
+                                </div>
                                 @if (old('editing_organizacion') == $item->id)
                                     @error('persona_id')
                                         <div class="invalid-feedback">{{ $message }}</div>

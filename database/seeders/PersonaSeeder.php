@@ -12,16 +12,32 @@ class PersonaSeeder extends Seeder
      */
     public function run(): void
     {
+        // Persona con 11 años (el mayor en este seeder)
         Persona::updateOrCreate(
-            ['ci' => '12345678'],
+            ['ci' => '3190582'],
             [
                 'first_name' => 'Walter Landivar Limpias',
-                'birth_date' => '1985-01-01',
+                'birth_date' => now()->subYears(11)->format('Y-m-d'),
                 'email' => 'walter@example.com',
+                'phone' => '72841511',
+                'address' => 'Bolivia',
+                'gender' => 'Masculino',
+                'sangre' => 'O Rh (-)',
+                'status' => 1,
+            ]
+        );
+
+        // Persona con 6 años (el menor en este seeder)
+        Persona::updateOrCreate(
+            ['ci' => '88888888'],
+            [
+                'first_name' => 'Competidor Junior',
+                'birth_date' => now()->subYears(6)->format('Y-m-d'),
+                'email' => 'junior@example.com',
                 'phone' => '70000000',
                 'address' => 'Bolivia',
                 'gender' => 'Masculino',
-                'sangre' => 'O Rh (+)',
+                'sangre' => 'O Rh (-)',
                 'status' => 1,
             ]
         );

@@ -14,10 +14,12 @@ class Competidor extends Model
     protected $fillable = [
         'organizacion_id',
         'persona_id',
+        'peso',
         'status',
     ];
 
     protected $casts = [
+        'peso' => 'decimal:3',
         'status' => 'integer',
     ];
 

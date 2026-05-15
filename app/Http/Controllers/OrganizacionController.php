@@ -63,6 +63,32 @@ class OrganizacionController extends Controller
             ->header('Expires', '0');
     }
 
+    public function searchPersonas(Request $request)
+    {
+        $search = trim((string) $request->input('q', ''));
+
+        if ($search === '') {
+            return response()->json([]);
+        }
+
+        $personas = Persona::where('status', 1)
+            ->where(function ($query) use ($search) {
+                $query->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('ci', 'like', "%{$search}%");
+            })
+            ->orderBy('first_name')
+            ->limit(20)
+            ->get()
+            ->map(function ($persona) {
+                return [
+                    'id' => $persona->id,
+                    'text' => $persona->first_name . ($persona->ci ? ' - CI ' . $persona->ci : ''),
+                ];
+            });
+
+        return response()->json($personas);
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([

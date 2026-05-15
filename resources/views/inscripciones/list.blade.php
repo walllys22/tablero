@@ -5,7 +5,6 @@
                 <tr>
                     <th style="text-align: center">Organizacion</th>
                     <th style="text-align: center">Costo organizacion</th>
-                    <th style="text-align: center">Competidores</th>
                     <th style="text-align: center">Total competidores</th>
                     <th style="text-align: center">Total general</th>
                     <th style="text-align: center">Acciones</th>
@@ -14,11 +13,25 @@
             <tbody>
                 @forelse ($organizaciones as $inscripcion)
                     @php
-                        $totalCompetidores = $inscripcion->competidores->sum(function ($competidor) {
+                        $searchTerm = trim((string) ($search ?? ''));
+                        $searchLower = mb_strtolower($searchTerm);
+                        $competidoresCoincidentes = $searchTerm !== ''
+                            ? $inscripcion->competidores->filter(function ($competidor) use ($searchLower) {
+                                $nombre = mb_strtolower((string) optional($competidor->persona)->first_name);
+                                $ci = mb_strtolower((string) optional($competidor->persona)->ci);
+
+                                return str_contains($nombre, $searchLower) || str_contains($ci, $searchLower);
+                            })
+                            : collect();
+                        $filtrandoPorCompetidor = $competidoresCoincidentes->isNotEmpty();
+                        $competidoresParaMostrar = $filtrandoPorCompetidor
+                            ? $competidoresCoincidentes
+                            : $inscripcion->competidores;
+                        $totalCompetidores = $competidoresParaMostrar->sum(function ($competidor) {
                             return $competidor->modalidades->sum('costo');
                         });
                         $totalGeneral = $totalCompetidores + (float) $inscripcion->costo;
-                        $categoriasInscritas = $inscripcion->competidores
+                        $categoriasInscritas = $competidoresParaMostrar
                             ->flatMap(function ($competidor) {
                                 return $competidor->modalidades->map(function ($detalle) use ($competidor) {
                                     return [
@@ -34,50 +47,17 @@
                     @endphp
                     <tr>
                         <td style="vertical-align: top;">
-                            <strong>{{ $inscripcion->organizacion->nombre }}</strong><br>
+                            <button type="button" class="btn btn-sm btn-outline-primary w-100 d-flex align-items-center justify-content-between text-start"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#organizacion-inscripcion-{{ $inscripcion->id }}"
+                                aria-expanded="{{ $filtrandoPorCompetidor ? 'true' : 'false' }}"
+                                aria-controls="organizacion-inscripcion-{{ $inscripcion->id }}">
+                                <strong>{{ $inscripcion->organizacion->nombre }}</strong>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
                         </td>
                         <td style="text-align: center; vertical-align: top;">
                             <label class="label label-primary">{{ number_format((float) $inscripcion->costo, 2) }}</label>
-                        </td>
-                        <td style="vertical-align: top;">
-                            @if ($categoriasInscritas->isNotEmpty())
-                                @foreach ($categoriasInscritas as $categoriaId => $itemsCategoria)
-                                    @php
-                                        $firstItem = $itemsCategoria->first();
-                                        $collapseId = 'categoria-inscripcion-' . $inscripcion->id . '-' . ($categoriaId ?: 'sin-categoria');
-                                        $competidoresCategoria = $itemsCategoria
-                                            ->pluck('competidor')
-                                            ->unique('id')
-                                            ->values();
-                                    @endphp
-                                    <div class="mb-2">
-                                        <button type="button" class="btn btn-sm btn-outline-primary w-100 d-flex align-items-center justify-content-between"
-                                            data-bs-toggle="collapse"
-                                            data-bs-target="#{{ $collapseId }}"
-                                            aria-expanded="false"
-                                            aria-controls="{{ $collapseId }}">
-                                            <span>{{ $firstItem['categoria_nombre'] }} - {{ $competidoresCategoria->count() }} competidor(es)</span>
-                                            <i class="bi bi-chevron-down"></i>
-                                        </button>
-                                        <div class="collapse mt-2" id="{{ $collapseId }}">
-                                            @foreach ($competidoresCategoria as $competidor)
-                                                @php
-                                                    $detallesCompetidor = $itemsCategoria->where('competidor.id', $competidor->id);
-                                                    $totalCategoriaCompetidor = $detallesCompetidor->sum(function ($itemCategoria) {
-                                                        return (float) $itemCategoria['detalle']->costo;
-                                                    });
-                                                @endphp
-                                                <div class="mb-2 pb-2 border-bottom d-flex justify-content-between align-items-center gap-2">
-                                                    <strong>{{ $competidor->persona->first_name }}</strong>
-                                                    <span>{{ number_format($totalCategoriaCompetidor, 2) }}</span>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endforeach
-                            @else
-                                <span class="text-muted">Sin competidores inscritos</span>
-                            @endif
                         </td>
                         <td style="text-align: center; vertical-align: top;">
                             <label class="label label-info">{{ number_format((float) $totalCompetidores, 2) }}</label>
@@ -99,9 +79,55 @@
                             </div>
                         </td>
                     </tr>
+                    <tr class="collapse {{ $filtrandoPorCompetidor ? 'show' : '' }}" id="organizacion-inscripcion-{{ $inscripcion->id }}">
+                        <td colspan="5" class="bg-light">
+                            <div class="row g-2">
+                                @if ($categoriasInscritas->isNotEmpty())
+                                    @foreach ($categoriasInscritas as $categoriaId => $itemsCategoria)
+                                        @php
+                                            $firstItem = $itemsCategoria->first();
+                                            $collapseId = 'categoria-inscripcion-' . $inscripcion->id . '-' . ($categoriaId ?: 'sin-categoria');
+                                            $competidoresCategoria = $itemsCategoria
+                                                ->pluck('competidor')
+                                                ->unique('id')
+                                                ->values();
+                                        @endphp
+                                        <div class="col-md-6 col-xl-4">
+                                            <button type="button" class="btn btn-sm btn-outline-primary w-100 d-flex align-items-center justify-content-between"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#{{ $collapseId }}"
+                                                aria-expanded="{{ $filtrandoPorCompetidor ? 'true' : 'false' }}"
+                                                aria-controls="{{ $collapseId }}">
+                                                <span>{{ $firstItem['categoria_nombre'] }} - {{ $competidoresCategoria->count() }} competidor(es)</span>
+                                                <i class="bi bi-chevron-down"></i>
+                                            </button>
+                                            <div class="collapse mt-2 {{ $filtrandoPorCompetidor ? 'show' : '' }}" id="{{ $collapseId }}">
+                                                <div class="bg-white border rounded p-2">
+                                                    @foreach ($competidoresCategoria as $competidor)
+                                                        @php
+                                                            $detallesCompetidor = $itemsCategoria->where('competidor.id', $competidor->id);
+                                                            $totalCategoriaCompetidor = $detallesCompetidor->sum(function ($itemCategoria) {
+                                                                return (float) $itemCategoria['detalle']->costo;
+                                                            });
+                                                        @endphp
+                                                        <div class="mb-2 pb-2 border-bottom d-flex justify-content-between align-items-center gap-2">
+                                                            <strong>{{ $competidor->persona->first_name }}</strong>
+                                                            <span>{{ number_format($totalCategoriaCompetidor, 2) }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="col-12 text-muted">Sin competidores inscritos</div>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
                 @empty
                     <tr>
-                        <td colspan="6">
+                        <td colspan="5">
                             <h5 class="text-center eventos-empty">
                                 <img src="{{ asset('images/empty.png') }}" width="120" alt="Sin resultados">
                                 <br><br>

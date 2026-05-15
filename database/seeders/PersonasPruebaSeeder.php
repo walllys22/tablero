@@ -63,6 +63,9 @@ class PersonasPruebaSeeder extends Seeder
         ];
 
         foreach ($personas as $persona) {
+            // Sobrescribimos la fecha de nacimiento para que tengan entre 6 y 11 años aleatoriamente
+            $persona['birth_date'] = fake()->dateTimeBetween('-11 years', '-6 years')->format('Y-m-d');
+
             Persona::updateOrCreate(
                 ['ci' => $persona['ci']],
                 $persona + [

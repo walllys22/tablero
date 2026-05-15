@@ -94,10 +94,17 @@
                                 <div id="persona_ids" class="border rounded px-2 py-2 @error('persona_ids') border-danger @enderror @error('persona_ids.*') border-danger @enderror" style="height: 178px; overflow-y: auto;">
                                     @foreach ($personas as $persona)
                                         <div class="form-check py-1">
-                                            <input type="checkbox" name="persona_ids[]" id="persona_id_{{ $persona->id }}" value="{{ $persona->id }}" class="form-check-input" {{ in_array($persona->id, old('persona_ids', [])) ? 'checked' : '' }}>
-                                            <label for="persona_id_{{ $persona->id }}" class="form-check-label">
-                                                {{ $persona->first_name }}{{ $persona->ci ? ' - CI ' . $persona->ci : '' }}{{ $persona->gender ? ' - ' . $persona->gender : '' }}
-                                            </label>
+                                            <div class="row g-2 align-items-center">
+                                                <div class="col-md-8">
+                                                    <input type="checkbox" name="persona_ids[]" id="persona_id_{{ $persona->id }}" value="{{ $persona->id }}" class="form-check-input" {{ in_array($persona->id, old('persona_ids', [])) ? 'checked' : '' }}>
+                                                    <label for="persona_id_{{ $persona->id }}" class="form-check-label">
+                                                        {{ $persona->first_name }} - {{ $persona->birth_date->age }} años
+                                                    </label>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <input type="number" name="pesos[{{ $persona->id }}]" value="{{ old('pesos.' . $persona->id) }}" class="form-control form-control-sm @error('pesos.' . $persona->id) is-invalid @enderror" placeholder="Peso Kg" min="0" max="999.999" step="0.001">
+                                                </div>
+                                            </div>
                                         </div>
                                     @endforeach
                                 </div>

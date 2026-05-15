@@ -59,7 +59,7 @@
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <div class="row mb-3 align-items-center">
-                            <div class="col-sm-9">
+                            <div class="col-sm-8">
                                 <label class="d-flex align-items-center gap-2 mb-0">
                                     Mostrar
                                     <select id="select-paginate" class="form-select form-select-sm w-auto">
@@ -71,7 +71,8 @@
                                     registros
                                 </label>
                             </div>
-                            <div class="col-sm-3 mt-2 mt-sm-0">
+                            <div class="col-sm-4 mt-2 mt-sm-0">
+                                <label for="input-search" class="form-label mb-1">Buscar Competidor</label>
                                 <input type="text" id="input-search" placeholder="Buscar..." class="form-control">
                             </div>
                         </div>
@@ -184,7 +185,7 @@
                                     <option value="">Seleccione</option>
                                     @foreach ($personas as $persona)
                                         <option value="{{ $persona->id }}" {{ old('persona_id') == $persona->id ? 'selected' : '' }}>
-                                            {{ $persona->first_name }}{{ $persona->ci ? ' - CI ' . $persona->ci : '' }}
+                                            {{ $persona->first_name }} - {{ $persona->birth_date->age }} años
                                         </option>
                                     @endforeach
                                 </select>

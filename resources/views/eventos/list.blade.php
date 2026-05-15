@@ -7,6 +7,7 @@
                     <th style="text-align: center">Responsable</th>
                     <th style="text-align: center">Ciudad</th>
                     <th style="text-align: center">Sistema</th>
+                    <th style="text-align: center">Areas</th>
                     <th style="text-align: center">Fecha</th>
                     <th style="text-align: center">Estado</th>
                     <th style="text-align: center">Acciones</th>
@@ -68,6 +69,9 @@
                             @if ($item->modalidad_puntaje)
                                 <br><small class="text-muted">{{ $item->modalidad_puntaje }}</small>
                             @endif
+                        </td>
+                        <td style="text-align: center; vertical-align: middle;">
+                            <label class="label label-primary">{{ $item->cantidad_areas ?? 1 }}</label>
                         </td>
                         <td style="text-align: center; vertical-align: middle;">
                             @if ($item->fecha_inicio)
@@ -352,6 +356,12 @@
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <div class="torneo-view-field">
+                                            <div class="field-label">Cantidad de areas</div>
+                                            <div class="field-value">{{ $item->cantidad_areas ?? 1 }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="torneo-view-field">
                                             <div class="field-label">Organiza</div>
                                             <div class="field-value">{{ $item->organiza ?: 'No registrado' }}</div>
                                         </div>
@@ -528,6 +538,21 @@
                                                 maxlength="100">
                                             @if (old('editing_torneo') == $item->id)
                                                 @error('modalidad_puntaje')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            @endif
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="cantidad_areas_edit_{{ $item->id }}"
+                                                class="form-label">Cantidad de areas</label>
+                                            <input type="number" name="cantidad_areas"
+                                                id="cantidad_areas_edit_{{ $item->id }}"
+                                                value="{{ old('editing_torneo') == $item->id ? old('cantidad_areas') : ($item->cantidad_areas ?? 1) }}"
+                                                class="form-control @if (old('editing_torneo') == $item->id) @error('cantidad_areas') is-invalid @enderror @endif"
+                                                min="1" max="99" step="1" required>
+                                            @if (old('editing_torneo') == $item->id)
+                                                @error('cantidad_areas')
                                                     <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             @endif

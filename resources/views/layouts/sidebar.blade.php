@@ -23,10 +23,11 @@
         [
             'label' => 'Registro',
             'icon' => 'fa-solid fa-address-card',
-            'active' => request()->is('registro*') || request()->routeIs('inscripciones.*') || request()->routeIs('arbitros.*'),
+            'active' => request()->is('registro*') || request()->routeIs('inscripciones.*') || request()->routeIs('sorteo-llaves.*') || request()->routeIs('arbitros.*'),
             'children' => [
                 ['label' => 'Jueces', 'icon' => 'fa-solid fa-user-tie', 'modal' => 'modal-arbitros-sidebar', 'active' => request()->routeIs('arbitros.*')],
                 ['label' => 'Inscripciones', 'icon' => 'fa-solid fa-address-book', 'modal' => 'modal-inscripciones-sidebar', 'active' => request()->routeIs('inscripciones.*')],
+                ['label' => 'Sorteo Llaves', 'icon' => 'fa-solid fa-code-branch', 'modal' => 'modal-sorteo-llaves-sidebar', 'active' => request()->routeIs('sorteo-llaves.*')],
             ],
         ],
 
@@ -268,6 +269,34 @@
     </div>
 </div>
 
+<div class="modal fade" id="modal-sorteo-llaves-sidebar" tabindex="-1" aria-labelledby="modalSorteoLlavesSidebarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="form-sorteo-llaves-sidebar">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold" id="modalSorteoLlavesSidebarLabel">Seleccionar campeonato</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="torneo_sorteo_llaves_sidebar" class="form-label">Campeonato</label>
+                    <select id="torneo_sorteo_llaves_sidebar" class="form-select" required>
+                        <option value="">Seleccione un campeonato</option>
+                        @foreach ($torneosModalidades as $torneo)
+                            <option value="{{ $torneo->id }}">{{ $torneo->nombre ?: 'Torneo #' . $torneo->id }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success" {{ $torneosModalidades->isEmpty() ? 'disabled' : '' }}>
+                        <i class="bi bi-box-arrow-in-right"></i> Abrir
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     document.getElementById('form-modalidades-sidebar').addEventListener('submit', function (event) {
         event.preventDefault();
@@ -300,5 +329,16 @@
         }
 
         window.location.href = `{{ url('/torneos') }}/${torneoId}/arbitros`;
+    });
+
+    document.getElementById('form-sorteo-llaves-sidebar').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        let torneoId = document.getElementById('torneo_sorteo_llaves_sidebar').value;
+        if (!torneoId) {
+            return;
+        }
+
+        window.location.href = `{{ url('/torneos') }}/${torneoId}/sorteo-llaves`;
     });
 </script>

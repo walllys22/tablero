@@ -80,10 +80,16 @@
                                     <label for="persona_ids" class="form-label">Competidores</label>
                                     <div id="persona_ids" class="border rounded px-2 py-2 @error('persona_ids') border-danger @enderror @error('persona_ids.*') border-danger @enderror" style="height: 96px; overflow-y: auto;">
                                         @forelse ($personas as $persona)
+                                            @php
+                                                $pesoCompetidor = $pesosCompetidores->get($persona->id);
+                                            @endphp
                                             <div class="form-check py-1">
                                                 <input type="checkbox" name="persona_ids[]" id="persona_id_{{ $persona->id }}" value="{{ $persona->id }}" class="form-check-input" {{ collect(old('persona_ids', []))->contains((string) $persona->id) ? 'checked' : '' }}>
                                                 <label for="persona_id_{{ $persona->id }}" class="form-check-label">
                                                     {{ $persona->first_name }}{{ $persona->birth_date ? ' - ' . $persona->birth_date->diffInYears(now()) . ' años' : '' }}
+                                                    @if ($mostrarPesoFiltro && $pesoCompetidor !== null)
+                                                        / {{ number_format((float) $pesoCompetidor, 3) }} Kg
+                                                    @endif
                                                 </label>
                                             </div>
                                         @empty
@@ -161,9 +167,18 @@
                                 </thead>
                                 <tbody>
                                     @forelse ($competidores as $competidor)
+                                        @php
+                                            $competidorPeso = $pesosCompetidores->get($competidor->persona_id);
+                                            $competidorTieneKumite = $competidor->modalidades->contains(function ($detalle) {
+                                                return str_contains(mb_strtolower((string) optional($detalle->modalidad)->nombre), 'kumite');
+                                            });
+                                        @endphp
                                         <tr>
                                             <td>
                                                 {{ $competidor->persona->first_name }}{{ $competidor->persona->birth_date ? ' - ' . $competidor->persona->birth_date->diffInYears(now()) . ' años' : '' }}
+                                                @if (($mostrarPesoFiltro || $competidorTieneKumite) && $competidorPeso !== null)
+                                                    / {{ number_format((float) $competidorPeso, 3) }} Kg
+                                                @endif
                                             </td>
                                             <td>
                                                 @foreach ($competidor->modalidades as $detalle)

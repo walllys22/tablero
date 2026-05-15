@@ -30,8 +30,7 @@
                             <div style="display: flex; align-items: center;">
                                 <img src="{{ $image }}" alt="{{ $item->first_name ?: 'Persona' }}" class="image-expandable" style="width: 60px; height: 60px; border-radius: 30px; margin-right: 10px; object-fit: cover;" onerror="this.src='{{ $defaultPersonImage }}'">
                                 <div>
-                                    <strong>{{ strtoupper($item->first_name ?: 'Sin nombre') }}</strong><br>
-                                    <small class="text-muted">ID: {{ $item->id }}</small>
+                                    <strong>{{ strtoupper($item->first_name ?: 'Sin nombre') }}</strong>
                                 </div>
                             </div>
                         </td>
