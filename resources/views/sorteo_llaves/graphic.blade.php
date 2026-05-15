@@ -45,6 +45,7 @@
 
                 $matchHeight = 117;
                 $baseGap = 18;
+                $podiumPull = max(0, (count($llaves[0]['combates'] ?? []) - 2) * 70);
                 $resultadosPorIndice = $sorteo
                     ? $sorteo->resultadosKumite->keyBy('indice_combate')
                     : collect();
@@ -220,7 +221,7 @@
                     @endforeach
                 </div>
 
-                <div class="podium-row">
+                <div class="podium-row" style="--podium-pull: {{ $podiumPull }}px;">
                     <div class="podium-box gold">
                         <span>1er lugar - Oro</span>
                         <strong>{{ $podio['oro'] ?: 'Pendiente' }}</strong>
@@ -272,9 +273,8 @@
             align-items: flex-start;
             display: flex;
             gap: 86px;
-            min-height: 560px;
             min-width: max-content;
-            padding: 0 22px 42px 10px;
+            padding: 0 22px 8px 10px;
         }
 
         .graphic-round {
@@ -404,8 +404,10 @@
             display: flex;
             gap: 14px;
             justify-content: center;
-            margin-top: 22px;
+            margin-top: calc(8px - var(--podium-pull, 0px));
             min-width: 760px;
+            position: relative;
+            z-index: 5;
         }
 
         .podium-box {
@@ -448,11 +450,24 @@
 
         @media print {
             @page {
-                margin: 12px;
+                margin: 4mm;
                 size: landscape;
             }
 
-            .print-actions,
+            html,
+            body {
+                background: #ffffff !important;
+                height: auto !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                padding: 0 !important;
+                width: auto !important;
+            }
+
+            body * {
+                visibility: hidden !important;
+            }
+
             .sidebar,
             .navbar,
             .bottom-bar,
@@ -462,17 +477,69 @@
                 display: none !important;
             }
 
-            .container-fluid,
-            .app-main {
-                margin: 0 !important;
-                padding: 0 !important;
-                max-width: none !important;
+            .graphic-sheet,
+            .graphic-sheet * {
+                visibility: visible !important;
             }
 
             .graphic-sheet {
+                background: #ffffff !important;
                 border: 0;
+                color: #111111 !important;
+                left: 0 !important;
+                margin: 0 !important;
                 overflow: visible;
                 padding: 0;
+                position: fixed !important;
+                top: 0 !important;
+                transform: scale(0.84);
+                transform-origin: top left;
+                width: 119% !important;
+            }
+
+            .graphic-header,
+            .graphic-bracket,
+            .graphic-round,
+            .graphic-match,
+            .graphic-slot,
+            .podium-row,
+            .podium-box {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            .graphic-bracket {
+                padding-bottom: 0;
+            }
+
+            .podium-row {
+                margin-top: calc(4px - var(--podium-pull, 0px)) !important;
+            }
+
+            .graphic-result,
+            .podium-box {
+                display: inline-block !important;
+            }
+
+            .graphic-header,
+            .graphic-bracket,
+            .podium-row {
+                display: flex !important;
+            }
+
+            .graphic-slot strong,
+            .graphic-slot small,
+            .podium-box span,
+            .podium-box strong {
+                display: block !important;
+            }
+
+            .container-fluid,
+            .app-main,
+            main {
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
         }
     </style>

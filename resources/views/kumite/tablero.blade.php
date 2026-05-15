@@ -328,6 +328,25 @@
             box-shadow: inset 0 4px 16px rgba(15, 23, 42, 0.14);
         }
 
+        .fase-combate {
+            align-self: center;
+            background: #ffff00;
+            border: 2px solid #000000;
+            border-radius: 999px;
+            color: #000000;
+            display: inline-flex;
+            font-size: 1rem;
+            font-weight: 900;
+            justify-content: center;
+            line-height: 1;
+            margin: -22px 0 -22px;
+            min-width: 190px;
+            padding: 9px 18px;
+            position: relative;
+            text-transform: uppercase;
+            z-index: 3;
+        }
+
         .timer-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -500,6 +519,7 @@
                 <h3 id="tablero-modalidad-label">Modalidad: Kumite Individual</h3>
                 <h4>Categoría: </h4> 
             </div>
+            <div id="fase-combate-label" class="fase-combate">Combate</div>
             <div id="timer-display" class="timer-display">00:00</div>
 
             <div class="timer-grid">
@@ -618,6 +638,9 @@
         const podioKumiteUrl = combateInicialKumite.sorteo_id
             ? @json(route('tablero.kumite.podio')) + `?sorteo_id=${combateInicialKumite.sorteo_id}`
             : null;
+        const siguienteCategoriaKumiteUrl = combateInicialKumite.siguiente_sorteo_id
+            ? @json(route('tablero.kumite')) + `?sorteo_id=${combateInicialKumite.siguiente_sorteo_id}`
+            : null;
 
         const sideConfig = {
             ao: {
@@ -691,10 +714,15 @@
             $('#mirrorSpanRojo').text(nombreRojo || '---');
             $('#mirrorSpanAzul').text(nombreAzul || '---');
             setEncabezadoCombate(combateInicialKumite.modalidad, combateInicialKumite.categoria);
+            setFaseCombate(combate.ronda || 'Combate');
             indiceCombateKumite = index;
             cargarSiguienteCombateEnCampos();
 
             return true;
+        }
+
+        function setFaseCombate(fase) {
+            $('#fase-combate-label').text(fase || 'Combate');
         }
 
         function cargarSiguienteCombateEnCampos() {
@@ -1092,6 +1120,7 @@
 
             if (siguienteIndice === null) {
                 $('#mirrorSpanRojo, #mirrorSpanAzul').text('---');
+                setFaseCombate('Categoria finalizada');
                 proximoIndiceCombateKumite = null;
                 cargarSiguienteCombateEnCampos();
 

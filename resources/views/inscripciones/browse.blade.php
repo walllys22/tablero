@@ -185,7 +185,7 @@
                                     <option value="">Seleccione</option>
                                     @foreach ($personas as $persona)
                                         <option value="{{ $persona->id }}" {{ old('persona_id') == $persona->id ? 'selected' : '' }}>
-                                            {{ $persona->first_name }} - {{ $persona->birth_date->age }} años
+                                            {{ $persona->first_name }} - {{ $persona->birth_date ? $persona->birth_date->age . ' años' : 'Sin fecha de nacimiento' }}
                                         </option>
                                     @endforeach
                                 </select>

@@ -127,9 +127,15 @@
                                                 <a href="{{ route('sorteo-llaves.resultados', [$torneo, $sorteo]) }}" class="btn btn-sm btn-info text-white p-1" title="Llaves realizadas">
                                                     <i class="bi bi-clipboard-check"></i>
                                                 </a>
+                                                <a href="{{ route('tablero.kumite.podio', ['sorteo_id' => $sorteo->id]) }}" class="btn btn-sm btn-warning text-white p-1" title="Ver podio">
+                                                    <i class="bi bi-trophy"></i>
+                                                </a>
                                             @else
                                                 <button type="button" class="btn btn-sm btn-secondary p-1" title="Sin llaves realizadas" disabled>
                                                     <i class="bi bi-clipboard-check"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-secondary p-1" title="Podio no disponible" disabled>
+                                                    <i class="bi bi-trophy"></i>
                                                 </button>
                                             @endif
                                             @if (($torneo->cantidad_areas ?? 1) >= 2)

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\KumiteCombateResultado;
+use App\Models\KumitePodio;
 use App\Models\SorteoLlave;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -22,6 +23,7 @@ class TableroController extends Controller
                     'indice' => count($combatesKumite),
                     'round_index' => $roundIndex,
                     'match_index' => $matchIndex,
+                    'ronda' => $ronda['nombre'] ?? 'Combate',
                     'numero_llave' => $numeroLlave++,
                     'rojo' => $combate['a']['nombre'] ?? '',
                     'azul' => $combate['b']['nombre'] ?? ($combate['bye'] ?? false ? 'BYE' : ''),
@@ -36,6 +38,7 @@ class TableroController extends Controller
 
         $combateInicialKumite = [
             'sorteo_id' => $sorteo?->id,
+            'siguiente_sorteo_id' => $this->siguienteSorteoKumite($sorteo)?->id,
             'modalidad' => $sorteo?->modalidad?->nombre ?? 'Kumite Individual',
             'categoria' => $sorteo?->categoria?->nombre ?? '',
             'rojo' => $primerCombate['rojo'] ?? '',
@@ -57,8 +60,10 @@ class TableroController extends Controller
 
         $llaves = $this->llavesConResultados($sorteo);
         $podio = $this->calcularPodio($llaves, $sorteo);
+        $this->guardarPodioKumite($sorteo, $podio);
+        $siguienteSorteo = $this->siguienteSorteoKumite($sorteo);
 
-        return view('kumite.podio', compact('sorteo', 'podio'));
+        return view('kumite.podio', compact('sorteo', 'podio', 'siguienteSorteo'));
     }
 
     public function guardarCombateKumite(Request $request)
@@ -124,12 +129,66 @@ class TableroController extends Controller
                 ->find($request->input('sorteo_id'));
         }
 
-        return SorteoLlave::with(['modalidad', 'categoria', 'resultadosKumite'])
+        $sorteos = SorteoLlave::with(['modalidad', 'categoria', 'resultadosKumite'])
+            ->whereHas('modalidad', function ($query) {
+                $query->where('nombre', 'like', '%Kumite%');
+            })
+            ->orderByRaw('COALESCE(area, 999)')
+            ->orderBy('id')
+            ->get();
+
+        return $sorteos->first(function ($sorteo) {
+            return $this->tieneCombatesPendientes($sorteo);
+        }) ?: SorteoLlave::with(['modalidad', 'categoria', 'resultadosKumite'])
             ->whereHas('modalidad', function ($query) {
                 $query->where('nombre', 'like', '%Kumite%');
             })
             ->latest()
             ->first();
+    }
+
+    private function siguienteSorteoKumite(?SorteoLlave $actual): ?SorteoLlave
+    {
+        if (! $actual) {
+            return null;
+        }
+
+        $query = SorteoLlave::with(['modalidad', 'categoria', 'resultadosKumite'])
+            ->where('torneo_id', $actual->torneo_id)
+            ->where('id', '!=', $actual->id)
+            ->whereHas('modalidad', function ($query) {
+                $query->where('nombre', 'like', '%Kumite%');
+            })
+            ->orderByRaw('CASE WHEN id > ? THEN 0 ELSE 1 END', [$actual->id])
+            ->orderBy('id');
+
+        if ($actual->area) {
+            $query->where('area', $actual->area);
+        }
+
+        return $query->get()->first(function ($sorteo) {
+            return $this->tieneCombatesPendientes($sorteo);
+        });
+    }
+
+    private function tieneCombatesPendientes(SorteoLlave $sorteo): bool
+    {
+        foreach ($this->llavesConResultados($sorteo) as $ronda) {
+            foreach (($ronda['combates'] ?? []) as $combate) {
+                $rojo = trim((string) ($combate['a']['nombre'] ?? ''));
+                $azul = trim((string) ($combate['b']['nombre'] ?? ''));
+
+                if (($combate['realizado'] ?? false) || ($combate['bye'] ?? false)) {
+                    continue;
+                }
+
+                if ($rojo !== '' && $azul !== '' && strtoupper($rojo) !== 'BYE' && strtoupper($azul) !== 'BYE') {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private function llavesConResultados(SorteoLlave $sorteo): array
@@ -314,6 +373,20 @@ class TableroController extends Controller
         $podio['bronce_2'] = $bronces[1] ?? '';
 
         return $podio;
+    }
+
+    private function guardarPodioKumite(SorteoLlave $sorteo, array $podio): void
+    {
+        KumitePodio::updateOrCreate(
+            ['sorteo_llave_id' => $sorteo->id],
+            [
+                'oro' => $podio['oro'] ?: null,
+                'plata' => $podio['plata'] ?: null,
+                'bronce_1' => $podio['bronce_1'] ?: null,
+                'bronce_2' => $podio['bronce_2'] ?: null,
+                'generado_at' => Carbon::now(),
+            ]
+        );
     }
 
     private function nombreCompetidorPodio(?array $competidor): string
