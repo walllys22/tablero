@@ -17,6 +17,11 @@
                     </small>
                 </div>
                 <div>
+                    @if ($sorteo && str_contains(mb_strtolower($categoria->modalidad->nombre), 'kumite'))
+                        <a href="{{ route('tablero.kumite', ['sorteo_id' => $sorteo->id]) }}" class="btn btn-primary me-2">
+                            <i class="bi bi-keyboard"></i> Tablero
+                        </a>
+                    @endif
                     <button type="button" class="btn btn-success me-2" onclick="window.print()">
                         <i class="bi bi-printer"></i> Imprimir
                     </button>

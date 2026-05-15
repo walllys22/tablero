@@ -121,7 +121,7 @@ class SorteoLlaveController extends Controller
             ? $sorteo->llaves
             : ($competidores->count() >= 2 ? $this->crearLlaves($competidores, (int) $request->input('seed')) : []);
 
-        return view('sorteo_llaves.graphic', compact('torneo', 'categoria', 'competidores', 'llaves'));
+        return view('sorteo_llaves.graphic', compact('torneo', 'categoria', 'competidores', 'llaves', 'sorteo'));
     }
 
     public function updateArea(Request $request, Torneo $torneo, SorteoLlave $sorteo)

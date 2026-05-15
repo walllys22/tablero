@@ -35,6 +35,12 @@
             margin: 5px 0;             /* Ajusta el espacio entre líneas */
         }
 
+        .bg-red h4 {
+            font-size: clamp(1rem, 2vw, 1.35rem);
+            line-height: 1.15;
+            overflow-wrap: anywhere;
+        }
+
         .toast-senshu-arriba {
             width: 340px !important;
             margin-top: 18px !important;
@@ -491,7 +497,7 @@
 
         <section class="timer-panel">
             <div class="bg-red">
-                <h3>Modalidad: Kumite Individual</h3>
+                <h3 id="tablero-modalidad-label">Modalidad: Kumite Individual</h3>
                 <h4>Categoría: </h4> 
             </div>
             <div id="timer-display" class="timer-display">00:00</div>
@@ -603,6 +609,10 @@
             ao: [false, false, false, false, false],
             aka: [false, false, false, false, false]
         };
+        let indiceCombateKumite = -1;
+        let proximoIndiceCombateKumite = null;
+        const combateInicialKumite = @json($combateInicialKumite);
+        const combatesKumite = @json($combatesKumite);
 
         const sideConfig = {
             ao: {
@@ -635,7 +645,79 @@
             });
 
             updateTimerDisplay();
+            inicializarEncabezadoCombate();
+            setEncabezadoCombate();
         });
+
+        function inicializarEncabezadoCombate() {
+            $('#tablero-modalidad-label').text('Modalidad: Kumite Individual');
+            $('.timer-panel .bg-red h4').text('Categoría:');
+        }
+
+        function setEncabezadoCombate(modalidad = null, categoria = null) {
+            const modalidadTexto = modalidad || combateInicialKumite.modalidad || 'Kumite Individual';
+            const categoriaTexto = formatearCategoriaVisual(categoria ?? combateInicialKumite.categoria ?? '');
+
+            $('#tablero-modalidad-label').text(`Modalidad: ${modalidadTexto}`);
+            $('.timer-panel .bg-red h4').text(categoriaTexto ? `Categoría: ${categoriaTexto}` : 'Categoría:');
+        }
+
+        function formatearCategoriaVisual(categoria) {
+            return (categoria || '')
+                .replace(/menor o igual a/gi, '<=')
+                .replace(/mayor o igual a/gi, '>=');
+        }
+
+        function cargarPrimerCombateDesdeLlave() {
+            return cargarCombateDesdeLlave(0);
+        }
+
+        function cargarCombateDesdeLlave(index) {
+            const combate = combatesKumite[index] || null;
+            const nombreRojo = (combate?.rojo || '').trim();
+            const nombreAzul = (combate?.azul || '').trim();
+
+            if (!nombreRojo && !nombreAzul) {
+                return false;
+            }
+
+            $('#mirrorSpanRojo').text(nombreRojo || '---');
+            $('#mirrorSpanAzul').text(nombreAzul || '---');
+            setEncabezadoCombate(combateInicialKumite.modalidad, combateInicialKumite.categoria);
+            indiceCombateKumite = index;
+            cargarSiguienteCombateEnCampos();
+
+            return true;
+        }
+
+        function cargarSiguienteCombateEnCampos() {
+            proximoIndiceCombateKumite = encontrarSiguienteCombateValido(indiceCombateKumite + 1);
+            const siguiente = proximoIndiceCombateKumite !== null ? combatesKumite[proximoIndiceCombateKumite] : null;
+            const inputAzul = document.getElementById('TxtAzulProximo');
+            const inputRojo = document.getElementById('TxtRojoProximo');
+
+            inputRojo.value = siguiente?.rojo || '';
+            inputAzul.value = siguiente?.azul || '';
+            inputRojo.classList.toggle('border-primary', inputRojo.value.length > 0);
+            inputAzul.classList.toggle('border-primary', inputAzul.value.length > 0);
+        }
+
+        function encontrarSiguienteCombateValido(desde) {
+            for (let index = desde; index < combatesKumite.length; index++) {
+                if (!esCombateBye(combatesKumite[index])) {
+                    return index;
+                }
+            }
+
+            return null;
+        }
+
+        function esCombateBye(combate) {
+            const rojo = (combate?.rojo || '').trim().toUpperCase();
+            const azul = (combate?.azul || '').trim().toUpperCase();
+
+            return !rojo || !azul || rojo === 'BYE' || azul === 'BYE';
+        }
 
         function showToast(title, icon = 'warning') {
             Swal.fire({
@@ -903,6 +985,17 @@
             const nombreRojo = inputRojo.value.trim();
 
             if (!nombreAzul || !nombreRojo) {
+                const esPrimerCombate = $('#mirrorSpanAzul').text().trim() === '---'
+                    && $('#mirrorSpanRojo').text().trim() === '---';
+
+                if (esPrimerCombate) {
+                    inicializarEncabezadoCombate();
+
+                    if (cargarPrimerCombateDesdeLlave()) {
+                        return;
+                    }
+                }
+
                 showToast('POR FAVOR, INGRESA LOS NOMBRES DE AMBOS COMPETIDORES.');
                 return;
             }
@@ -927,10 +1020,18 @@
             renderPenalties('ao');
             renderPenalties('aka');
 
-            inputAzul.value = '';
-            inputRojo.value = '';
-            inputAzul.classList.remove('border-primary');
-            inputRojo.classList.remove('border-primary');
+            if (combatesKumite.length > 0) {
+                indiceCombateKumite = proximoIndiceCombateKumite !== null
+                    ? proximoIndiceCombateKumite
+                    : indiceCombateKumite + 1;
+                cargarSiguienteCombateEnCampos();
+            } else {
+                inputAzul.value = '';
+                inputRojo.value = '';
+                inputAzul.classList.remove('border-primary');
+                inputRojo.classList.remove('border-primary');
+            }
+
             inputAzul.focus();
         }
 
