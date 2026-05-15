@@ -33,6 +33,7 @@ class OrganizacionController extends Controller
         $data = Organizacion::query()
             ->with(['persona', 'estilo'])
             ->withCount('inscripciones')
+            ->withCount('competidores')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('id', $search)

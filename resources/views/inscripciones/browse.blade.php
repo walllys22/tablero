@@ -31,6 +31,9 @@
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-create-organizacion">
                                     <i class="bi bi-building-add"></i> Organizacion
                                 </button>
+                                <a href="{{ route('inscripciones.print', $torneo) }}" class="btn btn-success">
+                                    <i class="bi bi-printer"></i> Imprimir
+                                </a>                                
                                 <a href="{{ route('torneos.index') }}" class="btn btn-warning text-white">
                                     <i class="bi bi-x-lg"></i> Cerrar
                                 </a>

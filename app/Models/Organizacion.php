@@ -29,6 +29,11 @@ class Organizacion extends Model
         return $this->hasMany(InscripcionOrganizacion::class);
     }
 
+    public function competidores()
+    {
+        return $this->hasMany(Competidor::class);
+    }
+
     public function persona()
     {
         return $this->belongsTo(Persona::class);

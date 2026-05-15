@@ -71,6 +71,11 @@ class Persona extends Model
         return $this->hasMany(Organizacion::class);
     }
 
+    public function competidores()
+    {
+        return $this->hasMany(Competidor::class);
+    }
+
     public function torneos()
     {
         return $this->hasMany(Torneo::class);

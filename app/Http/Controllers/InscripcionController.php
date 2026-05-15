@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\InscripcionCompetidor;
+use App\Models\InscripcionCompetidorModalidad;
 use App\Models\InscripcionOrganizacion;
 use App\Models\Organizacion;
 use App\Models\Persona;
@@ -62,6 +63,47 @@ class InscripcionController extends Controller
             ->withQueryString();
 
         return view('inscripciones.list', compact('organizaciones', 'torneo'));
+    }
+
+    public function print(Torneo $torneo)
+    {
+        $detalles = InscripcionCompetidorModalidad::query()
+            ->with([
+                'modalidad',
+                'categoria',
+                'inscripcionCompetidor.persona',
+                'inscripcionCompetidor.inscripcionOrganizacion.organizacion',
+            ])
+            ->whereHas('inscripcionCompetidor', function ($query) use ($torneo) {
+                $query->where('torneo_id', $torneo->id);
+            })
+            ->join('modalidades', 'modalidades.id', '=', 'inscripcion_competidor_modalidades.modalidad_id')
+            ->join('categorias', 'categorias.id', '=', 'inscripcion_competidor_modalidades.categoria_id')
+            ->orderBy('modalidades.nombre')
+            ->orderBy('categorias.edad_desde')
+            ->orderBy('categorias.edad_hasta')
+            ->orderBy('categorias.genero')
+            ->orderBy('categorias.peso_hasta')
+            ->orderBy('categorias.nombre')
+            ->select('inscripcion_competidor_modalidades.*')
+            ->get();
+
+        $modalidades = $detalles
+            ->groupBy('modalidad_id')
+            ->map(function ($items) {
+                return [
+                    'modalidad' => $items->first()->modalidad,
+                    'categorias' => $items->groupBy('categoria_id')->map(function ($categoriaItems) {
+                        return [
+                            'categoria' => $categoriaItems->first()->categoria,
+                            'competidores' => $categoriaItems,
+                        ];
+                    })->values(),
+                ];
+            })
+            ->values();
+
+        return view('inscripciones.print', compact('torneo', 'modalidades'));
     }
 
     public function storeOrganizacion(Request $request, Torneo $torneo)
@@ -169,31 +211,46 @@ class InscripcionController extends Controller
         $torneo->load('persona');
         $inscripcion->load('organizacion.persona');
         $categoriasDisponibles = $this->categoriasQuery($torneo, $request)->get();
-        $generosDisponibles = $categoriasDisponibles
-            ->pluck('genero')
-            ->filter()
-            ->unique()
-            ->values();
-        $categoriaIdsDisponibles = $categoriasDisponibles->pluck('id');
+        $categoriaSeleccionada = $request->filled('categoria_id')
+            ? $categoriasDisponibles->firstWhere('id', (int) $request->input('categoria_id'))
+            : null;
         $personasNoDisponibles = collect();
 
-        if ($categoriaIdsDisponibles->isNotEmpty()) {
+        // Con una categoria especifica, no mostramos competidores que ya estan
+        // inscritos en esa misma categoria del campeonato.
+        if ($categoriaSeleccionada) {
             $personasNoDisponibles = InscripcionCompetidor::where('torneo_id', $torneo->id)
-                ->whereHas('modalidades', function ($query) use ($categoriaIdsDisponibles) {
-                    $query->whereIn('categoria_id', $categoriaIdsDisponibles);
+                ->whereHas('modalidades', function ($query) use ($categoriaSeleccionada) {
+                    $query->where('categoria_id', $categoriaSeleccionada->id);
                 })
                 ->pluck('persona_id');
         }
 
-        $personas = Persona::where('status', 1)
-            ->when($generosDisponibles->isNotEmpty() && ! $generosDisponibles->contains('Mixto'), function ($query) use ($generosDisponibles) {
-                $query->whereIn('gender', $generosDisponibles);
+        $personas = $inscripcion->organizacion->competidores()
+            ->with('persona')
+            ->where('competidores.status', 1)
+            ->whereHas('persona', function ($query) use ($categoriaSeleccionada, $personasNoDisponibles) {
+                $query->where('status', 1)
+                    ->when($categoriaSeleccionada && $categoriaSeleccionada->genero && $categoriaSeleccionada->genero !== 'Mixto', function ($query) use ($categoriaSeleccionada) {
+                        $query->where('gender', $categoriaSeleccionada->genero);
+                    })
+                    ->when($categoriaSeleccionada && $categoriaSeleccionada->edad_desde !== null, function ($query) use ($categoriaSeleccionada) {
+                        $query->whereDate('birth_date', '<=', now()->subYears((int) $categoriaSeleccionada->edad_desde)->toDateString());
+                    })
+                    ->when($categoriaSeleccionada && $categoriaSeleccionada->edad_hasta !== null, function ($query) use ($categoriaSeleccionada) {
+                        $query->whereDate('birth_date', '>=', now()->subYears(((int) $categoriaSeleccionada->edad_hasta) + 1)->addDay()->toDateString());
+                    })
+                    ->when($personasNoDisponibles->isNotEmpty(), function ($query) use ($personasNoDisponibles) {
+                        $query->whereNotIn('id', $personasNoDisponibles);
+                    });
             })
-            ->when($personasNoDisponibles->isNotEmpty(), function ($query) use ($personasNoDisponibles) {
-                $query->whereNotIn('id', $personasNoDisponibles);
-            })
-            ->orderBy('first_name')
-            ->get();
+            ->join('personas', 'personas.id', '=', 'competidores.persona_id')
+            ->orderBy('personas.first_name')
+            ->select('competidores.*')
+            ->get()
+            ->pluck('persona')
+            ->filter()
+            ->values();
         $categorias = $torneo->categorias()
             ->with('modalidad')
             ->when($request->filled('modalidad_id'), function ($query) use ($request) {
@@ -222,9 +279,14 @@ class InscripcionController extends Controller
     {
         abort_unless($inscripcion->torneo_id === $torneo->id, 404);
 
+        $personaIdsOrganizacion = $inscripcion->organizacion->competidores()
+            ->where('status', 1)
+            ->pluck('persona_id')
+            ->all();
+
         $data = $request->validate([
             'persona_ids' => ['required', 'array', 'min:1'],
-            'persona_ids.*' => ['required', 'distinct', Rule::exists('personas', 'id')],
+            'persona_ids.*' => ['required', 'distinct', Rule::exists('personas', 'id'), Rule::in($personaIdsOrganizacion)],
             'modalidades' => ['required', 'array', 'min:1'],
             'modalidades.*.id' => [
                 'required',
@@ -264,6 +326,25 @@ class InscripcionController extends Controller
                 if ($invalidPerson) {
                     return back()
                         ->withErrors(['persona_ids' => 'Todos los competidores deben ser del mismo sexo que la categoria seleccionada.'])
+                        ->withInput();
+                }
+            }
+
+            if ($categoria->edad_desde !== null || $categoria->edad_hasta !== null) {
+                $invalidPerson = $personas->first(function ($persona) use ($categoria) {
+                    if (! $persona->birth_date) {
+                        return true;
+                    }
+
+                    $age = $persona->birth_date->diffInYears(now());
+
+                    return ($categoria->edad_desde !== null && $age < (int) $categoria->edad_desde)
+                        || ($categoria->edad_hasta !== null && $age > (int) $categoria->edad_hasta);
+                });
+
+                if ($invalidPerson) {
+                    return back()
+                        ->withErrors(['persona_ids' => 'Todos los competidores deben estar dentro del rango de edad de la categoria seleccionada.'])
                         ->withInput();
                 }
             }

@@ -18,35 +18,66 @@
                             return $competidor->modalidades->sum('costo');
                         });
                         $totalGeneral = $totalCompetidores + (float) $inscripcion->costo;
+                        $categoriasInscritas = $inscripcion->competidores
+                            ->flatMap(function ($competidor) {
+                                return $competidor->modalidades->map(function ($detalle) use ($competidor) {
+                                    return [
+                                        'competidor' => $competidor,
+                                        'detalle' => $detalle,
+                                        'categoria_id' => $detalle->categoria_id,
+                                        'categoria_nombre' => $detalle->categoria->nombre ?? 'Sin categoria',
+                                        'modalidad_nombre' => $detalle->modalidad->nombre ?? 'Sin modalidad',
+                                    ];
+                                });
+                            })
+                            ->groupBy('categoria_id');
                     @endphp
                     <tr>
                         <td style="vertical-align: top;">
                             <strong>{{ $inscripcion->organizacion->nombre }}</strong><br>
-                            <small class="text-muted">ID inscripcion: {{ $inscripcion->id }}</small>
                         </td>
                         <td style="text-align: center; vertical-align: top;">
                             <label class="label label-primary">{{ number_format((float) $inscripcion->costo, 2) }}</label>
                         </td>
                         <td style="vertical-align: top;">
-                            @forelse ($inscripcion->competidores as $competidor)
-                                <div class="mb-2 pb-2 border-bottom">
-                                    <strong>{{ $competidor->persona->first_name }}</strong>
-                                    <span class="label label-success ms-1">{{ number_format((float) $competidor->total, 2) }}</span>
-                                    <ul class="mb-0 mt-1">
-                                        @foreach ($competidor->modalidades as $detalle)
-                                            <li>
-                                                @if ($detalle->categoria)
-                                                    {{ $detalle->categoria->nombre }} /
-                                                @endif
-                                                {{ $detalle->modalidad->nombre }}:
-                                                {{ number_format((float) $detalle->costo, 2) }}
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @empty
+                            @if ($categoriasInscritas->isNotEmpty())
+                                @foreach ($categoriasInscritas as $categoriaId => $itemsCategoria)
+                                    @php
+                                        $firstItem = $itemsCategoria->first();
+                                        $collapseId = 'categoria-inscripcion-' . $inscripcion->id . '-' . ($categoriaId ?: 'sin-categoria');
+                                        $competidoresCategoria = $itemsCategoria
+                                            ->pluck('competidor')
+                                            ->unique('id')
+                                            ->values();
+                                    @endphp
+                                    <div class="mb-2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary w-100 d-flex align-items-center justify-content-between"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#{{ $collapseId }}"
+                                            aria-expanded="false"
+                                            aria-controls="{{ $collapseId }}">
+                                            <span>{{ $firstItem['categoria_nombre'] }} - {{ $competidoresCategoria->count() }} competidor(es)</span>
+                                            <i class="bi bi-chevron-down"></i>
+                                        </button>
+                                        <div class="collapse mt-2" id="{{ $collapseId }}">
+                                            @foreach ($competidoresCategoria as $competidor)
+                                                @php
+                                                    $detallesCompetidor = $itemsCategoria->where('competidor.id', $competidor->id);
+                                                    $totalCategoriaCompetidor = $detallesCompetidor->sum(function ($itemCategoria) {
+                                                        return (float) $itemCategoria['detalle']->costo;
+                                                    });
+                                                @endphp
+                                                <div class="mb-2 pb-2 border-bottom d-flex justify-content-between align-items-center gap-2">
+                                                    <strong>{{ $competidor->persona->first_name }}</strong>
+                                                    <span>{{ number_format($totalCategoriaCompetidor, 2) }}</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @else
                                 <span class="text-muted">Sin competidores inscritos</span>
-                            @endforelse
+                            @endif
                         </td>
                         <td style="text-align: center; vertical-align: top;">
                             <label class="label label-info">{{ number_format((float) $totalCompetidores, 2) }}</label>
@@ -55,15 +86,17 @@
                             <label class="label label-success">{{ number_format((float) $totalGeneral, 2) }}</label>
                         </td>
                         <td style="text-align: center; vertical-align: top;">
-                            <button type="button" class="btn btn-sm btn-primary" title="Recibo" data-bs-toggle="modal" data-bs-target="#modal-recibo-organizacion-{{ $inscripcion->id }}">
-                                <i class="bi bi-receipt"></i>
-                            </button>
-                            <a href="{{ route('inscripciones.participantes', [$torneo, $inscripcion]) }}" class="btn btn-sm btn-success" title="Participantes">
-                                <i class="bi bi-person-plus"></i>
-                            </a>
-                            <button type="button" class="btn btn-sm btn-danger" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete-organizacion-{{ $inscripcion->id }}">
-                                <i class="bi bi-trash"></i>
-                            </button>
+                            <div class="d-flex flex-wrap justify-content-center gap-1" style="min-width: 96px;">
+                                <button type="button" class="btn btn-sm btn-primary p-1" title="Recibo" data-bs-toggle="modal" data-bs-target="#modal-recibo-organizacion-{{ $inscripcion->id }}">
+                                    <i class="bi bi-receipt"></i>
+                                </button>
+                                <a href="{{ route('inscripciones.participantes', [$torneo, $inscripcion]) }}" class="btn btn-sm btn-success p-1" title="Participantes">
+                                    <i class="bi bi-person-plus"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-danger p-1" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete-organizacion-{{ $inscripcion->id }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 @empty

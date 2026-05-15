@@ -5,7 +5,7 @@
                 <tr>
                     <th style="text-align: center">Organizacion</th>
                     <th style="text-align: center">Responsable</th>
-                    <th style="text-align: center">Inscripciones</th>
+                    <th style="text-align: center">Competidores</th>
                     <th style="text-align: center">Estado</th>
                     <th style="text-align: center">Acciones</th>
                 </tr>
@@ -37,14 +37,15 @@
                             @if ($item->persona)
                                 <strong>{{ $item->persona->first_name }}</strong><br>
                                 <small class="text-muted">
-                                    <i class="bi bi-telephone-fill"></i> {{ $item->persona->phone ? 'Telefono: ' . $item->persona->phone : 'Sin telefono' }}
+                                    <i class="bi bi-telephone-fill"></i>
+                                    {{ $item->persona->phone ? 'Telefono: ' . $item->persona->phone : 'Sin telefono' }}
                                 </small>
                             @else
                                 <span class="text-muted">Sin persona</span>
                             @endif
                         </td>
                         <td style="text-align: center; vertical-align: middle;">
-                            <label class="label label-info">{{ $item->inscripciones_count }}</label>
+                            <label class="label label-info">{{ $item->competidores_count }}</label>
                         </td>
                         <td style="text-align: center; vertical-align: middle;">
                             @if ($item->status == 1)
@@ -65,7 +66,8 @@
                                     class="d-inline">
                                     @csrf
                                     @method('PATCH')
-                                    <button type="submit" title="Activar" class="btn btn-sm btn-warning text-white p-1">
+                                    <button type="submit" title="Activar"
+                                        class="btn btn-sm btn-warning text-white p-1">
                                         <i class="bi bi-toggle-off"></i>
                                     </button>
                                 </form>
@@ -84,6 +86,9 @@
                                 title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete"
                                 class="btn btn-sm btn-danger p-1">
                                 <i class="bi bi-trash"></i>
+                            </a>
+                            <a href="{{ route('organizaciones.competidores.index', $item) }}" title="Competidores" class="btn btn-sm btn-success p-1 mt-2 ms-1 me-1">
+                                <i class="bi bi-person-check"></i>
                             </a>
                         </td>
                     </tr>
@@ -196,14 +201,14 @@
                                     <div class="fw-bold" style="line-height: 1;">Contacto</div>
                                     <div class="fw-semibold" style="font-size: 14px;">
                                         <i class="bi bi-telephone-fill"></i>
-                                        {{ $item->persona ? $item->persona->phone ? 'Telefono: ' . $item->persona->phone: 'Sin Registro' : 'Sin Registro' }}
+                                        {{ $item->persona ? ($item->persona->phone ? 'Telefono: ' . $item->persona->phone : 'Sin Registro') : 'Sin Registro' }}
                                         &nbsp;&nbsp;&nbsp;&nbsp;
                                         <i class="bi bi-envelope-fill"></i>
-                                        {{ $item->persona ? $item->persona->email ? 'Email: ' . $item->persona->email : 'Sin Registro' : 'Sin Registro' }}
+                                        {{ $item->persona ? ($item->persona->email ? 'Email: ' . $item->persona->email : 'Sin Registro') : 'Sin Registro' }}
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="row g-2 p-1">
                                 <div class="col-md-9">
                                     <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
@@ -219,15 +224,15 @@
                                         <div class="fw-semibold" style="font-size: 14px;">
                                             {{ $item->status == 1 ? 'Activo' : 'Inactivo' }}</div>
                                     </div>
-                                </div>                            
+                                </div>
                             </div>
                             <div class="row g-2 p-1">
                                 <div class="col-md-6">
                                     <div class="h-100 px-3 py-2" style="background: #f8f8f8; border-radius: 8px;">
-                                        <div class="fw-bold" style="line-height: 1;">Inscripciones
+                                        <div class="fw-bold" style="line-height: 1;">Competidores
                                         </div>
                                         <div class="fw-semibold" style="font-size: 14px;">
-                                            {{ $item->inscripciones_count }}</div>
+                                            {{ $item->competidores_count }}</div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -238,7 +243,7 @@
                                             {{ $item->created_at ? $item->created_at->format('d/m/Y') : 'No registrada' }}
                                         </div>
                                     </div>
-                                </div>                                
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -339,7 +344,8 @@
                                     <input type="checkbox" name="status" id="status_edit_{{ $item->id }}"
                                         value="1" class="form-check-input"
                                         {{ old('editing_organizacion') == $item->id ? (old('status') ? 'checked' : '') : ($item->status == 1 ? 'checked' : '') }}>
-                                    <label for="status_edit_{{ $item->id }}" class="form-check-label">Activo</label>
+                                    <label for="status_edit_{{ $item->id }}"
+                                        class="form-check-label">Activo</label>
                                 </div>
                             </div>
 

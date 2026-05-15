@@ -78,18 +78,23 @@
                                 <input type="hidden" name="categoria_filtro_id" value="{{ request('categoria_id') }}">
                                 <div class="mb-3">
                                     <label for="persona_ids" class="form-label">Competidores</label>
-                                    <select name="persona_ids[]" id="persona_ids" class="form-select @error('persona_ids') is-invalid @enderror @error('persona_ids.*') is-invalid @enderror" multiple required>
-                                        @foreach ($personas as $persona)
-                                            <option value="{{ $persona->id }}" {{ collect(old('persona_ids', []))->contains((string) $persona->id) ? 'selected' : '' }}>
-                                                {{ $persona->first_name }}{{ $persona->ci ? ' - CI ' . $persona->ci : '' }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <div id="persona_ids" class="border rounded px-2 py-2 @error('persona_ids') border-danger @enderror @error('persona_ids.*') border-danger @enderror" style="height: 96px; overflow-y: auto;">
+                                        @forelse ($personas as $persona)
+                                            <div class="form-check py-1">
+                                                <input type="checkbox" name="persona_ids[]" id="persona_id_{{ $persona->id }}" value="{{ $persona->id }}" class="form-check-input" {{ collect(old('persona_ids', []))->contains((string) $persona->id) ? 'checked' : '' }}>
+                                                <label for="persona_id_{{ $persona->id }}" class="form-check-label">
+                                                    {{ $persona->first_name }}{{ $persona->birth_date ? ' - ' . $persona->birth_date->diffInYears(now()) . ' años' : '' }}
+                                                </label>
+                                            </div>
+                                        @empty
+                                            <div class="text-muted">No hay competidores disponibles para el filtro seleccionado.</div>
+                                        @endforelse
+                                    </div>
                                     @error('persona_ids')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
                                     @error('persona_ids.*')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
 
@@ -157,7 +162,9 @@
                                 <tbody>
                                     @forelse ($competidores as $competidor)
                                         <tr>
-                                            <td>{{ $competidor->persona->first_name }}{{ $competidor->persona->ci ? ' - CI ' . $competidor->persona->ci : '' }}</td>
+                                            <td>
+                                                {{ $competidor->persona->first_name }}{{ $competidor->persona->birth_date ? ' - ' . $competidor->persona->birth_date->diffInYears(now()) . ' años' : '' }}
+                                            </td>
                                             <td>
                                                 @foreach ($competidor->modalidades as $detalle)
                                                     <div>

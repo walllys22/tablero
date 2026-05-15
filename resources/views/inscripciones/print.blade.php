@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Imprimir modalidades')
+@section('title', 'Imprimir competidores inscritos')
 
 @section('content')
     @php
@@ -18,7 +18,7 @@
             margin-bottom: 14px;
         }
 
-        .modalidades-print {
+        .inscripciones-print {
             background: #fff;
             color: #24292f;
             font-family: Arial, Helvetica, sans-serif;
@@ -49,7 +49,6 @@
             color: #000;
             font-size: 16px;
             font-weight: 700;
-            letter-spacing: 0;
             line-height: 1.35;
             margin: 0;
             text-align: center;
@@ -63,47 +62,47 @@
             text-align: left;
         }
 
-        .modalidades-table {
+        .modalidad-block {
+            margin-top: 16px;
+            break-inside: avoid;
+        }
+
+        .modalidad-title {
+            background: #eeeeee;
+            border: 1px solid #cfcfcf;
+            color: #000;
+            font-weight: 700;
+            padding: 8px 10px;
+            text-transform: uppercase;
+        }
+
+        .categoria-title {
+            border: 1px solid #dee2e6;
+            border-top: 0;
+            font-weight: 700;
+            padding: 8px 10px;
+        }
+
+        .competidores-table {
             border-collapse: collapse;
-            margin-top: 14px;
             width: 100%;
         }
 
-        .modalidades-table th,
-        .modalidades-table td {
+        .competidores-table th,
+        .competidores-table td {
             border: 1px solid #dee2e6;
-            padding: 10px 7px;
+            padding: 8px 10px;
             text-align: left;
             vertical-align: middle;
         }
 
-        .modalidades-table th {
+        .competidores-table th {
             color: #343a40;
             font-weight: 700;
         }
 
-        .modalidades-table .modalidad-col {
-            width: 30%;
-        }
-
-        .modalidades-table .modalidad-name {
-            font-weight: 700;
-        }
-
-        .modalidad-name {
-            font-weight: 700;
-            color: #24292f;
-        }
-
-        .categoria-line {
-            line-height: 1.55;
-        }
-
-        .categoria-line {
-            line-height: 1.55;
-        }
-
         .empty-row {
+            padding: 14px;
             text-align: center;
         }
 
@@ -136,20 +135,8 @@
                 width: 100% !important;
             }
 
-            .modalidades-print {
+            .inscripciones-print {
                 padding: 0;
-            }
-
-            .collapse:not(.show) {
-                display: block !important;
-            }
-
-            .modalidad-toggle .bi-chevron-down {
-                display: none !important;
-            }
-
-            .print-header {
-                break-inside: avoid;
             }
         }
     </style>
@@ -160,7 +147,7 @@
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <h1 class="h3 mb-0 text-dark">
-                            <i class="bi bi-printer"></i> Imprimir modalidades
+                            <i class="bi bi-printer"></i> Imprimir competidores inscritos
                         </h1>
                         <small class="text-muted">{{ $torneo->nombre ?: 'Torneo sin nombre' }}</small>
                     </div>
@@ -169,7 +156,7 @@
                         <button type="button" class="btn btn-success me-2" onclick="window.print()">
                             <i class="bi bi-printer"></i> Imprimir
                         </button>
-                        <a href="{{ route('modalidades.index', ['torneo' => $torneo, 'return' => request('return')]) }}" class="btn btn-warning text-white">
+                        <a href="{{ route('inscripciones.index', $torneo) }}" class="btn btn-warning text-white">
                             <i class="bi bi-arrow-left"></i> Volver
                         </a>
                     </div>
@@ -177,7 +164,7 @@
             </div>
         </div>
 
-        <section class="modalidades-print">
+        <section class="inscripciones-print">
             <div class="print-header">
                 <div>
                     <img src="{{ $logo }}" class="print-logo" alt="Logo torneo" onerror="this.style.visibility='hidden';">
@@ -185,7 +172,7 @@
 
                 <h2 class="print-title">
                     TORNEO - {{ $torneo->nombre ?: 'Torneo sin nombre' }}<br>
-                    MODALIDADES&nbsp;&nbsp;-&nbsp;&nbsp;CATEGORIAS
+                    COMPETIDORES INSCRITOS
                 </h2>
 
                 <div class="print-meta">
@@ -196,38 +183,38 @@
                 </div>
             </div>
 
-            <table class="modalidades-table">
-                <thead>
-                    <tr>
-                        <th class="modalidad-col">Modalidad</th>
-                        <th>Categorias</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($modalidades as $modalidad)
-                        <tr>
-                            <td class="modalidad-name">
-                                {{ $modalidad->nombre }}
-                            </td>
-                            <td>
-                                <div>
-                                    @forelse ($modalidad->categorias as $categoria)
-                                        <div class="categoria-line">
-                                            <strong>{{ $formatCategoriaNombre($categoria, $modalidad) }}</strong>
-                                        </div>
-                                    @empty
-                                        <span>Sin categorias</span>
-                                    @endforelse
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="2" class="empty-row">No hay modalidades registradas</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+            @forelse ($modalidades as $modalidadItem)
+                <div class="modalidad-block">
+                    <div class="modalidad-title">
+                        Modalidad: {{ $modalidadItem['modalidad']->nombre ?? 'Sin modalidad' }}
+                    </div>
+
+                    @foreach ($modalidadItem['categorias'] as $categoriaItem)
+                        <div class="categoria-title">
+                            Categoria: {{ $formatCategoriaNombre($categoriaItem['categoria'], $modalidadItem['modalidad']) }}
+                        </div>
+
+                        <table class="competidores-table">
+                            <thead>
+                                <tr>
+                                    <th>Competidor</th>
+                                    <th>Organizacion</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($categoriaItem['competidores'] as $detalle)
+                                    <tr>
+                                        <td>{{ $detalle->inscripcionCompetidor->persona->first_name ?? 'Sin competidor' }}</td>
+                                        <td>{{ $detalle->inscripcionCompetidor->inscripcionOrganizacion->organizacion->nombre ?? 'Sin organizacion' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @endforeach
+                </div>
+            @empty
+                <div class="empty-row">No hay competidores inscritos</div>
+            @endforelse
         </section>
     </div>
 @endsection
