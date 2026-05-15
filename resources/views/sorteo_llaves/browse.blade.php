@@ -90,6 +90,7 @@
                         <table class="table table-bordered table-hover align-middle mb-0">
                             <thead>
                                 <tr>
+                                    <th style="width: 70px; text-align: center;">Nro.</th>
                                     <th>Modalidad</th>
                                     <th>Categoria</th>
                                     <th style="width: 120px; text-align: center;">Area</th>
@@ -98,8 +99,14 @@
                                 </tr>
                             </thead>
                             <tbody class="js-sorteos-tbody">
+                                @php $numeroPorModalidad = []; @endphp
                                 @forelse ($sorteos as $sorteo)
+                                    @php
+                                        $modalidadKey = $sorteo->modalidad_id ?: 'sin-modalidad';
+                                        $numeroPorModalidad[$modalidadKey] = ($numeroPorModalidad[$modalidadKey] ?? 0) + 1;
+                                    @endphp
                                     <tr class="js-sorteo-row" data-search="{{ mb_strtolower(($sorteo->modalidad->nombre ?? '') . ' ' . ($sorteo->categoria->nombre ?? '')) }}">
+                                        <td class="text-center fw-bold">{{ $numeroPorModalidad[$modalidadKey] }}</td>
                                         <td>{{ $sorteo->modalidad->nombre ?? 'Sin modalidad' }}</td>
                                         <td>{{ $sorteo->categoria->nombre ?? 'Sin categoria' }}</td>
                                         <td class="text-center">
@@ -130,11 +137,11 @@
                                     </tr>
                                 @empty
                                     <tr class="js-sorteos-empty">
-                                        <td colspan="5" class="text-center text-muted">No hay categorias sorteadas.</td>
+                                        <td colspan="6" class="text-center text-muted">No hay categorias sorteadas.</td>
                                     </tr>
                                 @endforelse
                                 <tr class="js-sorteos-no-results d-none">
-                                    <td colspan="5" class="text-center text-muted">No hay categorias sorteadas que coincidan con la busqueda.</td>
+                                    <td colspan="6" class="text-center text-muted">No hay categorias sorteadas que coincidan con la busqueda.</td>
                                 </tr>
                             </tbody>
                         </table>
