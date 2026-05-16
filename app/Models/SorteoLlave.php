@@ -18,12 +18,14 @@ class SorteoLlave extends Model
         'seed',
         'llaves',
         'area',
+        'orden',
     ];
 
     protected $casts = [
         'seed' => 'integer',
         'llaves' => 'array',
         'area' => 'integer',
+        'orden' => 'integer',
     ];
 
     public function torneo()

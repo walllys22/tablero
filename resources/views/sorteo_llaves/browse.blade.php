@@ -9,6 +9,11 @@
                 {{ session('status') }}
             </div>
         @endif
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                {{ $errors->first() }}
+            </div>
+        @endif
 
         <div class="card shadow-sm mb-3">
             <div class="card-body d-flex justify-content-between align-items-center">
@@ -27,7 +32,7 @@
         <div class="card shadow-sm mb-3">
             <div class="card-body">
                 <form method="GET" action="{{ route('sorteo-llaves.index', $torneo) }}" id="form-sortear-llave" class="row g-3 align-items-end">
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <label for="modalidad_id" class="form-label">Modalidad</label>
                         <select name="modalidad_id" id="modalidad_id" class="form-select" required>
                             <option value="">Seleccione</option>
@@ -38,7 +43,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <label for="categoria_id" class="form-label">Categoria</label>
                         <select name="categoria_id" id="categoria_id" class="form-select" required>
                             <option value="">Seleccione</option>
@@ -51,6 +56,13 @@
                                     </option>
                                 @endforeach
                             @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="sistema_sorteo" class="form-label">Sistema</label>
+                        <select name="sistema_sorteo" id="sistema_sorteo" class="form-select" required>
+                            <option value="eliminacion_directa" {{ request('sistema_sorteo', 'eliminacion_directa') === 'eliminacion_directa' ? 'selected' : '' }}>Eliminacion directa</option>
+                            <option value="round_robin" {{ request('sistema_sorteo') === 'round_robin' ? 'selected' : '' }}>Round Robin</option>
                         </select>
                     </div>
                     <div class="col-md-2 d-grid">
@@ -66,7 +78,12 @@
 
         <div id="sorteos-list-wrapper">
             <div class="card shadow-sm mb-3">
-                <div class="card-header fw-bold">Categorias sorteadas</div>
+                <div class="card-header d-flex justify-content-between align-items-center gap-2">
+                    <span class="fw-bold">Categorias sorteadas</span>
+                    <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal" data-bs-target="#modal-orden-sorteos" {{ $sorteos->isEmpty() ? 'disabled' : '' }}>
+                        <i class="bi bi-sort-down"></i> Ordenar
+                    </button>
+                </div>
                 <div class="card-body">
                     <div class="row g-2 align-items-end mb-3">
                         <div class="col-md-8">
@@ -266,6 +283,81 @@
                     </div>
                 </div>
             @endforeach
+
+            <div class="modal fade" id="modal-orden-sorteos" tabindex="-1" aria-labelledby="modalOrdenSorteosLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <form method="POST" action="{{ route('sorteo-llaves.orden.update', $torneo) }}" id="form-orden-sorteos">
+                        @csrf
+                        @method('PATCH')
+
+                        <div class="modal-content">
+                            <div class="modal-header bg-light">
+                                <h5 class="modal-title fw-bold" id="modalOrdenSorteosLabel">
+                                    <i class="bi bi-sort-down"></i> Ordenar categorias sorteadas
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            </div>
+                            <div class="modal-body">
+                                @error('orden')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                                <div class="alert alert-info">
+                                    Arrastre las categorias para definir el orden de competencia. Las categorias con combates realizados quedan bloqueadas.
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-bordered align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 44px;"></th>
+                                                <th style="width: 70px; text-align: center;">#</th>
+                                                <th>Modalidad / categoria</th>
+                                                <th style="width: 130px; text-align: center;">Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="sorteos-orden-list">
+                                            @foreach ($sorteos as $index => $sorteo)
+                                                @php
+                                                    $bloqueado = (int) ($sorteo->resultados_kumite_count ?? 0) > 0;
+                                                @endphp
+                                                <tr class="js-orden-row {{ $bloqueado ? 'table-light' : '' }}"
+                                                    data-id="{{ $sorteo->id }}"
+                                                    data-locked="{{ $bloqueado ? '1' : '0' }}"
+                                                    draggable="{{ $bloqueado ? 'false' : 'true' }}">
+                                                    <td class="text-center text-muted">
+                                                        <i class="bi bi-grip-vertical {{ $bloqueado ? 'opacity-25' : '' }}"></i>
+                                                        <input type="hidden" name="orden[]" value="{{ $sorteo->id }}">
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span class="badge bg-primary js-orden-numero">{{ $index + 1 }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="fw-semibold">{{ $sorteo->modalidad->nombre ?? 'Sin modalidad' }}</div>
+                                                        <small class="text-muted">{{ $sorteo->categoria->nombre ?? 'Sin categoria' }}</small>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        @if ($bloqueado)
+                                                            <span class="badge bg-secondary">Bloqueado</span>
+                                                        @else
+                                                            <span class="badge bg-success">Movible</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg"></i> Guardar orden
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
 
         @if ($categoria)
@@ -375,6 +467,18 @@
             display: block;
             color: #6c757d;
             margin-top: 2px;
+        }
+
+        .js-orden-row:not([data-locked="1"]) {
+            cursor: grab;
+        }
+
+        .js-orden-row.dragging {
+            opacity: .45;
+        }
+
+        .js-orden-row[data-locked="1"] {
+            cursor: not-allowed;
         }
     </style>
 @endpush
@@ -573,6 +677,70 @@
                 });
                 render();
             }
+
+            function updateOrdenNumbers() {
+                document.querySelectorAll('#sorteos-orden-list .js-orden-row').forEach(function (row, index) {
+                    const badge = row.querySelector('.js-orden-numero');
+
+                    if (badge) {
+                        badge.textContent = index + 1;
+                    }
+                });
+            }
+
+            function closestOrdenRow(target) {
+                return target.closest('#sorteos-orden-list .js-orden-row');
+            }
+
+            let draggedOrdenRow = null;
+
+            document.addEventListener('dragstart', function (event) {
+                const row = closestOrdenRow(event.target);
+
+                if (!row) {
+                    return;
+                }
+
+                if (row.dataset.locked === '1') {
+                    event.preventDefault();
+                    return;
+                }
+
+                draggedOrdenRow = row;
+                row.classList.add('dragging');
+                event.dataTransfer.effectAllowed = 'move';
+            });
+
+            document.addEventListener('dragover', function (event) {
+                const row = closestOrdenRow(event.target);
+
+                if (!row || !draggedOrdenRow || row === draggedOrdenRow || row.dataset.locked === '1') {
+                    return;
+                }
+
+                event.preventDefault();
+
+                const bounds = row.getBoundingClientRect();
+                const insertAfter = event.clientY > bounds.top + (bounds.height / 2);
+
+                row.parentNode.insertBefore(draggedOrdenRow, insertAfter ? row.nextSibling : row);
+                updateOrdenNumbers();
+            });
+
+            document.addEventListener('dragend', function () {
+                if (draggedOrdenRow) {
+                    draggedOrdenRow.classList.remove('dragging');
+                    draggedOrdenRow = null;
+                }
+
+                updateOrdenNumbers();
+            });
+
+            document.addEventListener('shown.bs.modal', function (event) {
+                if (event.target.id === 'modal-orden-sorteos') {
+                    updateOrdenNumbers();
+                }
+            });
 
             document.addEventListener('change', function (event) {
                 if (!event.target.classList.contains('js-confirm-delete-sorteo')) {

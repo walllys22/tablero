@@ -67,7 +67,7 @@
 
     <div class="modal fade" id="modal-create" tabindex="-1" aria-labelledby="modalCreateLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <form method="POST" action="{{ route('usuarios.store') }}">
+            <form method="POST" action="{{ route('usuarios.store') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-content">
                     <div class="modal-header bg-success text-white">
@@ -86,10 +86,15 @@
                                 <input type="email" name="email" id="email" value="{{ old('email') }}" class="form-control @if(!old('editing_usuario')) @error('email') is-invalid @enderror @endif" maxlength="255" required>
                                 @if (!old('editing_usuario')) @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror @endif
                             </div>
+                            <div class="col-md-12">
+                                <label for="imagen" class="form-label">Imagen</label>
+                                <input type="file" name="imagen" id="imagen" class="form-control @if(!old('editing_usuario')) @error('imagen') is-invalid @enderror @endif" accept="image/jpeg,image/png,image/webp">
+                                @if (!old('editing_usuario')) @error('imagen')<div class="invalid-feedback">{{ $message }}</div>@enderror @endif
+                            </div>
                             <div class="col-md-6">
                                 <label for="password" class="form-label">Contrasena</label>
                                 <div class="input-group">
-                                    <input type="password" name="password" id="password" class="form-control @if(!old('editing_usuario')) @error('password') is-invalid @enderror @endif" required>
+                                    <input type="password" name="password" id="password" class="form-control @if(!old('editing_usuario')) @error('password') is-invalid @enderror @endif" autocomplete="new-password" required>
                                     <button type="button" class="btn btn-outline-secondary js-toggle-password" data-target="password" aria-label="Ver contrasena">
                                         <i class="bi bi-eye"></i>
                                     </button>
@@ -99,7 +104,7 @@
                             <div class="col-md-6">
                                 <label for="password_confirmation" class="form-label">Confirmar contrasena</label>
                                 <div class="input-group">
-                                    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" required>
+                                    <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" autocomplete="new-password" required>
                                     <button type="button" class="btn btn-outline-secondary js-toggle-password" data-target="password_confirmation" aria-label="Ver contrasena">
                                         <i class="bi bi-eye"></i>
                                     </button>

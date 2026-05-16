@@ -17,10 +17,14 @@ class SorteoLlaveController extends Controller
         $competidores = collect();
         $llaves = [];
         $seed = (int) $request->input('seed', random_int(100000, 999999));
+        $sistemaSorteo = $request->input('sistema_sorteo') === 'round_robin'
+            ? 'round_robin'
+            : 'eliminacion_directa';
         $sorteos = SorteoLlave::with(['modalidad', 'categoria'])
             ->withCount('resultadosKumite')
             ->where('torneo_id', $torneo->id)
-            ->latest()
+            ->orderByRaw('COALESCE(orden, 999999)')
+            ->orderBy('id')
             ->get();
         $this->asignarAreaUnica($torneo, $sorteos);
         $sorteoActual = null;
@@ -44,7 +48,9 @@ class SorteoLlaveController extends Controller
                 }
 
                 if ($request->boolean('sortear') && ! $sorteoActual && $competidores->count() >= 2) {
-                    $llaves = $this->crearLlaves($competidores, $seed);
+                    $llaves = $sistemaSorteo === 'round_robin'
+                        ? $this->crearLlavesRoundRobin($competidores, $seed)
+                        : $this->crearLlaves($competidores, $seed);
                     $sorteoActual = SorteoLlave::create([
                         'torneo_id' => $torneo->id,
                         'modalidad_id' => $categoria->modalidad_id,
@@ -52,11 +58,13 @@ class SorteoLlaveController extends Controller
                         'seed' => $seed,
                         'llaves' => $llaves,
                         'area' => ((int) ($torneo->cantidad_areas ?? 1)) === 1 ? 1 : null,
+                        'orden' => $this->siguienteOrden($torneo),
                     ]);
                     $sorteos = SorteoLlave::with(['modalidad', 'categoria'])
                         ->withCount('resultadosKumite')
                         ->where('torneo_id', $torneo->id)
-                        ->latest()
+                        ->orderByRaw('COALESCE(orden, 999999)')
+                        ->orderBy('id')
                         ->get();
                     $this->asignarAreaUnica($torneo, $sorteos);
 
@@ -140,6 +148,51 @@ class SorteoLlaveController extends Controller
         ]);
 
         return view('sorteo_llaves.resultados', compact('torneo', 'sorteo'));
+    }
+
+    public function updateOrden(Request $request, Torneo $torneo)
+    {
+        $data = $request->validate([
+            'orden' => ['required', 'array', 'min:1'],
+            'orden.*' => ['required', 'integer', 'distinct'],
+        ]);
+
+        $sorteos = SorteoLlave::withCount('resultadosKumite')
+            ->where('torneo_id', $torneo->id)
+            ->orderByRaw('COALESCE(orden, 999999)')
+            ->orderBy('id')
+            ->get()
+            ->keyBy('id');
+        $ids = collect($data['orden'])->map(fn ($id) => (int) $id)->values();
+
+        abort_unless($ids->count() === $sorteos->count() && $ids->diff($sorteos->keys())->isEmpty(), 422);
+
+        $ordenActual = $sorteos->keys()->values();
+        $bloqueados = $sorteos->filter(fn ($sorteo) => (int) $sorteo->resultados_kumite_count > 0);
+
+        foreach ($bloqueados as $sorteo) {
+            if ($ordenActual->search($sorteo->id) !== $ids->search($sorteo->id)) {
+                return back()->withErrors([
+                    'orden' => 'No se puede reordenar una categoria que tiene combates realizados o en curso.',
+                ]);
+            }
+        }
+
+        foreach ($ids as $index => $id) {
+            $sorteo = $sorteos->get($id);
+
+            if ((int) $sorteo->resultados_kumite_count > 0) {
+                continue;
+            }
+
+            $sorteo->update([
+                'orden' => $index + 1,
+            ]);
+        }
+
+        return redirect()
+            ->route('sorteo-llaves.index', $torneo)
+            ->with('status', 'Orden de categorias actualizado correctamente.');
     }
 
     public function updateArea(Request $request, Torneo $torneo, SorteoLlave $sorteo)
@@ -295,6 +348,13 @@ class SorteoLlaveController extends Controller
         });
     }
 
+    private function siguienteOrden(Torneo $torneo): int
+    {
+        $sorteos = SorteoLlave::where('torneo_id', $torneo->id);
+
+        return max((int) $sorteos->max('orden'), (int) $sorteos->count()) + 1;
+    }
+
     private function modalidadesDisponiblesParaSorteo(Torneo $torneo): array
     {
         $categoriasSorteadas = SorteoLlave::where('torneo_id', $torneo->id)
@@ -370,6 +430,7 @@ class SorteoLlaveController extends Controller
 
         $rondas = [[
             'nombre' => $this->nombreRonda($tamanoLlave),
+            'sistema' => 'eliminacion_directa',
             'combates' => $this->ordenarSorteo($primeraRonda, $seed, 'combates'),
         ]];
 
@@ -377,6 +438,7 @@ class SorteoLlaveController extends Controller
         while ($combates >= 1) {
             $rondas[] = [
                 'nombre' => $combates === 1 ? 'Final' : $this->nombreRonda($combates * 2),
+                'sistema' => 'eliminacion_directa',
                 'combates' => collect(range(1, $combates))->map(function () {
                     return [
                         'a' => null,
@@ -390,6 +452,29 @@ class SorteoLlaveController extends Controller
         }
 
         return $rondas;
+    }
+
+    private function crearLlavesRoundRobin($competidores, int $seed): array
+    {
+        $participantes = $this->ordenarSorteo($competidores, $seed, 'round-robin-competidores');
+        $combates = collect();
+
+        for ($i = 0; $i < $participantes->count(); $i++) {
+            for ($j = $i + 1; $j < $participantes->count(); $j++) {
+                $combates->push([
+                    'a' => $participantes[$i],
+                    'b' => $participantes[$j],
+                    'bye' => false,
+                    'round_robin' => true,
+                ]);
+            }
+        }
+
+        return [[
+            'nombre' => 'Round Robin',
+            'sistema' => 'round_robin',
+            'combates' => $this->ordenarSorteo($combates, $seed, 'round-robin-combates'),
+        ]];
     }
 
     private function ordenarSorteo($items, int $seed, string $salt)

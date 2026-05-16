@@ -13,9 +13,19 @@
             </thead>
             <tbody>
                 @forelse ($data as $item)
+                    @php
+                        $imagenUsuario = $item->imagen
+                            ? asset('storage/' . ltrim($item->imagen, '/'))
+                            : asset('images/icono.png');
+                    @endphp
                     <tr>
                         <td class="text-center">{{ $item->id }}</td>
-                        <td>{{ $item->name }}</td>
+                        <td>
+                            <div class="usuario-name-cell">
+                                <img src="{{ $imagenUsuario }}" alt="{{ $item->name }}" onerror="this.src='{{ asset('images/icono.png') }}'">
+                                <span>{{ $item->name }}</span>
+                            </div>
+                        </td>
                         <td>{{ $item->email }}</td>
                         <td>
                             @forelse ($item->roles as $role)
@@ -69,6 +79,34 @@
     </div>
 </div>
 
+<style>
+    .usuario-name-cell {
+        align-items: center;
+        display: flex;
+        gap: 10px;
+    }
+
+    .usuario-name-cell img,
+    .usuario-edit-img,
+    .usuario-view-img {
+        background: #f8f9fa;
+        border: 1px solid #e5e7eb;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .usuario-name-cell img {
+        height: 42px;
+        width: 42px;
+    }
+
+    .usuario-edit-img,
+    .usuario-view-img {
+        height: 82px;
+        width: 82px;
+    }
+</style>
+
 <div class="col-md-12">
     <div class="row align-items-center">
         <div class="col-md-4" style="overflow-x:auto">
@@ -85,6 +123,11 @@
 </div>
 
 @foreach ($data as $item)
+    @php
+        $imagenUsuario = $item->imagen
+            ? asset('storage/' . ltrim($item->imagen, '/'))
+            : asset('images/icono.png');
+    @endphp
     <div class="modal fade" id="modal-view-user-{{ $item->id }}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow">
@@ -94,6 +137,12 @@
                 </div>
                 <div class="modal-body p-3" style="background: #f8f9fa;">
                     <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="px-3 py-2 bg-white rounded-3 border text-center h-100">
+                                <strong>Imagen</strong><br>
+                                <img src="{{ $imagenUsuario }}" alt="{{ $item->name }}" class="usuario-view-img mt-2" onerror="this.src='{{ asset('images/icono.png') }}'">
+                            </div>
+                        </div>
                         <div class="col-md-4"><div class="px-3 py-2 bg-white rounded-3 border"><strong>ID</strong><br>{{ $item->id }}</div></div>
                         <div class="col-md-4"><div class="px-3 py-2 bg-white rounded-3 border"><strong>Nombre</strong><br>{{ $item->name }}</div></div>
                         <div class="col-md-4"><div class="px-3 py-2 bg-white rounded-3 border"><strong>Email</strong><br>{{ $item->email }}</div></div>
@@ -139,7 +188,7 @@
 
     <div class="modal fade" id="modal-edit-user-{{ $item->id }}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <form method="POST" action="{{ route('usuarios.update', $item) }}">
+            <form method="POST" action="{{ route('usuarios.update', $item) }}" enctype="multipart/form-data">
                 @csrf
                 @method('PATCH')
                 <input type="hidden" name="editing_usuario" value="{{ $item->id }}">
@@ -160,10 +209,18 @@
                                 <input type="email" name="email" id="email_edit_{{ $item->id }}" value="{{ old('editing_usuario') == $item->id ? old('email') : $item->email }}" class="form-control @if(old('editing_usuario') == $item->id) @error('email') is-invalid @enderror @endif" maxlength="255" required>
                                 @if (old('editing_usuario') == $item->id) @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror @endif
                             </div>
+                            <div class="col-md-9">
+                                <label for="imagen_edit_{{ $item->id }}" class="form-label">Imagen</label>
+                                <input type="file" name="imagen" id="imagen_edit_{{ $item->id }}" class="form-control js-user-image-input @if(old('editing_usuario') == $item->id) @error('imagen') is-invalid @enderror @endif" accept="image/jpeg,image/png,image/webp" data-preview="usuario_preview_edit_{{ $item->id }}">
+                                @if (old('editing_usuario') == $item->id) @error('imagen')<div class="invalid-feedback">{{ $message }}</div>@enderror @endif
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <img src="{{ $imagenUsuario }}" alt="{{ $item->name }}" id="usuario_preview_edit_{{ $item->id }}" class="usuario-edit-img" onerror="this.src='{{ asset('images/icono.png') }}'">
+                            </div>
                             <div class="col-md-6">
                                 <label for="password_edit_{{ $item->id }}" class="form-label">Nueva contrasena</label>
                                 <div class="input-group">
-                                    <input type="password" name="password" id="password_edit_{{ $item->id }}" class="form-control @if(old('editing_usuario') == $item->id) @error('password') is-invalid @enderror @endif">
+                                    <input type="password" name="password" id="password_edit_{{ $item->id }}" class="form-control @if(old('editing_usuario') == $item->id) @error('password') is-invalid @enderror @endif" autocomplete="new-password">
                                     <button type="button" class="btn btn-outline-secondary js-toggle-password" data-target="password_edit_{{ $item->id }}" aria-label="Ver contrasena">
                                         <i class="bi bi-eye"></i>
                                     </button>
@@ -173,7 +230,7 @@
                             <div class="col-md-6">
                                 <label for="password_confirmation_edit_{{ $item->id }}" class="form-label">Confirmar nueva contrasena</label>
                                 <div class="input-group">
-                                    <input type="password" name="password_confirmation" id="password_confirmation_edit_{{ $item->id }}" class="form-control">
+                                    <input type="password" name="password_confirmation" id="password_confirmation_edit_{{ $item->id }}" class="form-control" autocomplete="new-password">
                                     <button type="button" class="btn btn-outline-secondary js-toggle-password" data-target="password_confirmation_edit_{{ $item->id }}" aria-label="Ver contrasena">
                                         <i class="bi bi-eye"></i>
                                     </button>
@@ -232,5 +289,20 @@
                 new bootstrap.Modal(editModal).show();
             }
         @endif
+    });
+
+    document.addEventListener('change', function (event) {
+        if (!event.target.classList.contains('js-user-image-input')) {
+            return;
+        }
+
+        const preview = document.getElementById(event.target.dataset.preview);
+        const file = event.target.files && event.target.files[0];
+
+        if (!preview || !file) {
+            return;
+        }
+
+        preview.src = URL.createObjectURL(file);
     });
 </script>

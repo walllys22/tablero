@@ -54,42 +54,43 @@
                                 <label class="label label-danger">Inactivo</label>
                             @endif
                         </td>
-                        <td style="vertical-align: middle; width: 14%" class="text-end">
-                            @if ($item->status == 1)
-                                <button type="button" title="Inactivar" data-bs-toggle="modal"
-                                    data-bs-target="#modal-status-{{ $item->id }}"
-                                    class="btn btn-sm btn-warning text-white p-1">
-                                    <i class="bi bi-toggle-on"></i>
-                                </button>
-                            @else
-                                <form method="POST" action="{{ route('organizaciones.toggle-status', $item) }}"
-                                    class="d-inline">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" title="Activar"
+                        <td style="vertical-align: middle; width: 140px">
+                            <div class="organizacion-actions">
+                                @if ($item->status == 1)
+                                    <button type="button" title="Inactivar" data-bs-toggle="modal"
+                                        data-bs-target="#modal-status-{{ $item->id }}"
                                         class="btn btn-sm btn-warning text-white p-1">
-                                        <i class="bi bi-toggle-off"></i>
+                                        <i class="bi bi-toggle-on"></i>
                                     </button>
-                                </form>
-                            @endif
-                            <button type="button" title="Ver" data-bs-toggle="modal"
-                                data-bs-target="#modal-view-{{ $item->id }}" class="btn btn-sm btn-primary p-1">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                            <button type="button" title="Editar" data-bs-toggle="modal"
-                                data-bs-target="#modal-edit-{{ $item->id }}"
-                                class="btn btn-sm btn-info text-white p-1">
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
-                            <a href="#"
-                                onclick="event.preventDefault(); deleteItem('{{ route('organizaciones.destroy', $item) }}')"
-                                title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete"
-                                class="btn btn-sm btn-danger p-1">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                            <a href="{{ route('organizaciones.competidores.index', $item) }}" title="Competidores" class="btn btn-sm btn-success p-1 mt-2 ms-1 me-1">
-                                <i class="bi bi-person-check"></i>
-                            </a>
+                                @else
+                                    <form method="POST" action="{{ route('organizaciones.toggle-status', $item) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" title="Activar"
+                                            class="btn btn-sm btn-warning text-white p-1">
+                                            <i class="bi bi-toggle-off"></i>
+                                        </button>
+                                    </form>
+                                @endif
+                                <button type="button" title="Ver" data-bs-toggle="modal"
+                                    data-bs-target="#modal-view-{{ $item->id }}" class="btn btn-sm btn-primary p-1">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button type="button" title="Editar" data-bs-toggle="modal"
+                                    data-bs-target="#modal-edit-{{ $item->id }}"
+                                    class="btn btn-sm btn-info text-white p-1">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <a href="#"
+                                    onclick="event.preventDefault(); deleteItem('{{ route('organizaciones.destroy', $item) }}')"
+                                    title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete"
+                                    class="btn btn-sm btn-danger p-1">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                <a href="{{ route('organizaciones.competidores.index', $item) }}" title="Competidores" class="btn btn-sm btn-success p-1">
+                                    <i class="bi bi-person-check"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -107,6 +108,31 @@
         </table>
     </div>
 </div>
+
+<style>
+    .organizacion-actions {
+        display: grid;
+        gap: 6px;
+        grid-template-columns: repeat(4, 32px);
+        justify-content: center;
+    }
+
+    .organizacion-actions .btn {
+        align-items: center;
+        display: inline-flex;
+        height: 32px;
+        justify-content: center;
+        width: 32px;
+    }
+
+    .organizacion-actions form {
+        display: contents;
+    }
+
+    .organizacion-actions a:last-child {
+        grid-column: 4;
+    }
+</style>
 
 <div class="col-md-12">
     <div class="row align-items-center">

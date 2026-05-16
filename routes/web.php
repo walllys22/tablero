@@ -16,6 +16,9 @@ use App\Http\Controllers\SorteoLlaveController;
 use App\Http\Controllers\TableroController;
 use App\Http\Controllers\TorneoController;
 use App\Http\Controllers\UsuarioController;
+use App\Models\KumitePodio;
+use App\Models\Organizacion;
+use App\Models\Torneo;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -41,7 +44,78 @@ Route::get('/kumite/podio', [TableroController::class, 'podioKumite'])->name('ta
 Route::get('/kata/tablero', [TableroController::class, 'kata'])->name('tablero.kata');
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    $torneo = Torneo::where('status', 1)
+        ->latest('id')
+        ->first() ?? Torneo::latest('id')->first();
+
+    if (! $torneo) {
+        return view('dashboard', [
+            'torneo' => null,
+            'medallero' => collect(),
+        ]);
+    }
+
+    $organizaciones = Organizacion::with('estilo')
+        ->whereHas('inscripciones', function ($query) use ($torneo) {
+            $query->where('torneo_id', $torneo->id);
+        })
+        ->orderBy('nombre')
+        ->get();
+    $medallero = $organizaciones->mapWithKeys(function ($organizacion) {
+        return [
+            $organizacion->id => [
+                'organizacion' => $organizacion,
+                'oro' => 0,
+                'plata' => 0,
+                'bronce' => 0,
+                'total' => 0,
+            ],
+        ];
+    });
+
+    KumitePodio::with('sorteoLlave')
+        ->whereHas('sorteoLlave', function ($query) use ($torneo) {
+            $query->where('torneo_id', $torneo->id);
+        })
+        ->get()
+        ->each(function ($podio) use (&$medallero) {
+            $organizacionesPorCompetidor = collect($podio->sorteoLlave->llaves ?? [])
+                ->flatMap(fn ($ronda) => $ronda['combates'] ?? [])
+                ->flatMap(fn ($combate) => collect([$combate['a'] ?? null, $combate['b'] ?? null]))
+                ->filter(fn ($competidor) => is_array($competidor) && ! empty($competidor['nombre']) && ! empty($competidor['organizacion_id']))
+                ->mapWithKeys(fn ($competidor) => [
+                    mb_strtolower(trim($competidor['nombre'])) => (int) $competidor['organizacion_id'],
+                ]);
+
+            foreach (['oro' => 'oro', 'plata' => 'plata', 'bronce_1' => 'bronce', 'bronce_2' => 'bronce'] as $campo => $medalla) {
+                $nombre = trim((string) $podio->{$campo});
+
+                if ($nombre === '') {
+                    continue;
+                }
+
+                $organizacionId = $organizacionesPorCompetidor->get(mb_strtolower($nombre));
+
+                if (! $organizacionId || ! $medallero->has($organizacionId)) {
+                    continue;
+                }
+
+                $fila = $medallero->get($organizacionId);
+                $fila[$medalla]++;
+                $fila['total']++;
+                $medallero->put($organizacionId, $fila);
+            }
+        });
+
+    $tieneMedallas = $medallero->contains(fn ($fila) => $fila['total'] > 0);
+    $medallero = $tieneMedallas
+        ? $medallero->sort(function ($a, $b) {
+            return [$b['oro'], $b['plata'], $b['bronce'], $a['organizacion']->nombre]
+                <=> [$a['oro'], $a['plata'], $a['bronce'], $b['organizacion']->nombre];
+        })->values()
+        : $medallero->sortBy(fn ($fila) => $fila['organizacion']->nombre)->values();
+
+    return view('dashboard', compact('torneo', 'medallero'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -99,6 +173,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/torneos/{torneo}/sorteo-llaves/categorias-disponibles', [SorteoLlaveController::class, 'categoriasDisponibles'])->name('sorteo-llaves.categorias');
     Route::get('/torneos/{torneo}/sorteo-llaves/grafico', [SorteoLlaveController::class, 'graphic'])->name('sorteo-llaves.graphic');
     Route::get('/torneos/{torneo}/sorteo-llaves/{sorteo}/resultados', [SorteoLlaveController::class, 'resultados'])->name('sorteo-llaves.resultados');
+    Route::patch('/torneos/{torneo}/sorteo-llaves/orden', [SorteoLlaveController::class, 'updateOrden'])->name('sorteo-llaves.orden.update');
     Route::patch('/torneos/{torneo}/sorteo-llaves/{sorteo}/area', [SorteoLlaveController::class, 'updateArea'])->name('sorteo-llaves.area.update');
     Route::delete('/torneos/{torneo}/sorteo-llaves/{sorteo}', [SorteoLlaveController::class, 'destroy'])->name('sorteo-llaves.destroy');
     Route::get('/torneos/{torneo}/modalidades', [ModalidadController::class, 'index'])->name('modalidades.index');

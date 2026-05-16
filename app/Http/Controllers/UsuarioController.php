@@ -6,6 +6,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class UsuarioController extends Controller
@@ -51,6 +52,7 @@ class UsuarioController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'imagen' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'roles' => ['nullable', 'array'],
             'roles.*' => ['integer', Rule::exists('roles', 'id')],
@@ -63,6 +65,9 @@ class UsuarioController extends Controller
         $data['password'] = Hash::make($data['password']);
         $data['email_verified_at'] = now();
         $data['status'] = $request->has('status') ? 1 : 0;
+        if ($request->hasFile('imagen')) {
+            $data['imagen'] = $request->file('imagen')->store('usuarios', 'public');
+        }
 
         $user = User::create($data);
         $user->roles()->sync($roleIds);
@@ -82,6 +87,7 @@ class UsuarioController extends Controller
                 'max:255',
                 Rule::unique('users', 'email')->ignore($usuario->id),
             ],
+            'imagen' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'roles' => ['nullable', 'array'],
             'roles.*' => ['integer', Rule::exists('roles', 'id')],
@@ -98,6 +104,13 @@ class UsuarioController extends Controller
             unset($data['password']);
         }
         $data['status'] = $request->has('status') ? 1 : 0;
+        if ($request->hasFile('imagen')) {
+            if ($usuario->imagen) {
+                Storage::disk('public')->delete($usuario->imagen);
+            }
+
+            $data['imagen'] = $request->file('imagen')->store('usuarios', 'public');
+        }
 
         $usuario->update($data);
         $usuario->roles()->sync($roleIds);

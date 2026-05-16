@@ -134,6 +134,7 @@ class TableroController extends Controller
                 $query->where('nombre', 'like', '%Kumite%');
             })
             ->orderByRaw('COALESCE(area, 999)')
+            ->orderByRaw('COALESCE(orden, 999999)')
             ->orderBy('id')
             ->get();
 
@@ -159,7 +160,8 @@ class TableroController extends Controller
             ->whereHas('modalidad', function ($query) {
                 $query->where('nombre', 'like', '%Kumite%');
             })
-            ->orderByRaw('CASE WHEN id > ? THEN 0 ELSE 1 END', [$actual->id])
+            ->orderByRaw('CASE WHEN COALESCE(orden, 999999) > COALESCE(?, 999999) THEN 0 ELSE 1 END', [$actual->orden])
+            ->orderByRaw('COALESCE(orden, 999999)')
             ->orderBy('id');
 
         if ($actual->area) {

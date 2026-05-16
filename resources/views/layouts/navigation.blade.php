@@ -11,9 +11,19 @@
 
         <div class="ms-auto d-none d-lg-flex align-items-center gap-3">
             @auth
+                @php
+                    $imagenUsuarioNav = Auth::user()->imagen
+                        ? asset('storage/' . ltrim(Auth::user()->imagen, '/'))
+                        : null;
+                @endphp
                 <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-person-circle me-1"></i> {{ Auth::user()->name }}
+                    <button class="btn btn-outline-secondary dropdown-toggle d-inline-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        @if ($imagenUsuarioNav)
+                            <img src="{{ $imagenUsuarioNav }}" alt="{{ Auth::user()->name }}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;" onerror="this.style.display='none';">
+                        @else
+                            <i class="bi bi-person-circle"></i>
+                        @endif
+                        {{ Auth::user()->name }}
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li>
