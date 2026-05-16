@@ -10,7 +10,9 @@ class RoleController extends Controller
 {
     public function index()
     {
-        return view('roles.browse');
+        $permissionOptions = $this->permissionOptions();
+
+        return view('roles.browse', compact('permissionOptions'));
     }
 
     public function ajaxList(Request $request)
@@ -30,8 +32,10 @@ class RoleController extends Controller
             ->paginate($paginate)
             ->withQueryString();
 
+        $permissionOptions = $this->permissionOptions();
+
         return response()
-            ->view('roles.list', compact('data'))
+            ->view('roles.list', compact('data', 'permissionOptions'))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
@@ -42,9 +46,12 @@ class RoleController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:roles,name'],
             'description' => ['nullable', 'string', 'max:255'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string', Rule::in(array_keys($this->permissionOptions()))],
             'status' => ['nullable'],
         ]);
 
+        $data['permissions'] = array_values($data['permissions'] ?? []);
         $data['status'] = $request->has('status') ? 1 : 0;
 
         Role::create($data);
@@ -64,11 +71,14 @@ class RoleController extends Controller
                 Rule::unique('roles', 'name')->ignore($role->id),
             ],
             'description' => ['nullable', 'string', 'max:255'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string', Rule::in(array_keys($this->permissionOptions()))],
             'status' => ['nullable'],
             'editing_role' => ['nullable'],
         ]);
         unset($data['editing_role']);
 
+        $data['permissions'] = array_values($data['permissions'] ?? []);
         $data['status'] = $request->has('status') ? 1 : 0;
 
         $role->update($data);
@@ -87,5 +97,19 @@ class RoleController extends Controller
         return redirect()
             ->route('roles.index')
             ->with('status', 'Estado del rol actualizado correctamente.');
+    }
+
+    private function permissionOptions(): array
+    {
+        return [
+            'ver' => 'Ver',
+            'crear' => 'Crear',
+            'editar' => 'Editar',
+            'eliminar' => 'Eliminar',
+            'imprimir' => 'Imprimir',
+            'activar' => 'Activar/Inactivar',
+            'ordenar' => 'Ordenar',
+            'sortear' => 'Sortear',
+        ];
     }
 }

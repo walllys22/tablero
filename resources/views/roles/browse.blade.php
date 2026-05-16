@@ -66,7 +66,7 @@
     </div>
 
     <div class="modal fade" id="modal-create" tabindex="-1" aria-labelledby="modalCreateLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <form method="POST" action="{{ route('roles.store') }}">
                 @csrf
                 <div class="modal-content">
@@ -90,6 +90,34 @@
                             @if (!old('editing_role'))
                                 @error('description')
                                     <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            @endif
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <label class="form-label mb-0">Permisos</label>
+                                <div class="form-check mb-0">
+                                    <input type="checkbox" id="permissions_all_create" class="form-check-input js-permissions-all" data-target=".js-permission-create">
+                                    <label for="permissions_all_create" class="form-check-label">Todo</label>
+                                </div>
+                            </div>
+                            <div class="row g-2">
+                                @foreach ($permissionOptions as $permissionKey => $permissionLabel)
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input type="checkbox" name="permissions[]" id="permission_create_{{ $permissionKey }}"
+                                                value="{{ $permissionKey }}" class="form-check-input js-permission-create"
+                                                {{ in_array($permissionKey, old('permissions', []), true) ? 'checked' : '' }}>
+                                            <label for="permission_create_{{ $permissionKey }}" class="form-check-label">
+                                                {{ $permissionLabel }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            @if (!old('editing_role'))
+                                @error('permissions')
+                                    <div class="text-danger small">{{ $message }}</div>
                                 @enderror
                             @endif
                         </div>
@@ -164,5 +192,15 @@
                 @endif
             });
         @endif
+
+        document.addEventListener('change', function (event) {
+            if (!event.target.classList.contains('js-permissions-all')) {
+                return;
+            }
+
+            document.querySelectorAll(event.target.dataset.target).forEach(function (checkbox) {
+                checkbox.checked = event.target.checked;
+            });
+        });
     </script>
 @endpush

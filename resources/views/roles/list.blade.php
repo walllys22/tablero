@@ -6,6 +6,7 @@
                     <th style="width: 90px; text-align: center">ID</th>
                     <th style="text-align: center">Nombre</th>
                     <th style="text-align: center">Descripcion</th>
+                    <th style="text-align: center">Permisos</th>
                     <th style="width: 120px; text-align: center">Usuarios</th>
                     <th style="width: 120px; text-align: center">Estado</th>
                     <th style="width: 180px; text-align: center">Acciones</th>
@@ -17,6 +18,13 @@
                         <td class="text-center">{{ $item->id }}</td>
                         <td>{{ $item->name }}</td>
                         <td>{{ $item->description ?: 'Sin descripcion' }}</td>
+                        <td>
+                            @forelse (($item->permissions ?? []) as $permission)
+                                <span class="badge bg-secondary">{{ $permissionOptions[$permission] ?? $permission }}</span>
+                            @empty
+                                <span class="text-muted">Sin permisos</span>
+                            @endforelse
+                        </td>
                         <td class="text-center">{{ $item->users_count }}</td>
                         <td class="text-center">
                             @if ($item->status == 1)
@@ -49,7 +57,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6">
+                        <td colspan="7">
                             <h5 class="text-center eventos-empty">
                                 <img src="{{ asset('images/empty.png') }}" width="120" alt="Sin resultados">
                                 <br><br>
@@ -93,6 +101,16 @@
                         <div class="col-md-4"><div class="px-3 py-2 bg-white rounded-3 border"><strong>Usuarios</strong><br>{{ $item->users_count }}</div></div>
                         <div class="col-md-4"><div class="px-3 py-2 bg-white rounded-3 border"><strong>Estado</strong><br>{{ $item->status == 1 ? 'Activo' : 'Inactivo' }}</div></div>
                         <div class="col-md-12"><div class="px-3 py-2 bg-white rounded-3 border"><strong>Descripcion</strong><br>{{ $item->description ?: 'Sin descripcion' }}</div></div>
+                        <div class="col-md-12">
+                            <div class="px-3 py-2 bg-white rounded-3 border">
+                                <strong>Permisos</strong><br>
+                                @forelse (($item->permissions ?? []) as $permission)
+                                    <span class="badge bg-secondary">{{ $permissionOptions[$permission] ?? $permission }}</span>
+                                @empty
+                                    <span class="text-muted">Sin permisos</span>
+                                @endforelse
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
@@ -123,7 +141,7 @@
     </div>
 
     <div class="modal fade" id="modal-edit-role-{{ $item->id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <form method="POST" action="{{ route('roles.update', $item) }}">
                 @csrf
                 @method('PATCH')
@@ -146,6 +164,39 @@
                             <input type="text" name="description" id="description_edit_{{ $item->id }}" value="{{ old('editing_role') == $item->id ? old('description') : $item->description }}" class="form-control @if(old('editing_role') == $item->id) @error('description') is-invalid @enderror @endif" maxlength="255">
                             @if (old('editing_role') == $item->id)
                                 @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            @endif
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <label class="form-label mb-0">Permisos</label>
+                                <div class="form-check mb-0">
+                                    <input type="checkbox" id="permissions_all_edit_{{ $item->id }}" class="form-check-input js-permissions-all" data-target=".js-permission-edit-{{ $item->id }}">
+                                    <label for="permissions_all_edit_{{ $item->id }}" class="form-check-label">All</label>
+                                </div>
+                            </div>
+                            @php
+                                $selectedPermissions = old('editing_role') == $item->id
+                                    ? old('permissions', [])
+                                    : ($item->permissions ?? []);
+                            @endphp
+                            <div class="row g-2">
+                                @foreach ($permissionOptions as $permissionKey => $permissionLabel)
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input type="checkbox" name="permissions[]" id="permission_edit_{{ $item->id }}_{{ $permissionKey }}"
+                                                value="{{ $permissionKey }}" class="form-check-input js-permission-edit-{{ $item->id }}"
+                                                {{ in_array($permissionKey, $selectedPermissions, true) ? 'checked' : '' }}>
+                                            <label for="permission_edit_{{ $item->id }}_{{ $permissionKey }}" class="form-check-label">
+                                                {{ $permissionLabel }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            @if (old('editing_role') == $item->id)
+                                @error('permissions')
+                                    <div class="text-danger small">{{ $message }}</div>
+                                @enderror
                             @endif
                         </div>
                         <div class="form-check form-switch">
@@ -182,5 +233,15 @@
                 new bootstrap.Modal(editModal).show();
             }
         @endif
+    });
+
+    document.addEventListener('change', function (event) {
+        if (!event.target.classList.contains('js-permissions-all')) {
+            return;
+        }
+
+        document.querySelectorAll(event.target.dataset.target).forEach(function (checkbox) {
+            checkbox.checked = event.target.checked;
+        });
     });
 </script>
