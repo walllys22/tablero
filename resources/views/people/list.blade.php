@@ -1,13 +1,44 @@
 <div class="col-md-12">
+    @php
+        $sort = $sort ?? 'first_name';
+        $order = $order ?? 'asc';
+        $sortIcon = function ($field) use ($sort, $order) {
+            if ($sort !== $field) {
+                return 'bi-chevron-down';
+            }
+
+            return $order === 'asc' ? 'bi-chevron-up' : 'bi-chevron-down';
+        };
+    @endphp
     <div class="table-responsive">
         <table class="table table-bordered table-hover">
             <thead>
                 <tr>
-                    <th style="text-align: center">Documento</th>
-                    <th style="text-align: center">Nombre completo</th>
-                    <th style="text-align: center">Datos personales</th>
-                    <th style="text-align: center">Contacto</th>
-                    <th style="text-align: center">Estado</th>
+                    <th style="text-align: center">
+                        <button type="button" class="btn btn-link text-dark text-decoration-none p-0 fw-bold js-sort-header" data-sort="ci">
+                            Documento <i class="bi {{ $sortIcon('ci') }}"></i>
+                        </button>
+                    </th>
+                    <th style="text-align: center">
+                        <button type="button" class="btn btn-link text-dark text-decoration-none p-0 fw-bold js-sort-header" data-sort="first_name">
+                            Nombre completo <i class="bi {{ $sortIcon('first_name') }}"></i>
+                        </button>
+                    </th>
+                    <th style="text-align: center">
+                        <button type="button" class="btn btn-link text-dark text-decoration-none p-0 fw-bold js-sort-header" data-sort="birth_date">
+                            Datos personales <i class="bi {{ $sortIcon('birth_date') }}"></i>
+                        </button>
+                    </th>
+                    <th style="text-align: center">
+                        <button type="button" class="btn btn-link text-dark text-decoration-none p-0 fw-bold js-sort-header" data-sort="phone">
+                            Contacto <i class="bi {{ $sortIcon('phone') }}"></i>
+                        </button>
+                    </th>
+                    <th style="text-align: center">
+                        <button type="button" class="btn btn-link text-dark text-decoration-none p-0 fw-bold js-sort-header" data-sort="status">
+                            Estado <i class="bi {{ $sortIcon('status') }}"></i>
+                        </button>
+                    </th>
                     <th style="text-align: center">Acciones</th>
                 </tr>
             </thead>
@@ -77,32 +108,34 @@
                                 <label class="label label-danger">Inactivo</label>
                             @endif
                         </td>
-                        <td style="vertical-align: middle; width: 14%" class="text-end">
-                            @if ($item->status == 1)
-                                <button type="button" title="Inactivar" data-bs-toggle="modal" data-bs-target="#modal-status-{{ $item->id }}" class="btn btn-sm btn-warning text-white">
-                                    <i class="bi bi-toggle-on"></i>
-                                </button>
-                            @else
-                                <form method="POST" action="{{ route('people.toggle-status', $item) }}" class="d-inline">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" title="Activar" class="btn btn-sm btn-warning text-white">
-                                        <i class="bi bi-toggle-off"></i>
+                        <td style="vertical-align: middle; width: 14%" class="text-center">
+                            <div class="d-grid gap-1 justify-content-center" style="grid-template-columns: repeat(2, 32px);">
+                                @if ($item->status == 1)
+                                    <button type="button" title="Inactivar" data-bs-toggle="modal" data-bs-target="#modal-status-{{ $item->id }}" class="btn btn-sm btn-warning text-white d-inline-flex align-items-center justify-content-center p-1" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-toggle-on"></i>
                                     </button>
-                                </form>
-                            @endif
+                                @else
+                                    <form method="POST" action="{{ route('people.toggle-status', $item) }}" class="m-0">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" title="Activar" class="btn btn-sm btn-warning text-white d-inline-flex align-items-center justify-content-center p-1" style="width: 32px; height: 32px;">
+                                            <i class="bi bi-toggle-off"></i>
+                                        </button>
+                                    </form>
+                                @endif
 
-                            <button type="button" title="Ver" data-bs-toggle="modal" data-bs-target="#modal-view-{{ $item->id }}" class="btn btn-sm btn-primary">
-                                <i class="bi bi-eye"></i>
-                            </button>
+                                <button type="button" title="Ver" data-bs-toggle="modal" data-bs-target="#modal-view-{{ $item->id }}" class="btn btn-sm btn-primary d-inline-flex align-items-center justify-content-center p-1" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-eye"></i>
+                                </button>
 
-                            <button type="button" title="Editar" data-bs-toggle="modal" data-bs-target="#modal-edit-{{ $item->id }}" class="btn btn-sm btn-info text-white">
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
+                                <button type="button" title="Editar" data-bs-toggle="modal" data-bs-target="#modal-edit-{{ $item->id }}" class="btn btn-sm btn-info text-white d-inline-flex align-items-center justify-content-center p-1" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
 
-                            <a href="#" onclick="event.preventDefault(); deleteItem('{{ route('people.destroy', $item) }}')" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete" class="btn btn-sm btn-danger">
-                                <i class="bi bi-trash"></i>
-                            </a>
+                                <a href="#" onclick="event.preventDefault(); deleteItem('{{ route('people.destroy', $item) }}')" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete" class="btn btn-sm btn-danger d-inline-flex align-items-center justify-content-center p-1" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 @empty

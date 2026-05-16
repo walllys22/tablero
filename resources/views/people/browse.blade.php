@@ -45,7 +45,7 @@
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <div class="row mb-3 align-items-center">
-                            <div class="col-sm-9">
+                            <div class="col-md-9">
                                 <div>
                                     <label class="d-flex align-items-center gap-2 mb-0">
                                         Mostrar
@@ -59,7 +59,8 @@
                                     </label>
                                 </div>
                             </div>
-                            <div class="col-sm-3 mt-2 mt-sm-0">
+                            <div class="col-md-3 mt-2 mt-md-0">
+                                <label for="input-search" class="form-label mb-1">Buscar</label>
                                 <input type="text" id="input-search" placeholder="Buscar..." class="form-control">
                             </div>
                         </div>
@@ -121,6 +122,8 @@
     <script>
         var countPage = 10;
         var timeout = null;
+        var sortField = 'first_name';
+        var sortDirection = 'asc';
 
         $(document).ready(function () {
             list();
@@ -143,6 +146,19 @@
                     list();
                 }, 600);
             });
+
+            $(document).on('click', '.js-sort-header', function () {
+                let field = $(this).data('sort');
+
+                if (sortField === field) {
+                    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortField = field;
+                    sortDirection = 'asc';
+                }
+
+                list();
+            });
         });
 
         function list(page = 1) {
@@ -152,7 +168,7 @@
             let search = $('#input-search').val() ? $('#input-search').val() : '';
 
             $.ajax({
-                url: `${url}?search=${encodeURIComponent(search)}&paginate=${countPage}&page=${page}`,
+                url: `${url}?search=${encodeURIComponent(search)}&paginate=${countPage}&sort=${encodeURIComponent(sortField)}&order=${encodeURIComponent(sortDirection)}&page=${page}`,
                 type: 'get',
                 success: function (result) {
                     $('#div-results').html(result);

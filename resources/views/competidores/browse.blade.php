@@ -54,7 +54,7 @@
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <div class="row mb-3 align-items-center">
-                            <div class="col-sm-9">
+                            <div class="col-md-6">
                                 <label class="d-flex align-items-center gap-2 mb-0">
                                     Mostrar
                                     <select id="select-paginate" class="form-select form-select-sm w-auto">
@@ -66,7 +66,15 @@
                                     registros
                                 </label>
                             </div>
-                            <div class="col-sm-3 mt-2 mt-sm-0">
+                            <div class="col-md-3 mt-2 mt-md-0">
+                                <label for="select-order" class="form-label mb-1">Ordenar</label>
+                                <select id="select-order" class="form-select">
+                                    <option value="asc">A-Z</option>
+                                    <option value="desc">Z-A</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mt-2 mt-md-0">
+                                <label for="input-search" class="form-label mb-1">Buscar</label>
                                 <input type="text" id="input-search" placeholder="Buscar..." class="form-control">
                             </div>
                         </div>
@@ -90,10 +98,13 @@
                     <div class="modal-body">
                         <div class="row g-3">
                             <div class="col-md-9">
-                                <label for="persona_ids" class="form-label">Personas</label>
+                                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                    <label for="persona_ids" class="form-label mb-0">Personas</label>
+                                    <input type="text" id="input-search-personas" class="form-control form-control-sm" style="max-width: 280px;" placeholder="Buscar persona...">
+                                </div>
                                 <div id="persona_ids" class="border rounded px-2 py-2 @error('persona_ids') border-danger @enderror @error('persona_ids.*') border-danger @enderror" style="height: 178px; overflow-y: auto;">
                                     @foreach ($personas as $persona)
-                                        <div class="form-check py-1">
+                                        <div class="form-check py-1 js-persona-option" data-persona-search="{{ mb_strtolower($persona->first_name . ' ' . $persona->ci) }}">
                                             <div class="row g-2 align-items-center">
                                                 <div class="col-md-8">
                                                     <input type="checkbox" name="persona_ids[]" id="persona_id_{{ $persona->id }}" value="{{ $persona->id }}" class="form-check-input" {{ in_array($persona->id, old('persona_ids', [])) ? 'checked' : '' }}>
@@ -107,6 +118,7 @@
                                             </div>
                                         </div>
                                     @endforeach
+                                    <div id="empty-personas-search" class="text-muted d-none">No hay coincidencias.</div>
                                 </div>
                                 @error('persona_ids')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
@@ -177,11 +189,21 @@
                 list();
             });
 
+            $('#select-order').change(function () {
+                list();
+            });
+
             $('#input-search').on('input', function () {
                 clearTimeout(timeout);
                 timeout = setTimeout(function () {
                     list();
                 }, 600);
+            });
+
+            $('#input-search-personas').on('input', filterPersonasModal);
+            $('#modal-create').on('hidden.bs.modal', function () {
+                $('#input-search-personas').val('');
+                filterPersonasModal();
             });
         });
 
@@ -190,9 +212,10 @@
 
             let url = '{{ route("organizaciones.competidores.ajax.list", $organizacion) }}';
             let search = $('#input-search').val() ? $('#input-search').val() : '';
+            let order = $('#select-order').val() ? $('#select-order').val() : 'asc';
 
             $.ajax({
-                url: `${url}?search=${encodeURIComponent(search)}&paginate=${countPage}&page=${page}&_=${Date.now()}`,
+                url: `${url}?search=${encodeURIComponent(search)}&paginate=${countPage}&order=${encodeURIComponent(order)}&page=${page}&_=${Date.now()}`,
                 type: 'get',
                 cache: false,
                 success: function (result) {
@@ -206,6 +229,24 @@
 
         function deleteItem(url) {
             $('#delete_form').attr('action', url);
+        }
+
+        function filterPersonasModal() {
+            let search = ($('#input-search-personas').val() || '').toLowerCase().trim();
+            let visibleCount = 0;
+
+            $('.js-persona-option').each(function () {
+                let text = $(this).data('persona-search') || '';
+                let visible = search === '' || text.includes(search);
+
+                $(this).toggleClass('d-none', !visible);
+
+                if (visible) {
+                    visibleCount++;
+                }
+            });
+
+            $('#empty-personas-search').toggleClass('d-none', visibleCount > 0);
         }
 
         @if ($errors->any())

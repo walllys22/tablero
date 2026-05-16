@@ -31,9 +31,9 @@
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-create-organizacion">
                                     <i class="bi bi-building-add"></i> Organizacion
                                 </button>
-                                <a href="{{ route('inscripciones.print', $torneo) }}" class="btn btn-success">
-                                    <i class="bi bi-printer"></i> Imprimir
-                                </a>                                
+                                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-print-inscripciones">
+                                    <i class="bi bi-printer"></i> Categorias
+                                </button>
                                 <a href="{{ route('torneos.index') }}" class="btn btn-warning text-white">
                                     <i class="bi bi-x-lg"></i> Cerrar
                                 </a>
@@ -147,6 +147,51 @@
                     <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Aceptar</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-print-inscripciones" tabindex="-1" aria-labelledby="modalPrintInscripcionesLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <form method="GET" action="{{ route('inscripciones.print', $torneo) }}">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title fw-bold" id="modalPrintInscripcionesLabel">Imprimir competidores inscritos</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-6">
+                                <label for="print_modalidad_id" class="form-label">Modalidad</label>
+                                <select name="modalidad_id" id="print_modalidad_id" class="form-select">
+                                    <option value="">Todas</option>
+                                    @foreach ($modalidades as $modalidad)
+                                        <option value="{{ $modalidad->id }}">{{ $modalidad->nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="print_categoria_id" class="form-label">Categoria</label>
+                                <select name="categoria_id" id="print_categoria_id" class="form-select">
+                                    <option value="">Todas</option>
+                                    @foreach ($modalidades as $modalidad)
+                                        @foreach ($modalidad->categorias as $categoria)
+                                            <option value="{{ $categoria->id }}" data-modalidad-id="{{ $modalidad->id }}">
+                                                {{ $categoria->nombre }}
+                                            </option>
+                                        @endforeach
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-printer"></i> Imprimir
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -281,8 +326,10 @@
             $('.js-modalidad-check').on('change', syncModalidadCosts);
             $('.js-modalidad-costo').on('input', updateCompetidorTotal);
             $('#organizacion_id').on('change', updateResponsableOrganizacion);
+            $('#print_modalidad_id').on('change', filterPrintCategoriasByModalidad);
             syncModalidadCosts();
             updateResponsableOrganizacion();
+            filterPrintCategoriasByModalidad();
         });
 
         function list(page = 1) {
@@ -339,6 +386,29 @@
             let selected = $('#organizacion_id option:selected');
             let responsable = selected.data('responsable') || 'Seleccione una organizacion';
             $('#responsable-organizacion-preview').text(responsable);
+        }
+
+        function filterPrintCategoriasByModalidad() {
+            const modalidadId = $('#print_modalidad_id').val();
+            const categoriaSelect = $('#print_categoria_id');
+            const selectedCategoria = categoriaSelect.find('option:selected');
+            let selectedStillVisible = !selectedCategoria.val();
+
+            categoriaSelect.find('option').each(function () {
+                const option = $(this);
+                const optionModalidadId = option.data('modalidad-id');
+                const visible = !option.val() || !modalidadId || String(optionModalidadId) === String(modalidadId);
+
+                option.prop('hidden', !visible).prop('disabled', !visible);
+
+                if (visible && option.is(':selected')) {
+                    selectedStillVisible = true;
+                }
+            });
+
+            if (!selectedStillVisible) {
+                categoriaSelect.val('');
+            }
         }
 
         @if ($errors->any())

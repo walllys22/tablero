@@ -70,6 +70,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/organizaciones/{organizacion}/competidores', [CompetidorController::class, 'index'])->name('organizaciones.competidores.index');
     Route::get('/organizaciones/{organizacion}/competidores/ajax/list', [CompetidorController::class, 'ajaxList'])->name('organizaciones.competidores.ajax.list');
     Route::post('/organizaciones/{organizacion}/competidores', [CompetidorController::class, 'store'])->name('organizaciones.competidores.store');
+    Route::patch('/organizaciones/{organizacion}/competidores/{competidor}', [CompetidorController::class, 'update'])->name('organizaciones.competidores.update');
     Route::patch('/organizaciones/{organizacion}/competidores/{competidor}/estado', [CompetidorController::class, 'toggleStatus'])->name('organizaciones.competidores.toggle-status');
     Route::delete('/organizaciones/{organizacion}/competidores/{competidor}', [CompetidorController::class, 'destroy'])->name('organizaciones.competidores.destroy');
 
@@ -92,6 +93,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/torneos/{torneo}/inscripciones/competidores', [InscripcionController::class, 'storeCompetidor'])->name('inscripciones.competidores.store');
     Route::get('/torneos/{torneo}/inscripciones/{inscripcion}/participantes', [InscripcionController::class, 'participantes'])->name('inscripciones.participantes');
     Route::post('/torneos/{torneo}/inscripciones/{inscripcion}/participantes', [InscripcionController::class, 'storeParticipante'])->name('inscripciones.participantes.store');
+    Route::patch('/torneos/{torneo}/inscripciones/{inscripcion}/participantes/{competidor}/pagos', [InscripcionController::class, 'updateParticipantePago'])->name('inscripciones.participantes.pagos.update');
+    Route::delete('/torneos/{torneo}/inscripciones/{inscripcion}/participantes/{competidor}', [InscripcionController::class, 'destroyParticipante'])->name('inscripciones.participantes.destroy');
     Route::get('/torneos/{torneo}/sorteo-llaves', [SorteoLlaveController::class, 'index'])->name('sorteo-llaves.index');
     Route::get('/torneos/{torneo}/sorteo-llaves/categorias-disponibles', [SorteoLlaveController::class, 'categoriasDisponibles'])->name('sorteo-llaves.categorias');
     Route::get('/torneos/{torneo}/sorteo-llaves/grafico', [SorteoLlaveController::class, 'graphic'])->name('sorteo-llaves.graphic');

@@ -77,8 +77,10 @@
         }
 
         .categoria-title {
+            background: #f3f4f6;
             border: 1px solid #dee2e6;
             border-top: 0;
+            color: #000;
             font-weight: 700;
             padding: 8px 10px;
         }
@@ -136,7 +138,15 @@
             }
 
             .inscripciones-print {
-                padding: 0;
+                padding: 104px 0 0;
+            }
+
+            .print-header {
+                left: 0;
+                position: fixed;
+                right: 0;
+                top: 0;
+                z-index: 10;
             }
         }
     </style>

@@ -23,6 +23,16 @@ class PersonaController extends Controller
         $paginate = (int) $request->input('paginate', 10);
         $paginate = in_array($paginate, [10, 25, 50, 100], true) ? $paginate : 10;
         $search = trim((string) $request->input('search', ''));
+        $order = $request->input('order') === 'desc' ? 'desc' : 'asc';
+        $sort = (string) $request->input('sort', 'first_name');
+        $sortColumns = [
+            'ci' => 'ci',
+            'first_name' => 'first_name',
+            'birth_date' => 'birth_date',
+            'phone' => 'phone',
+            'status' => 'status',
+        ];
+        $sortColumn = $sortColumns[$sort] ?? 'first_name';
 
         $data = Persona::query()
             ->when($search !== '', function ($query) use ($search) {
@@ -35,11 +45,13 @@ class PersonaController extends Controller
                         ->orWhere('sangre', 'like', "%{$search}%");
                 });
             })
-            ->orderByDesc('id')
+            ->orderBy($sortColumn, $order)
+            ->orderBy('first_name', $order)
+            ->orderBy('id', $order)
             ->paginate($paginate)
             ->withQueryString();
 
-        return view('people.list', compact('data'));
+        return view('people.list', compact('data', 'sort', 'order'));
     }
 
     /**

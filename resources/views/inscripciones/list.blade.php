@@ -4,6 +4,7 @@
             <thead>
                 <tr>
                     <th style="text-align: center">Organizacion</th>
+                    <th style="text-align: center">Competidores</th>
                     <th style="text-align: center">Costo organizacion</th>
                     <th style="text-align: center">Total competidores</th>
                     <th style="text-align: center">Total general</th>
@@ -27,6 +28,7 @@
                         $competidoresParaMostrar = $filtrandoPorCompetidor
                             ? $competidoresCoincidentes
                             : $inscripcion->competidores;
+                        $cantidadCompetidores = $competidoresParaMostrar->count();
                         $totalCompetidores = $competidoresParaMostrar->sum(function ($competidor) {
                             return $competidor->modalidades->sum('costo');
                         });
@@ -57,6 +59,9 @@
                             </button>
                         </td>
                         <td style="text-align: center; vertical-align: top;">
+                            <label class="label label-info">{{ $cantidadCompetidores }}</label>
+                        </td>
+                        <td style="text-align: center; vertical-align: top;">
                             <label class="label label-primary">{{ number_format((float) $inscripcion->costo, 2) }}</label>
                         </td>
                         <td style="text-align: center; vertical-align: top;">
@@ -80,7 +85,7 @@
                         </td>
                     </tr>
                     <tr class="collapse {{ $filtrandoPorCompetidor ? 'show' : '' }}" id="organizacion-inscripcion-{{ $inscripcion->id }}">
-                        <td colspan="5" class="bg-light">
+                        <td colspan="6" class="bg-light">
                             <div class="row g-2">
                                 @if ($categoriasInscritas->isNotEmpty())
                                     @foreach ($categoriasInscritas as $categoriaId => $itemsCategoria)
@@ -127,7 +132,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5">
+                        <td colspan="6">
                             <h5 class="text-center eventos-empty">
                                 <img src="{{ asset('images/empty.png') }}" width="120" alt="Sin resultados">
                                 <br><br>

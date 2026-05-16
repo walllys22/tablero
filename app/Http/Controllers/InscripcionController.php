@@ -39,8 +39,14 @@ class InscripcionController extends Controller
             ->orderBy('organizaciones.nombre')
             ->select('inscripcion_organizaciones.*')
             ->get();
+        $modalidades = $torneo->modalidades()
+            ->with(['categorias' => function ($query) {
+                $query->orderBy('nombre');
+            }])
+            ->orderBy('nombre')
+            ->get();
 
-        return view('inscripciones.browse', compact('torneo', 'personas', 'organizaciones', 'categorias', 'organizacionesInscritas'));
+        return view('inscripciones.browse', compact('torneo', 'personas', 'organizaciones', 'categorias', 'organizacionesInscritas', 'modalidades'));
     }
 
     public function ajaxList(Request $request, Torneo $torneo)
@@ -69,8 +75,11 @@ class InscripcionController extends Controller
         return view('inscripciones.list', compact('organizaciones', 'torneo', 'search'));
     }
 
-    public function print(Torneo $torneo)
+    public function print(Request $request, Torneo $torneo)
     {
+        $modalidadId = $request->filled('modalidad_id') ? (int) $request->input('modalidad_id') : null;
+        $categoriaId = $request->filled('categoria_id') ? (int) $request->input('categoria_id') : null;
+
         $detalles = InscripcionCompetidorModalidad::query()
             ->with([
                 'modalidad',
@@ -80,6 +89,12 @@ class InscripcionController extends Controller
             ])
             ->whereHas('inscripcionCompetidor', function ($query) use ($torneo) {
                 $query->where('torneo_id', $torneo->id);
+            })
+            ->when($modalidadId, function ($query) use ($modalidadId) {
+                $query->where('inscripcion_competidor_modalidades.modalidad_id', $modalidadId);
+            })
+            ->when($categoriaId, function ($query) use ($categoriaId) {
+                $query->where('inscripcion_competidor_modalidades.categoria_id', $categoriaId);
             })
             ->join('modalidades', 'modalidades.id', '=', 'inscripcion_competidor_modalidades.modalidad_id')
             ->join('categorias', 'categorias.id', '=', 'inscripcion_competidor_modalidades.categoria_id')
@@ -450,6 +465,46 @@ class InscripcionController extends Controller
                 'categoria_id' => $request->input('categoria_filtro_id'),
             ])
             ->with('status', 'Participantes inscritos correctamente.');
+    }
+
+    public function updateParticipantePago(Request $request, Torneo $torneo, InscripcionOrganizacion $inscripcion, InscripcionCompetidor $competidor)
+    {
+        abort_unless($inscripcion->torneo_id === $torneo->id, 404);
+        abort_unless($competidor->torneo_id === $torneo->id && $competidor->inscripcion_organizacion_id === $inscripcion->id, 404);
+
+        $data = $request->validate([
+            'costos' => ['required', 'array', 'min:1'],
+            'costos.*' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
+        ]);
+
+        $detalles = $competidor->modalidades()
+            ->whereIn('id', array_keys($data['costos']))
+            ->get()
+            ->keyBy('id');
+
+        if ($detalles->count() !== count($data['costos'])) {
+            return back()->withErrors(['costos' => 'No se pudo validar los montos del participante.']);
+        }
+
+        DB::transaction(function () use ($data, $detalles) {
+            foreach ($data['costos'] as $detalleId => $costo) {
+                $detalles->get((int) $detalleId)->update([
+                    'costo' => $costo,
+                ]);
+            }
+        });
+
+        return back()->with('status', 'Monto del pago actualizado correctamente.');
+    }
+
+    public function destroyParticipante(Torneo $torneo, InscripcionOrganizacion $inscripcion, InscripcionCompetidor $competidor)
+    {
+        abort_unless($inscripcion->torneo_id === $torneo->id, 404);
+        abort_unless($competidor->torneo_id === $torneo->id && $competidor->inscripcion_organizacion_id === $inscripcion->id, 404);
+
+        $competidor->delete();
+
+        return back()->with('status', 'Competidor eliminado de la inscripcion correctamente.');
     }
 
     private function categoriasQuery(Torneo $torneo, Request $request)

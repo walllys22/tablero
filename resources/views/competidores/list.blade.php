@@ -65,25 +65,30 @@
                             @endif
                         </td>
                         <td style="vertical-align: middle; width: 12%" class="text-end">
-                            @if ($item->status == 1)
-                                <button type="button" title="Inactivar" data-bs-toggle="modal" data-bs-target="#modal-status-{{ $item->id }}" class="btn btn-sm btn-warning text-white p-1">
-                                    <i class="bi bi-toggle-on"></i>
-                                </button>
-                            @else
-                                <form method="POST" action="{{ route('organizaciones.competidores.toggle-status', [$organizacion, $item]) }}" class="d-inline">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" title="Activar" class="btn btn-sm btn-warning text-white p-1">
-                                        <i class="bi bi-toggle-off"></i>
+                            <div class="d-inline-grid gap-1 justify-content-center" style="grid-template-columns: repeat(2, 32px);">
+                                @if ($item->status == 1)
+                                    <button type="button" title="Inactivar" data-bs-toggle="modal" data-bs-target="#modal-status-{{ $item->id }}" class="btn btn-sm btn-warning text-white d-inline-flex align-items-center justify-content-center p-1" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-toggle-on"></i>
                                     </button>
-                                </form>
-                            @endif
-                            <button type="button" title="Ver" data-bs-toggle="modal" data-bs-target="#modal-view-{{ $item->id }}" class="btn btn-sm btn-primary p-1">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                            <a href="#" onclick="event.preventDefault(); deleteItem('{{ route('organizaciones.competidores.destroy', [$organizacion, $item]) }}')" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete" class="btn btn-sm btn-danger p-1">
-                                <i class="bi bi-trash"></i>
-                            </a>
+                                @else
+                                    <form method="POST" action="{{ route('organizaciones.competidores.toggle-status', [$organizacion, $item]) }}" class="m-0">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" title="Activar" class="btn btn-sm btn-warning text-white d-inline-flex align-items-center justify-content-center p-1" style="width: 32px; height: 32px;">
+                                            <i class="bi bi-toggle-off"></i>
+                                        </button>
+                                    </form>
+                                @endif
+                                <button type="button" title="Ver" data-bs-toggle="modal" data-bs-target="#modal-view-{{ $item->id }}" class="btn btn-sm btn-primary d-inline-flex align-items-center justify-content-center p-1" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button type="button" title="Editar" data-bs-toggle="modal" data-bs-target="#modal-edit-{{ $item->id }}" class="btn btn-sm btn-info text-white d-inline-flex align-items-center justify-content-center p-1" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <a href="#" onclick="event.preventDefault(); deleteItem('{{ route('organizaciones.competidores.destroy', [$organizacion, $item]) }}')" title="Eliminar" data-bs-toggle="modal" data-bs-target="#modal-delete" class="btn btn-sm btn-danger d-inline-flex align-items-center justify-content-center p-1" style="width: 32px; height: 32px;">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -146,6 +151,72 @@
             </div>
         </div>
     @endif
+
+    <div class="modal fade" id="modal-edit-{{ $item->id }}" tabindex="-1" aria-labelledby="modalEditLabel{{ $item->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <form method="POST" action="{{ route('organizaciones.competidores.update', [$organizacion, $item]) }}">
+                @csrf
+                @method('PATCH')
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title fw-bold" id="modalEditLabel{{ $item->id }}">Editar competidor</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="ci_{{ $item->id }}" class="form-label">CI</label>
+                                <input type="text" name="ci" id="ci_{{ $item->id }}" value="{{ old('ci', $persona->ci ?? '') }}" class="form-control">
+                            </div>
+                            <div class="col-md-8">
+                                <label for="first_name_{{ $item->id }}" class="form-label">Nombre completo</label>
+                                <input type="text" name="first_name" id="first_name_{{ $item->id }}" value="{{ old('first_name', $persona->first_name ?? '') }}" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="birth_date_{{ $item->id }}" class="form-label">Fecha de nacimiento</label>
+                                <input type="date" name="birth_date" id="birth_date_{{ $item->id }}" value="{{ old('birth_date', $persona && $persona->birth_date ? $persona->birth_date->format('Y-m-d') : '') }}" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="gender_{{ $item->id }}" class="form-label">Genero</label>
+                                <select name="gender" id="gender_{{ $item->id }}" class="form-select">
+                                    <option value="">Seleccione</option>
+                                    @foreach (['Masculino', 'Femenino'] as $gender)
+                                        <option value="{{ $gender }}" {{ old('gender', $persona->gender ?? '') === $gender ? 'selected' : '' }}>{{ $gender }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="peso_{{ $item->id }}" class="form-label">Peso Kg</label>
+                                <input type="number" name="peso" id="peso_{{ $item->id }}" value="{{ old('peso', $item->peso) }}" class="form-control" min="0" max="999.999" step="0.001">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="sangre_{{ $item->id }}" class="form-label">Tipo sangre</label>
+                                <input type="text" name="sangre" id="sangre_{{ $item->id }}" value="{{ old('sangre', $persona->sangre ?? '') }}" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="phone_{{ $item->id }}" class="form-label">Telefono</label>
+                                <input type="text" name="phone" id="phone_{{ $item->id }}" value="{{ old('phone', $persona->phone ?? '') }}" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="email_{{ $item->id }}" class="form-label">Email</label>
+                                <input type="email" name="email" id="email_{{ $item->id }}" value="{{ old('email', $persona->email ?? '') }}" class="form-control">
+                            </div>
+                            <div class="col-12">
+                                <label for="address_{{ $item->id }}" class="form-label">Direccion</label>
+                                <input type="text" name="address" id="address_{{ $item->id }}" value="{{ old('address', $persona->address ?? '') }}" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-info text-white">
+                            <i class="bi bi-check-lg"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <div class="modal fade" id="modal-view-{{ $item->id }}" tabindex="-1" aria-labelledby="modalViewLabel{{ $item->id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">

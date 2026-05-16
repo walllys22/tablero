@@ -24,20 +24,24 @@ class CompetidorController extends Controller
         $search = trim((string) $request->input('search', ''));
         $paginate = (int) $request->input('paginate', 10);
         $paginate = in_array($paginate, [10, 25, 50, 100], true) ? $paginate : 10;
+        $order = $request->input('order') === 'desc' ? 'desc' : 'asc';
 
         $data = $organizacion->competidores()
             ->with('persona')
+            ->join('personas', 'personas.id', '=', 'competidores.persona_id')
             ->when($search !== '', function ($query) use ($search) {
-                $query->whereHas('persona', function ($query) use ($search) {
-                    $query->where('ci', 'like', "%{$search}%")
-                        ->orWhere('first_name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%")
-                        ->orWhere('gender', 'like', "%{$search}%")
-                        ->orWhere('sangre', 'like', "%{$search}%");
+                $query->where(function ($query) use ($search) {
+                    $query->where('personas.ci', 'like', "%{$search}%")
+                        ->orWhere('personas.first_name', 'like', "%{$search}%")
+                        ->orWhere('personas.email', 'like', "%{$search}%")
+                        ->orWhere('personas.phone', 'like', "%{$search}%")
+                        ->orWhere('personas.gender', 'like', "%{$search}%")
+                        ->orWhere('personas.sangre', 'like', "%{$search}%");
                 });
             })
-            ->orderByDesc('id')
+            ->orderBy('personas.first_name', $order)
+            ->orderBy('competidores.id', $order)
+            ->select('competidores.*')
             ->paginate($paginate)
             ->withQueryString();
 
@@ -100,6 +104,56 @@ class CompetidorController extends Controller
         return redirect()
             ->route('organizaciones.competidores.index', $organizacion)
             ->with('status', 'Estado del competidor actualizado correctamente.');
+    }
+
+    public function update(Request $request, Organizacion $organizacion, Competidor $competidor)
+    {
+        abort_unless($competidor->organizacion_id === $organizacion->id, 404);
+
+        $persona = $competidor->persona;
+
+        $data = $request->validate([
+            'ci' => [
+                'nullable',
+                'string',
+                'max:50',
+                Rule::unique('personas', 'ci')->ignore($persona?->id),
+            ],
+            'first_name' => ['required', 'string', 'max:255'],
+            'birth_date' => ['nullable', 'date', 'before_or_equal:today'],
+            'gender' => ['nullable', 'string', 'max:50'],
+            'sangre' => ['nullable', 'string', 'max:50'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+                Rule::unique('personas', 'email')->ignore($persona?->id),
+            ],
+            'address' => ['nullable', 'string', 'max:255'],
+            'peso' => ['nullable', 'numeric', 'min:0', 'max:999.999'],
+        ]);
+
+        if ($persona) {
+            $persona->update([
+                'ci' => $data['ci'] ?? null,
+                'first_name' => $data['first_name'],
+                'birth_date' => $data['birth_date'] ?? null,
+                'gender' => $data['gender'] ?? null,
+                'sangre' => $data['sangre'] ?? null,
+                'phone' => $data['phone'] ?? null,
+                'email' => $data['email'] ?? null,
+                'address' => $data['address'] ?? null,
+            ]);
+        }
+
+        $competidor->update([
+            'peso' => $data['peso'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('organizaciones.competidores.index', $organizacion)
+            ->with('status', 'Datos del competidor actualizados correctamente.');
     }
 
     public function destroy(Organizacion $organizacion, Competidor $competidor)

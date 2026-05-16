@@ -163,6 +163,7 @@
                                         <th>Competidor</th>
                                         <th>Modalidades</th>
                                         <th style="width: 120px; text-align: center;">Total</th>
+                                        <th style="width: 96px; text-align: center;">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -194,15 +195,88 @@
                                             <td class="text-center">
                                                 <span class="label label-success">{{ number_format((float) $competidor->total, 2) }}</span>
                                             </td>
+                                            <td class="text-center">
+                                                <div class="d-inline-grid gap-1" style="grid-template-columns: repeat(2, 32px);">
+                                                    <button type="button" class="btn btn-sm btn-info text-white d-inline-flex align-items-center justify-content-center p-1" style="width: 32px; height: 32px;" title="Editar monto" data-bs-toggle="modal" data-bs-target="#modal-edit-pago-{{ $competidor->id }}">
+                                                        <i class="bi bi-pencil-square"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-danger d-inline-flex align-items-center justify-content-center p-1" style="width: 32px; height: 32px;" title="Eliminar competidor" data-bs-toggle="modal" data-bs-target="#modal-delete-participante-{{ $competidor->id }}">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="3" class="text-center text-muted">No hay participantes inscritos para esta organizacion.</td>
+                                            <td colspan="4" class="text-center text-muted">No hay participantes inscritos para esta organizacion.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
                             </table>
                         </div>
+
+                        @foreach ($competidores as $competidor)
+                            <div class="modal fade" id="modal-edit-pago-{{ $competidor->id }}" tabindex="-1" aria-labelledby="modalEditPagoLabel{{ $competidor->id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <form method="POST" action="{{ route('inscripciones.participantes.pagos.update', [$torneo, $inscripcion, $competidor]) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-info text-white">
+                                                <h5 class="modal-title fw-bold" id="modalEditPagoLabel{{ $competidor->id }}">Editar monto del pago</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="fw-bold mb-3">{{ $competidor->persona->first_name }}</div>
+                                                @foreach ($competidor->modalidades as $detalle)
+                                                    <div class="mb-3">
+                                                        <label for="costo_detalle_{{ $detalle->id }}" class="form-label">
+                                                            {{ $detalle->modalidad->nombre }}
+                                                            @if ($detalle->categoria)
+                                                                <span class="text-muted">/ {{ $detalle->categoria->nombre }}</span>
+                                                            @endif
+                                                        </label>
+                                                        <input type="number" name="costos[{{ $detalle->id }}]" id="costo_detalle_{{ $detalle->id }}" value="{{ old('costos.' . $detalle->id, $detalle->costo) }}" class="form-control" min="0" step="0.01" required>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" class="btn btn-info text-white">
+                                                    <i class="bi bi-check-lg"></i> Guardar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="modal fade" id="modal-delete-participante-{{ $competidor->id }}" tabindex="-1" aria-labelledby="modalDeleteParticipanteLabel{{ $competidor->id }}" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <form method="POST" action="{{ route('inscripciones.participantes.destroy', [$torneo, $inscripcion, $competidor]) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title fw-bold" id="modalDeleteParticipanteLabel{{ $competidor->id }}">Eliminar competidor</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p class="mb-1">Seguro que desea eliminar a este competidor de la inscripcion?</p>
+                                                <strong>{{ $competidor->persona->first_name }}</strong>
+                                                <small class="text-muted d-block mt-2">Tambien se eliminaran las modalidades registradas para este competidor en esta organizacion.</small>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i class="bi bi-trash"></i> Eliminar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
