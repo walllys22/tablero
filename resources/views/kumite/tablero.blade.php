@@ -94,7 +94,7 @@
             width: 100%;
             height: 100vh;
             max-height: 100vh;
-            padding: 12px;
+            padding: 8px;
             overflow: hidden;
         }
 
@@ -110,8 +110,8 @@
             display: flex;
             flex-direction: column;
             align-items: stretch;
-            gap: 8px;
-            padding: 12px;
+            gap: 6px;
+            padding: 10px;
             border: 4px solid #ffffff;
             border-radius: 14px;
             color: #ffffff;
@@ -137,7 +137,6 @@
             justify-content: center;
             text-align: center;
             pointer-events: none;
-            transform: translateY(-8%);
         }
 
         .estado-combate {
@@ -161,9 +160,9 @@
         .puntos-gigantes {
             color: inherit;
             font-family: "Arial Black", Arial, Helvetica, sans-serif;
-            font-size: clamp(20rem, 26vh, 10rem);
+            font-size: clamp(15rem, 38vh, 22rem);
             font-weight: 900;
-            line-height: 0.86;
+            line-height: 0.82;
             text-align: center;
             text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
             transition: transform 0.1s ease;
@@ -183,7 +182,7 @@
             display: flex;
             flex: 0 0 auto;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             width: 100%;
         }
 
@@ -197,6 +196,18 @@
 
         .fila-faltas {
             grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+
+        .fila-kiken {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+
+        .btn-kiken {
+            grid-column: 5;
+            background: linear-gradient(145deg, #fef3c7, #f59e0b) !important;
+            color: #000000 !important;
+            min-height: 30px !important;
+            font-weight: 800;
         }
 
         .contadores-tecnicas {
@@ -213,6 +224,7 @@
         .btn-senshu,
         .btn-hantei,
         .btn-falta,
+        .btn-kiken,
         .btn-Reloj {
             display: inline-flex;
             align-items: center;
@@ -234,7 +246,8 @@
         .marcador .btn-personalizadoAzul,
         .marcador .btn-senshu,
         .marcador .btn-hantei,
-        .marcador .btn-falta {
+        .marcador .btn-falta,
+        .marcador .btn-kiken {
             min-height: 32px;
             padding: 4px 6px;
             border-radius: 7px;
@@ -283,15 +296,15 @@
         }
 
         .proximo-combate label {
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             color: #e5e7eb;
-            font-size: 0.9rem;
+            font-size: 0.82rem;
             font-weight: 700;
         }
 
         .proximo-combate input {
             width: 100%;
-            height: 42px;
+            height: 36px;
             color: #000000 !important;
             font-weight: 700;
             text-transform: uppercase;
@@ -357,8 +370,9 @@
 
         .ajuste-grid {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(94px, 1fr) minmax(100px, 1.05fr);
             gap: 10px;
+            align-items: stretch;
         }
 
         .ajuste-col {
@@ -378,7 +392,6 @@
 
         .tiempo-select {
             width: 100%;
-            min-height: 32px;
             border: 1px solid #2f2f30;
             border-radius: 8px;
             color: #000000;
@@ -386,6 +399,25 @@
             font-weight: 800;
             text-align: center;
             text-align-last: center;
+        }
+
+        .ajuste-col .btn-personalizado,
+        .ajuste-col .btn-Reloj,
+        .ajuste-col .tiempo-select {
+            min-height: 38px;
+            height: 38px;
+            box-sizing: border-box;
+        }
+
+        .ajuste-col .btn-personalizado {
+            padding: 4px 6px;
+            font-size: 0.95rem;
+            white-space: nowrap;
+        }
+
+        .ajuste-col .btn-Reloj {
+            padding: 4px 6px;
+            font-size: 1.2rem;
         }
 
         .senshu-indicador {
@@ -519,6 +551,9 @@
                     <button id="btn-aka-hc" class="btn-falta" onclick="togglePenalty('aka', 4)">HC</button>
                     <button id="btn-aka-c" class="btn-falta" onclick="togglePenalty('aka', 5)">C</button>
                 </div>
+                <div class="fila fila-kiken">
+                    <button id="btn-kiken-rojo" class="btn-kiken" onclick="declararKiken('aka')">Kiken</button>
+                </div>
             </div>
 
             <div class="proximo-combate">
@@ -578,7 +613,7 @@
                     <span class="ajuste-label">&nbsp;</span>
                     <button id="btnMuestraGanador" class="btn-personalizado" onclick="declararGanador()" disabled>Ganador</button>
                     <button type="button" id="btnNuevoCombate" onclick="trasladarDatos()" class="btn-personalizado btn-nuevo-combate">
-                        Nuevo Combate
+                        Nuevo
                     </button>
                 </div>
             </div>
@@ -619,6 +654,9 @@
                     <button id="btn-ao-c3" class="btn-falta" onclick="togglePenalty('ao', 3)">C3</button>
                     <button id="btn-ao-hc" class="btn-falta" onclick="togglePenalty('ao', 4)">HC</button>
                     <button id="btn-ao-c" class="btn-falta" onclick="togglePenalty('ao', 5)">C</button>
+                </div>
+                <div class="fila fila-kiken">
+                    <button id="btn-kiken-azul" class="btn-kiken" onclick="declararKiken('ao')">Kiken</button>
                 </div>
             </div>
 
@@ -709,6 +747,7 @@
                 });
             });
 
+            timerSeconds = tiempoSeleccionadoSegundos();
             updateTimerDisplay();
             inicializarEncabezadoCombate();
             setEncabezadoCombate();
@@ -971,7 +1010,7 @@
 
         function resetTimer() {
             pauseTimer();
-            timerSeconds = 0;
+            timerSeconds = tiempoSeleccionadoSegundos();
             updateTimerDisplay();
         }
 
@@ -989,6 +1028,16 @@
             if (timerInterval || value === '') return;
             timerSeconds = parseInt(value, 10) || 0;
             updateTimerDisplay();
+        }
+
+        function tiempoSeleccionadoSegundos() {
+            const tiempoSelect = document.getElementById('tiempo');
+
+            if (!tiempoSelect || tiempoSelect.value === '') {
+                return 0;
+            }
+
+            return parseInt(tiempoSelect.value, 10) || 0;
         }
 
         function updateScore(side, value) {
@@ -1089,6 +1138,19 @@
             await registrarGanador(winner);
         }
 
+        async function declararKiken(loserSide) {
+            const winnerSide = loserSide === 'aka' ? 'ao' : 'aka';
+
+            scores[loserSide] = 0;
+            scores[winnerSide] = 1;
+            $('#puntosRojo').text(scores.aka);
+            $('#puntosAzul').text(scores.ao);
+
+            await registrarGanador(winnerSide, {
+                kikenSide: loserSide,
+            });
+        }
+
         function resolveWinner() {
             if (scores.ao !== scores.aka) {
                 return scores.ao > scores.aka ? 'ao' : 'aka';
@@ -1124,13 +1186,13 @@
             $('#modal-ganador').css('display', 'none');
         }
 
-        async function registrarGanador(side) {
+        async function registrarGanador(side, options = {}) {
             const config = sideConfig[side];
             const nombreGanador = $(`#${config.nameId}`).text();
             const organizacionGanador = $(`#${config.nameId}`).data('organizacion') || '';
 
             if (combateInicialKumite.sorteo_id && indiceCombateKumite >= 0) {
-                const guardado = await guardarResultadoCombate(side, nombreGanador);
+                const guardado = await guardarResultadoCombate(side, nombreGanador, options);
 
                 if (!guardado) {
                     return;
@@ -1170,8 +1232,9 @@
             siguiente.bye = false;
         }
 
-        async function guardarResultadoCombate(side, nombreGanador) {
+        async function guardarResultadoCombate(side, nombreGanador, options = {}) {
             const combateActual = combatesKumite[indiceCombateKumite] || {};
+            const kikenSide = options.kikenSide || null;
 
             try {
                 const response = await fetch(guardarCombateUrl, {
@@ -1196,6 +1259,8 @@
                         senshu: activeSenshu === 'aka' ? 'rojo' : (activeSenshu === 'ao' ? 'azul' : null),
                         senshu_rojo: activeSenshu === 'aka',
                         senshu_azul: activeSenshu === 'ao',
+                        kiken_rojo: kikenSide === 'aka',
+                        kiken_azul: kikenSide === 'ao',
                         tecnicas_rojo: tecnicasCompetidor('Rojo'),
                         tecnicas_azul: tecnicasCompetidor('Azul'),
                         ganador: nombreGanador,
@@ -1238,7 +1303,7 @@
                 aka: [false, false, false, false, false]
             };
             activeSenshu = null;
-            timerSeconds = 0;
+            timerSeconds = tiempoSeleccionadoSegundos();
 
             $('#puntosAzul, #puntosRojo').text('0');
             $('#mirrorSpanYukoAzul, #mirrorSpanWazariAzul, #mirrorSpanIpponAzul, #mirrorSpanYukoRojo, #mirrorSpanWazariRojo, #mirrorSpanIpponRojo').text('0');
@@ -1391,7 +1456,7 @@
             const btnCerrar = document.getElementById('btnCerrar');
             const tiempoSelect = document.getElementById('tiempo');
             const ajusteButtons = document.querySelectorAll('.btn-Reloj');
-            const combateButtons = document.querySelectorAll('.suma, .resta, .btn-senshu, .btn-hantei, .btn-falta');
+            const combateButtons = document.querySelectorAll('.suma, .resta, .btn-senshu, .btn-hantei, .btn-falta, .btn-kiken');
             const isTimeZero = timerSeconds === 0;
             const isRunning = timerInterval !== null;
             const isPaused = !isRunning;
@@ -1419,7 +1484,10 @@
             if (btnReset) btnReset.disabled = false;
             if (btnCerrar) btnCerrar.disabled = false;
             if (btnGanador) btnGanador.disabled = !(isTimeZero || isPaused);
-            if (btnAnterior) btnAnterior.disabled = !isTimeZero || historialCombatesKumite.length === 0;
+            if (btnAnterior) {
+                btnAnterior.disabled = !isTimeZero;
+                btnAnterior.style.color = '#000000';
+            }
             if (tiempoSelect) tiempoSelect.disabled = false;
             ajusteButtons.forEach(function (button) {
                 button.disabled = false;

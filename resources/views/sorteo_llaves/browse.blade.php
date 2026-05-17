@@ -348,6 +348,12 @@
                                                                     No
                                                                 @endif
                                                             </div>
+                                                            <div class="bracket-result">
+                                                                <strong>Kiken:</strong>
+                                                                Rojo {{ $resultadoCombate->kiken_rojo ? 'Si' : 'No' }}
+                                                                -
+                                                                Azul {{ $resultadoCombate->kiken_azul ? 'Si' : 'No' }}
+                                                            </div>
                                                         @endif
                                                     </div>
                                                     <div class="bracket-player">
