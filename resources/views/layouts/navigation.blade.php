@@ -12,18 +12,25 @@
         <div class="ms-auto d-none d-lg-flex align-items-center gap-3">
             @auth
                 @php
+                    $usuarioNav = Auth::user();
                     $imagenUsuarioNav = Auth::user()->imagen
                         ? asset('storage/' . ltrim(Auth::user()->imagen, '/'))
                         : null;
+                    $rolUsuarioNav = $usuarioNav->roles->pluck('description')->filter()->first()
+                        ?: $usuarioNav->roles->pluck('name')->filter()->first()
+                        ?: 'Usuario';
                 @endphp
                 <div class="dropdown">
                     <button class="btn btn-outline-secondary dropdown-toggle d-inline-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         @if ($imagenUsuarioNav)
-                            <img src="{{ $imagenUsuarioNav }}" alt="{{ Auth::user()->name }}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;" onerror="this.style.display='none';">
+                            <img src="{{ $imagenUsuarioNav }}" alt="{{ $usuarioNav->name }}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;" onerror="this.style.display='none';">
                         @else
                             <i class="bi bi-person-circle"></i>
                         @endif
-                        {{ Auth::user()->name }}
+                        <span class="d-inline-flex flex-column align-items-start lh-sm">
+                            <span>{{ $rolUsuarioNav }}</span>
+                            <small class="text-muted">{{ $usuarioNav->name }}</small>
+                        </span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li>

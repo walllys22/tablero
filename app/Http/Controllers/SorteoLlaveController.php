@@ -358,6 +358,10 @@ class SorteoLlaveController extends Controller
             return $podio;
         }
 
+        if ($this->esRoundRobin($llaves)) {
+            return $this->podioRoundRobin($llaves, $sorteo, $podio);
+        }
+
         $resultadosPorIndice = $sorteo->resultadosKumite->keyBy('indice_combate');
         $finalRound = count($llaves) - 1;
         $finalIndex = $this->indiceCombatePorPosicion($llaves, $finalRound, 0);
@@ -405,6 +409,69 @@ class SorteoLlaveController extends Controller
         $podio['bronce_2'] = $bronces[1] ?? '';
 
         return $podio;
+    }
+
+    private function podioRoundRobin(array $llaves, SorteoLlave $sorteo, array $podio): array
+    {
+        $tabla = [];
+        $resultadosPorIndice = $sorteo->resultadosKumite->keyBy('indice_combate');
+        $indice = 0;
+
+        foreach ($llaves as $ronda) {
+            foreach (($ronda['combates'] ?? []) as $combate) {
+                $rojo = $this->nombreCompetidorPodio($combate['a'] ?? null);
+                $azul = $this->nombreCompetidorPodio($combate['b'] ?? null);
+
+                if ($rojo) {
+                    $tabla[$rojo] ??= ['nombre' => $rojo, 'puntos' => 0, 'senshu' => 0, 'victorias' => 0];
+                }
+
+                if ($azul) {
+                    $tabla[$azul] ??= ['nombre' => $azul, 'puntos' => 0, 'senshu' => 0, 'victorias' => 0];
+                }
+
+                $resultado = $resultadosPorIndice->get($indice);
+
+                if ($resultado) {
+                    $nombreRojo = $resultado->competidor_rojo ?: $rojo;
+                    $nombreAzul = $resultado->competidor_azul ?: $azul;
+
+                    if ($nombreRojo) {
+                        $tabla[$nombreRojo] ??= ['nombre' => $nombreRojo, 'puntos' => 0, 'senshu' => 0, 'victorias' => 0];
+                        $tabla[$nombreRojo]['puntos'] += (int) $resultado->puntaje_rojo;
+                        $tabla[$nombreRojo]['senshu'] += ($resultado->senshu === 'rojo' || $resultado->senshu_rojo) ? 1 : 0;
+                        $tabla[$nombreRojo]['victorias'] += $resultado->ganador_color === 'rojo' ? 1 : 0;
+                    }
+
+                    if ($nombreAzul) {
+                        $tabla[$nombreAzul] ??= ['nombre' => $nombreAzul, 'puntos' => 0, 'senshu' => 0, 'victorias' => 0];
+                        $tabla[$nombreAzul]['puntos'] += (int) $resultado->puntaje_azul;
+                        $tabla[$nombreAzul]['senshu'] += ($resultado->senshu === 'azul' || $resultado->senshu_azul) ? 1 : 0;
+                        $tabla[$nombreAzul]['victorias'] += $resultado->ganador_color === 'azul' ? 1 : 0;
+                    }
+                }
+
+                $indice++;
+            }
+        }
+
+        $ordenados = collect($tabla)
+            ->sort(function ($a, $b) {
+                return [$b['puntos'], $b['senshu'], $b['victorias'], $a['nombre']]
+                    <=> [$a['puntos'], $a['senshu'], $a['victorias'], $b['nombre']];
+            })
+            ->values();
+
+        $podio['oro'] = $ordenados[0]['nombre'] ?? '';
+        $podio['plata'] = $ordenados[1]['nombre'] ?? '';
+        $podio['bronce_1'] = $ordenados[2]['nombre'] ?? '';
+
+        return $podio;
+    }
+
+    private function esRoundRobin(array $llaves): bool
+    {
+        return ($llaves[0]['sistema'] ?? null) === 'round_robin';
     }
 
     private function nombreCompetidorPodio(?array $competidor): string

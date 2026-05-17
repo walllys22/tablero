@@ -267,7 +267,10 @@
                             <div class="modal-body">
                                 <div class="mb-3">
                                     <div class="fw-semibold">{{ $sorteo->modalidad->nombre ?? 'Sin modalidad' }}</div>
-                                    <small class="text-muted">{{ $sorteo->categoria->nombre ?? 'Sin categoria' }}</small>
+                                    <small class="text-muted">
+                                        Numero {{ $sorteo->orden ?? $loop->iteration }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        {{ $sorteo->categoria->nombre ?? 'Sin categoria' }}
+                                    </small>
                                 </div>
                                 @if ($sorteo->categoria_completa)
                                     @php $podioModal = $sorteo->podio_modal ?? []; @endphp
