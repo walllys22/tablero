@@ -26,7 +26,9 @@ class TableroController extends Controller
                     'ronda' => $ronda['nombre'] ?? 'Combate',
                     'numero_llave' => $numeroLlave++,
                     'rojo' => $combate['a']['nombre'] ?? '',
+                    'rojo_organizacion' => $combate['a']['organizacion'] ?? '',
                     'azul' => $combate['b']['nombre'] ?? ($combate['bye'] ?? false ? 'BYE' : ''),
+                    'azul_organizacion' => $combate['b']['organizacion'] ?? '',
                     'bye' => (bool) ($combate['bye'] ?? false),
                     'realizado' => (bool) ($combate['realizado'] ?? false),
                     'ganador' => $combate['ganador']['nombre'] ?? null,
@@ -34,13 +36,15 @@ class TableroController extends Controller
             }
         }
 
-        $primerCombate = $combatesKumite[0] ?? [];
+        $primerIndicePendiente = $this->primerIndiceCombatePendiente($combatesKumite);
+        $primerCombate = $primerIndicePendiente !== null ? ($combatesKumite[$primerIndicePendiente] ?? []) : [];
 
         $combateInicialKumite = [
             'sorteo_id' => $sorteo?->id,
             'siguiente_sorteo_id' => $this->siguienteSorteoKumite($sorteo)?->id,
             'modalidad' => $sorteo?->modalidad?->nombre ?? 'Kumite Individual',
             'categoria' => $sorteo?->categoria?->nombre ?? '',
+            'indice_combate' => $primerIndicePendiente,
             'rojo' => $primerCombate['rojo'] ?? '',
             'azul' => $primerCombate['azul'] ?? '',
         ];
@@ -79,6 +83,8 @@ class TableroController extends Controller
             'faltas_rojo' => ['array'],
             'faltas_azul' => ['array'],
             'senshu' => ['nullable', 'in:rojo,azul'],
+            'senshu_rojo' => ['required', 'boolean'],
+            'senshu_azul' => ['required', 'boolean'],
             'tecnicas_rojo' => ['array'],
             'tecnicas_azul' => ['array'],
             'ganador' => ['nullable', 'string', 'max:255'],
@@ -103,6 +109,8 @@ class TableroController extends Controller
                 'faltas_rojo' => $data['faltas_rojo'] ?? [],
                 'faltas_azul' => $data['faltas_azul'] ?? [],
                 'senshu' => $data['senshu'] ?? null,
+                'senshu_rojo' => $data['senshu_rojo'],
+                'senshu_azul' => $data['senshu_azul'],
                 'tecnicas_rojo' => $data['tecnicas_rojo'] ?? [],
                 'tecnicas_azul' => $data['tecnicas_azul'] ?? [],
                 'ganador' => $data['ganador'] ?? null,
@@ -123,16 +131,12 @@ class TableroController extends Controller
     {
         if ($request->filled('sorteo_id')) {
             return SorteoLlave::with(['modalidad', 'categoria', 'resultadosKumite'])
-                ->whereHas('modalidad', function ($query) {
-                    $query->where('nombre', 'like', '%Kumite%');
-                })
+                ->whereHas('modalidad', fn ($query) => $this->filtrarModalidadKumite($query))
                 ->find($request->input('sorteo_id'));
         }
 
         $sorteos = SorteoLlave::with(['modalidad', 'categoria', 'resultadosKumite'])
-            ->whereHas('modalidad', function ($query) {
-                $query->where('nombre', 'like', '%Kumite%');
-            })
+            ->whereHas('modalidad', fn ($query) => $this->filtrarModalidadKumite($query))
             ->orderByRaw('COALESCE(area, 999)')
             ->orderByRaw('COALESCE(orden, 999999)')
             ->orderBy('id')
@@ -141,9 +145,7 @@ class TableroController extends Controller
         return $sorteos->first(function ($sorteo) {
             return $this->tieneCombatesPendientes($sorteo);
         }) ?: SorteoLlave::with(['modalidad', 'categoria', 'resultadosKumite'])
-            ->whereHas('modalidad', function ($query) {
-                $query->where('nombre', 'like', '%Kumite%');
-            })
+            ->whereHas('modalidad', fn ($query) => $this->filtrarModalidadKumite($query))
             ->latest()
             ->first();
     }
@@ -157,9 +159,7 @@ class TableroController extends Controller
         $query = SorteoLlave::with(['modalidad', 'categoria', 'resultadosKumite'])
             ->where('torneo_id', $actual->torneo_id)
             ->where('id', '!=', $actual->id)
-            ->whereHas('modalidad', function ($query) {
-                $query->where('nombre', 'like', '%Kumite%');
-            })
+            ->whereHas('modalidad', fn ($query) => $this->filtrarModalidadKumite($query))
             ->orderByRaw('CASE WHEN COALESCE(orden, 999999) > COALESCE(?, 999999) THEN 0 ELSE 1 END', [$actual->orden])
             ->orderByRaw('COALESCE(orden, 999999)')
             ->orderBy('id');
@@ -171,6 +171,11 @@ class TableroController extends Controller
         return $query->get()->first(function ($sorteo) {
             return $this->tieneCombatesPendientes($sorteo);
         });
+    }
+
+    private function filtrarModalidadKumite($query): void
+    {
+        $query->where('nombre', 'like', '%Kumite%');
     }
 
     private function tieneCombatesPendientes(SorteoLlave $sorteo): bool
@@ -193,9 +198,27 @@ class TableroController extends Controller
         return false;
     }
 
+    private function primerIndiceCombatePendiente(array $combates): ?int
+    {
+        foreach ($combates as $index => $combate) {
+            $rojo = trim((string) ($combate['rojo'] ?? ''));
+            $azul = trim((string) ($combate['azul'] ?? ''));
+
+            if (($combate['realizado'] ?? false) || ($combate['bye'] ?? false)) {
+                continue;
+            }
+
+            if ($rojo !== '' && $azul !== '' && strtoupper($rojo) !== 'BYE' && strtoupper($azul) !== 'BYE') {
+                return $index;
+            }
+        }
+
+        return null;
+    }
+
     private function llavesConResultados(SorteoLlave $sorteo): array
     {
-        $llaves = $this->propagarByes($sorteo->llaves);
+        $llaves = $this->propagarByes($this->reiniciarLlavesBase($sorteo->llaves));
 
         foreach ($sorteo->resultadosKumite->sortBy('indice_combate') as $resultado) {
             $position = $this->posicionCombatePorIndice($llaves, (int) $resultado->indice_combate);
@@ -226,6 +249,27 @@ class TableroController extends Controller
 
             if (isset($llaves[$nextRound]['combates'][$nextMatch])) {
                 $llaves[$nextRound]['combates'][$nextMatch][$nextSide] = $ganadorCompetidor;
+            }
+        }
+
+        return $llaves;
+    }
+
+    private function reiniciarLlavesBase(array $llaves): array
+    {
+        foreach ($llaves as $roundIndex => $ronda) {
+            foreach (($ronda['combates'] ?? []) as $matchIndex => $combate) {
+                unset(
+                    $llaves[$roundIndex]['combates'][$matchIndex]['realizado'],
+                    $llaves[$roundIndex]['combates'][$matchIndex]['ganador']
+                );
+
+                if ($roundIndex > 0) {
+                    unset(
+                        $llaves[$roundIndex]['combates'][$matchIndex]['a'],
+                        $llaves[$roundIndex]['combates'][$matchIndex]['b']
+                    );
+                }
             }
         }
 
@@ -395,7 +439,7 @@ class TableroController extends Controller
     {
         $nombre = $competidor['nombre'] ?? '';
 
-        return in_array($nombre, ['', 'BYE', 'Competidor'], true) || str_starts_with($nombre, 'Ganador')
+        return in_array($nombre, ['', 'BYE', 'Competidor', 'Pendiente'], true) || str_starts_with($nombre, 'Ganador')
             ? ''
             : $nombre;
     }

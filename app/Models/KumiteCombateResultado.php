@@ -22,6 +22,8 @@ class KumiteCombateResultado extends Model
         'faltas_rojo',
         'faltas_azul',
         'senshu',
+        'senshu_rojo',
+        'senshu_azul',
         'tecnicas_rojo',
         'tecnicas_azul',
         'ganador',
@@ -32,6 +34,8 @@ class KumiteCombateResultado extends Model
     protected $casts = [
         'faltas_rojo' => 'array',
         'faltas_azul' => 'array',
+        'senshu_rojo' => 'boolean',
+        'senshu_azul' => 'boolean',
         'tecnicas_rojo' => 'array',
         'tecnicas_azul' => 'array',
         'realizado_at' => 'datetime',

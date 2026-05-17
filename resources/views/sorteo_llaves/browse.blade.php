@@ -51,6 +51,7 @@
                                 @foreach ($modalidad->categorias as $categoria)
                                     <option value="{{ $categoria->id }}"
                                         data-modalidad-id="{{ $modalidad->id }}"
+                                        data-sorteada="{{ $categoriaIdsSorteadas->contains((int) $categoria->id) ? '1' : '0' }}"
                                         {{ (string) request('categoria_id') === (string) $categoria->id ? 'selected' : '' }}>
                                         {{ $categoria->nombre }}
                                     </option>
@@ -66,7 +67,7 @@
                         </select>
                     </div>
                     <div class="col-md-2 d-grid">
-                        <input type="hidden" name="sortear" value="1">
+                        <input type="hidden" name="sortear" value="1" id="input-sortear">
                         <input type="hidden" name="seed" value="{{ $seed }}">
                         <button type="submit" id="btn-sortear" class="btn btn-success" {{ $sorteoActual ? 'disabled' : '' }}>
                             <i class="bi bi-shuffle"></i> Sortear
@@ -125,7 +126,16 @@
                                     <tr class="js-sorteo-row" data-search="{{ mb_strtolower(($sorteo->modalidad->nombre ?? '') . ' ' . ($sorteo->categoria->nombre ?? '')) }}">
                                         <td class="text-center fw-bold">{{ $numeroPorModalidad[$modalidadKey] }}</td>
                                         <td>{{ $sorteo->modalidad->nombre ?? 'Sin modalidad' }}</td>
-                                        <td>{{ $sorteo->categoria->nombre ?? 'Sin categoria' }}</td>
+                                        <td>
+                                            <div>{{ $sorteo->categoria->nombre ?? 'Sin categoria' }}</div>
+                                            @if ($sorteo->categoria_estado === 'realizada')
+                                                <span class="badge bg-success mt-1">Realizada</span>
+                                            @elseif ($sorteo->categoria_estado === 'ejecucion')
+                                                <span class="badge bg-warning text-dark mt-1">En ejecucion</span>
+                                            @else
+                                                <span class="badge bg-secondary mt-1">Pendiente</span>
+                                            @endif
+                                        </td>
                                         <td class="text-center">
                                             @if ($sorteo->area)
                                                 <span class="area-badge area-color-{{ (($sorteo->area - 1) % 8) + 1 }}">
@@ -140,6 +150,10 @@
                                             <a href="{{ route('sorteo-llaves.graphic', [$torneo, 'modalidad_id' => $sorteo->modalidad_id, 'categoria_id' => $sorteo->categoria_id, 'seed' => $sorteo->seed]) }}" class="btn btn-sm btn-primary p-1" title="Ver llaves">
                                                 <i class="bi bi-diagram-3"></i>
                                             </a>
+                                            <button type="button" class="btn btn-sm btn-success p-1" title="Mostrar llaves sorteadas"
+                                                data-bs-toggle="modal" data-bs-target="#modal-llaves-sorteadas-{{ $sorteo->id }}">
+                                                <i class="bi bi-list-check"></i>
+                                            </button>
                                             @if (($sorteo->resultados_kumite_count ?? 0) > 0)
                                                 <a href="{{ route('sorteo-llaves.resultados', [$torneo, $sorteo]) }}" class="btn btn-sm btn-info text-white p-1" title="Llaves realizadas">
                                                     <i class="bi bi-clipboard-check"></i>
@@ -239,6 +253,129 @@
             @endif
 
             @foreach ($sorteos as $sorteo)
+                <div class="modal fade" id="modal-llaves-sorteadas-{{ $sorteo->id }}" tabindex="-1"
+                    aria-labelledby="modalLlavesSorteadasLabel{{ $sorteo->id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title fw-bold" id="modalLlavesSorteadasLabel{{ $sorteo->id }}">
+                                    Llaves sorteadas
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                    aria-label="Cerrar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <div class="fw-semibold">{{ $sorteo->modalidad->nombre ?? 'Sin modalidad' }}</div>
+                                    <small class="text-muted">{{ $sorteo->categoria->nombre ?? 'Sin categoria' }}</small>
+                                </div>
+                                @if ($sorteo->categoria_completa)
+                                    @php $podioModal = $sorteo->podio_modal ?? []; @endphp
+                                    <div class="podio-horizontal mb-3">
+                                        @if (! empty($podioModal['oro']))
+                                            <div class="podio-horizontal-item podio-oro">
+                                                <span>1</span>
+                                                <strong>Oro</strong>
+                                                <div>{{ $podioModal['oro'] }}</div>
+                                            </div>
+                                        @endif
+                                        @if (! empty($podioModal['plata']))
+                                            <div class="podio-horizontal-item podio-plata">
+                                                <span>2</span>
+                                                <strong>Plata</strong>
+                                                <div>{{ $podioModal['plata'] }}</div>
+                                            </div>
+                                        @endif
+                                        @if (! empty($podioModal['bronce_1']))
+                                            <div class="podio-horizontal-item podio-bronce">
+                                                <span>3</span>
+                                                <strong>Bronce</strong>
+                                                <div>{{ $podioModal['bronce_1'] }}</div>
+                                            </div>
+                                        @endif
+                                        @if (! empty($podioModal['bronce_2']))
+                                            <div class="podio-horizontal-item podio-bronce">
+                                                <span>3</span>
+                                                <strong>Bronce</strong>
+                                                <div>{{ $podioModal['bronce_2'] }}</div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
+                                <div class="bracket-wrapper">
+                                    @php
+                                        $resultadosPorIndice = $sorteo->resultadosKumite->keyBy('indice_combate');
+                                        $indiceCombateModal = 0;
+                                    @endphp
+                                    @foreach (($sorteo->llaves ?? []) as $ronda)
+                                        <div class="bracket-round">
+                                            <div class="bracket-round-title">{{ $ronda['nombre'] ?? 'Ronda' }}</div>
+                                            @foreach (($ronda['combates'] ?? []) as $combate)
+                                                @php
+                                                    $resultadoCombate = $resultadosPorIndice->get($indiceCombateModal);
+                                                    $llaveRealizada = (bool) $resultadoCombate;
+                                                @endphp
+                                                @if ($sorteo->categoria_completa && ! $llaveRealizada)
+                                                    @php $indiceCombateModal++; @endphp
+                                                    @continue
+                                                @endif
+                                                <div class="bracket-match">
+                                                    <div class="bracket-status">
+                                                        <span class="badge {{ $llaveRealizada ? 'bg-success' : 'bg-secondary' }}">
+                                                            {{ $llaveRealizada ? 'Realizada' : 'Pendiente' }}
+                                                        </span>
+                                                        @if ($resultadoCombate)
+                                                            <div class="bracket-result">
+                                                                <strong>Resultado:</strong>
+                                                                {{ $resultadoCombate->competidor_rojo ?: ($combate['a']['nombre'] ?? 'Rojo') }}
+                                                                {{ $resultadoCombate->puntaje_rojo }}
+                                                                -
+                                                                {{ $resultadoCombate->puntaje_azul }}
+                                                                {{ $resultadoCombate->competidor_azul ?: ($combate['b']['nombre'] ?? 'Azul') }}
+                                                            </div>
+                                                            @if ($resultadoCombate->ganador)
+                                                                <div class="bracket-result">
+                                                                    <strong>Ganador:</strong> {{ $resultadoCombate->ganador }}
+                                                                </div>
+                                                            @endif
+                                                            <div class="bracket-result">
+                                                                <strong>Senshu:</strong>
+                                                                @if ($resultadoCombate->senshu === 'rojo')
+                                                                    {{ $resultadoCombate->competidor_rojo ?: ($combate['a']['nombre'] ?? 'Rojo') }}
+                                                                @elseif ($resultadoCombate->senshu === 'azul')
+                                                                    {{ $resultadoCombate->competidor_azul ?: ($combate['b']['nombre'] ?? 'Azul') }}
+                                                                @else
+                                                                    No
+                                                                @endif
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                    <div class="bracket-player">
+                                                        <strong>{{ $combate['a']['nombre'] ?? 'BYE' }}</strong>
+                                                        @if (! empty($combate['a']['organizacion']))
+                                                            <small>{{ $combate['a']['organizacion'] }}</small>
+                                                        @endif
+                                                    </div>
+                                                    <div class="bracket-player">
+                                                        <strong>{{ $combate['b']['nombre'] ?? (($combate['bye'] ?? false) ? 'BYE' : 'Por definir') }}</strong>
+                                                        @if (! empty($combate['b']['organizacion']))
+                                                            <small>{{ $combate['b']['organizacion'] }}</small>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                @php $indiceCombateModal++; @endphp
+                                            @endforeach
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="modal fade" id="modal-delete-sorteo-{{ $sorteo->id }}" tabindex="-1"
                     aria-labelledby="modalDeleteSorteoLabel{{ $sorteo->id }}" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
@@ -453,6 +590,65 @@
             background: #fff;
         }
 
+        .bracket-status {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            padding: 6px 10px;
+            text-align: right;
+        }
+
+        .bracket-result {
+            color: #212529;
+            font-size: 12px;
+            line-height: 1.25;
+            margin-top: 4px;
+            text-align: left;
+        }
+
+        .podio-horizontal {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+        }
+
+        .podio-horizontal-item {
+            border: 1px solid #d9e2ef;
+            border-radius: 8px;
+            padding: 12px;
+            background: #ffffff;
+        }
+
+        .podio-horizontal-item span {
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            margin-right: 6px;
+            font-weight: 900;
+        }
+
+        .podio-horizontal-item div {
+            margin-top: 8px;
+            font-weight: 800;
+        }
+
+        .podio-oro span {
+            background: #ffd700;
+            color: #111827;
+        }
+
+        .podio-plata span {
+            background: #d1d5db;
+            color: #111827;
+        }
+
+        .podio-bronce span {
+            background: #cd7f32;
+            color: #ffffff;
+        }
+
         .bracket-player {
             min-height: 58px;
             padding: 8px 10px;
@@ -513,6 +709,9 @@
                 }
 
                 sortearButton.disabled = !modalidad.value || !categoria.value;
+                sortearButton.classList.add('btn-success');
+                sortearButton.classList.remove('btn-primary');
+                sortearButton.innerHTML = defaultButtonHtml;
             }
 
             function setSortingState(isSorting) {
@@ -537,6 +736,7 @@
                         categoriaOption.value = categoriaItem.id;
                         categoriaOption.textContent = categoriaItem.nombre;
                         categoriaOption.dataset.modalidadId = categoriaItem.modalidad_id;
+                        categoriaOption.dataset.sorteada = categoriaItem.sorteada ? '1' : '0';
                         categoria.appendChild(categoriaOption);
                     });
                 });

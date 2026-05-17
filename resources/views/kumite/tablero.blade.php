@@ -226,7 +226,9 @@
         }
 
         .btn-Reloj {
-            font-size: 1.7rem;
+            min-height: 32px;
+            padding: 3px 6px;
+            font-size: 1.25rem;
         }
 
         .marcador .btn-personalizadoAzul,
@@ -355,23 +357,35 @@
 
         .ajuste-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 14px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
         }
 
         .ajuste-col {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             min-width: 0;
         }
 
         .ajuste-label {
-            min-height: 22px;
+            min-height: 18px;
             color: #1f2937;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 800;
             text-transform: uppercase;
+        }
+
+        .tiempo-select {
+            width: 100%;
+            min-height: 32px;
+            border: 1px solid #2f2f30;
+            border-radius: 8px;
+            color: #000000;
+            font-size: 0.92rem;
+            font-weight: 800;
+            text-align: center;
+            text-align-last: center;
         }
 
         .senshu-indicador {
@@ -427,6 +441,14 @@
             color: #000000;
             font-size: clamp(1.5rem, 3vw, 2.3rem);
             font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .texto-organizacion {
+            margin-top: 8px;
+            color: #000000;
+            font-size: clamp(1.1rem, 2.2vw, 1.8rem);
+            font-weight: 700;
             text-transform: uppercase;
         }
 
@@ -540,6 +562,19 @@
                     <button onclick="adjustTime(-1)" class="btn-Reloj">-</button>
                 </div>
                 <div class="ajuste-col">
+                    <label for="tiempo" class="ajuste-label">Tiempo</label>
+                    <select id="tiempo" name="tiempo" class="tiempo-select" onchange="setPresetTime(this.value)">
+                        <option value="">--</option>
+                        <option value="60">1:00</option>
+                        <option value="90">1:30</option>
+                        <option value="120">2:00</option>
+                        <option value="180">3:00</option>
+                    </select>
+                    <button type="button" id="btnAnteriorCombate" onclick="volverCombateAnterior()" class="btn-personalizado btn-nuevo-combate">
+                        Anterior
+                    </button>
+                </div>
+                <div class="ajuste-col">
                     <span class="ajuste-label">&nbsp;</span>
                     <button id="btnMuestraGanador" class="btn-personalizado" onclick="declararGanador()" disabled>Ganador</button>
                     <button type="button" id="btnNuevoCombate" onclick="trasladarDatos()" class="btn-personalizado btn-nuevo-combate">
@@ -615,6 +650,7 @@
         <div id="contenedor-ganador" class="mensaje-contenedor">
             <h3 id="texto-ganador-titulo" class="texto-arriba"></h3>
             <h3 id="texto-ganador-nombre" class="texto-debajo"></h3>
+            <div id="texto-ganador-organizacion" class="texto-organizacion"></div>
             <button onclick="cerrarModalGanador()" class="btn-cerrar-anuncio">Cerrar</button>
         </div>
     </div>
@@ -624,13 +660,14 @@
         let timerSeconds = 0;
         let scores = { ao: 0, aka: 0 };
         let activeSenshu = null;
-        let autoWinnerTimeout = null;
         let penalties = {
             ao: [false, false, false, false, false],
             aka: [false, false, false, false, false]
         };
         let indiceCombateKumite = -1;
         let proximoIndiceCombateKumite = null;
+        let proximoIndiceVisibleKumite = null;
+        let historialCombatesKumite = [];
         const combateInicialKumite = @json($combateInicialKumite);
         const combatesKumite = @json($combatesKumite);
         const csrfToken = @json(csrf_token());
@@ -675,6 +712,7 @@
             updateTimerDisplay();
             inicializarEncabezadoCombate();
             setEncabezadoCombate();
+            prepararPrimerCombateEnCampos();
         });
 
         function inicializarEncabezadoCombate() {
@@ -697,9 +735,27 @@
         }
 
         function cargarPrimerCombateDesdeLlave() {
-            const primerIndice = encontrarSiguienteCombateValido(0);
+            const primerIndice = Number.isInteger(combateInicialKumite.indice_combate)
+                ? combateInicialKumite.indice_combate
+                : encontrarSiguienteCombateValido(0);
 
-            return primerIndice !== null ? cargarCombateDesdeLlave(primerIndice) : false;
+            if (primerIndice !== null) {
+                return cargarCombateDesdeLlave(primerIndice);
+            }
+
+            const primerIndiceVisible = encontrarSiguienteCombateVisible(0);
+
+            return primerIndiceVisible !== null ? cargarCombateVisibleDesdeLlave(primerIndiceVisible) : false;
+        }
+
+        function prepararPrimerCombateEnCampos() {
+            const primerIndice = Number.isInteger(combateInicialKumite.indice_combate)
+                ? combateInicialKumite.indice_combate
+                : encontrarSiguienteCombateValido(0);
+
+            proximoIndiceCombateKumite = primerIndice;
+            proximoIndiceVisibleKumite = primerIndice ?? encontrarSiguienteCombateVisible(0);
+            mostrarCombateProximoEnCampos(proximoIndiceVisibleKumite);
         }
 
         function cargarCombateDesdeLlave(index) {
@@ -713,6 +769,8 @@
 
             $('#mirrorSpanRojo').text(nombreRojo || '---');
             $('#mirrorSpanAzul').text(nombreAzul || '---');
+            $('#mirrorSpanRojo').data('organizacion', combate?.rojo_organizacion || '');
+            $('#mirrorSpanAzul').data('organizacion', combate?.azul_organizacion || '');
             setEncabezadoCombate(combateInicialKumite.modalidad, combateInicialKumite.categoria);
             setFaseCombate(combate.ronda || 'Combate');
             indiceCombateKumite = index;
@@ -721,18 +779,78 @@
             return true;
         }
 
+        function cargarCombateVisibleDesdeLlave(index) {
+            const combate = combatesKumite[index] || null;
+
+            if (!combate) {
+                return false;
+            }
+
+            $('#mirrorSpanRojo').text(nombreVisibleProximo(combate.rojo || '') || '---');
+            $('#mirrorSpanAzul').text(nombreVisibleProximo(combate.azul || '') || '---');
+            $('#mirrorSpanRojo').data('organizacion', nombreVisibleProximo(combate.rojo || '') ? (combate.rojo_organizacion || '') : '');
+            $('#mirrorSpanAzul').data('organizacion', nombreVisibleProximo(combate.azul || '') ? (combate.azul_organizacion || '') : '');
+            setEncabezadoCombate(combateInicialKumite.modalidad, combateInicialKumite.categoria);
+            setFaseCombate(combate.ronda || 'Combate');
+            indiceCombateKumite = index;
+            cargarSiguienteCombateEnCampos();
+
+            return true;
+        }
+
+        function guardarCombateActualEnHistorial() {
+            if (indiceCombateKumite < 0) {
+                return;
+            }
+
+            const actual = combatesKumite[indiceCombateKumite] || null;
+
+            if (!actual) {
+                return;
+            }
+
+            historialCombatesKumite.push({
+                index: indiceCombateKumite,
+                visible: esCombateBye(actual),
+            });
+        }
+
+        function volverCombateAnterior() {
+            if (historialCombatesKumite.length === 0) {
+                showToast('NO HAY COMBATE ANTERIOR', 'info');
+                return;
+            }
+
+            const anterior = historialCombatesKumite.pop();
+            limpiarDatosCombate();
+
+            if (anterior.visible) {
+                cargarCombateVisibleDesdeLlave(anterior.index);
+            } else {
+                cargarCombateDesdeLlave(anterior.index);
+            }
+        }
+
         function setFaseCombate(fase) {
             $('#fase-combate-label').text(fase || 'Combate');
         }
 
         function cargarSiguienteCombateEnCampos() {
             proximoIndiceCombateKumite = encontrarSiguienteCombateValido(indiceCombateKumite + 1);
-            const siguiente = proximoIndiceCombateKumite !== null ? combatesKumite[proximoIndiceCombateKumite] : null;
+            proximoIndiceVisibleKumite = proximoIndiceCombateKumite !== null
+                ? proximoIndiceCombateKumite
+                : encontrarSiguienteCombateVisible(indiceCombateKumite + 1);
+
+            mostrarCombateProximoEnCampos(proximoIndiceVisibleKumite);
+        }
+
+        function mostrarCombateProximoEnCampos(index) {
+            const siguiente = index !== null ? combatesKumite[index] : null;
             const inputAzul = document.getElementById('TxtAzulProximo');
             const inputRojo = document.getElementById('TxtRojoProximo');
 
-            inputRojo.value = siguiente?.rojo || '';
-            inputAzul.value = siguiente?.azul || '';
+            inputRojo.value = nombreVisibleProximo(siguiente?.rojo || '');
+            inputAzul.value = nombreVisibleProximo(siguiente?.azul || '');
             inputRojo.classList.toggle('border-primary', inputRojo.value.length > 0);
             inputAzul.classList.toggle('border-primary', inputAzul.value.length > 0);
         }
@@ -747,11 +865,39 @@
             return null;
         }
 
+        function encontrarSiguienteCombateVisible(desde) {
+            for (let index = desde; index < combatesKumite.length; index++) {
+                const combate = combatesKumite[index];
+
+                if (!combate.realizado && tieneCompetidorVisible(combate)) {
+                    return index;
+                }
+            }
+
+            return null;
+        }
+
         function esCombateBye(combate) {
             const rojo = (combate?.rojo || '').trim().toUpperCase();
             const azul = (combate?.azul || '').trim().toUpperCase();
 
             return !rojo || !azul || rojo === 'BYE' || azul === 'BYE';
+        }
+
+        function tieneCompetidorVisible(combate) {
+            return nombreVisibleProximo(combate?.rojo || '') !== ''
+                || nombreVisibleProximo(combate?.azul || '') !== '';
+        }
+
+        function nombreVisibleProximo(nombre) {
+            const texto = (nombre || '').trim();
+            const textoMayuscula = texto.toUpperCase();
+
+            if (!texto || textoMayuscula === 'BYE' || textoMayuscula.startsWith('GANADOR')) {
+                return '';
+            }
+
+            return texto;
         }
 
         function showToast(title, icon = 'warning') {
@@ -824,8 +970,6 @@
         }
 
         function resetTimer() {
-            clearTimeout(autoWinnerTimeout);
-            autoWinnerTimeout = null;
             pauseTimer();
             timerSeconds = 0;
             updateTimerDisplay();
@@ -838,6 +982,12 @@
         function adjustTime(value) {
             if (timerInterval) return;
             timerSeconds = Math.max(0, timerSeconds + value);
+            updateTimerDisplay();
+        }
+
+        function setPresetTime(value) {
+            if (timerInterval || value === '') return;
+            timerSeconds = parseInt(value, 10) || 0;
             updateTimerDisplay();
         }
 
@@ -854,7 +1004,6 @@
             }, 100);
 
             updateTechniqueCounter(side, value);
-            checkPointDifference();
         }
 
         function updateTechniqueCounter(side, value) {
@@ -864,23 +1013,6 @@
             const mirrorId = `#mirrorSpan${technique}${sideName}`;
             const currentValue = parseInt($(mirrorId).text(), 10) || 0;
             $(mirrorId).text(Math.max(0, currentValue + (value > 0 ? 1 : -1)));
-        }
-
-        function checkPointDifference() {
-            if (autoWinnerTimeout) return;
-
-            if (scores.ao >= scores.aka + 8) {
-                scheduleAutoWinner('ao');
-            } else if (scores.aka >= scores.ao + 8) {
-                scheduleAutoWinner('aka');
-            }
-        }
-
-        function scheduleAutoWinner(side) {
-            pauseTimer();
-            autoWinnerTimeout = setTimeout(function () {
-                registrarGanador(side);
-            }, 5000);
         }
 
         function toggleSenshu(side) {
@@ -950,7 +1082,7 @@
             const winner = resolveWinner();
 
             if (winner === 'hantei') {
-                mostrarModalGanador('DECISION DE HANTEI', 'DE LOS JUECES', '#ffffcc', '#000000');
+                mostrarModalGanador('DECISION DE HANTEI', 'DE LOS JUECES', '', '#ffffcc', '#000000');
                 return;
             }
 
@@ -976,9 +1108,10 @@
             return 'hantei';
         }
 
-        function mostrarModalGanador(titulo, nombre, fondo, texto) {
+        function mostrarModalGanador(titulo, nombre, organizacion, fondo, texto) {
             $('#texto-ganador-titulo').text(titulo).css('color', texto);
             $('#texto-ganador-nombre').text(nombre).css('color', texto);
+            $('#texto-ganador-organizacion').text(organizacion || '').css('color', texto);
             $('#contenedor-ganador').css({
                 'background-color': fondo,
                 'border-color': texto === '#ffffff' ? '#ffffff' : '#000000'
@@ -994,6 +1127,7 @@
         async function registrarGanador(side) {
             const config = sideConfig[side];
             const nombreGanador = $(`#${config.nameId}`).text();
+            const organizacionGanador = $(`#${config.nameId}`).data('organizacion') || '';
 
             if (combateInicialKumite.sorteo_id && indiceCombateKumite >= 0) {
                 const guardado = await guardarResultadoCombate(side, nombreGanador);
@@ -1005,16 +1139,16 @@
                 if (combatesKumite[indiceCombateKumite]) {
                     combatesKumite[indiceCombateKumite].realizado = true;
                     combatesKumite[indiceCombateKumite].ganador = nombreGanador;
-                    propagarGanadorLocal(side, nombreGanador);
+                    propagarGanadorLocal(side, nombreGanador, organizacionGanador);
                 }
             }
 
-            mostrarModalGanador(config.title, nombreGanador, config.background, '#ffffff');
+            mostrarModalGanador(config.title, nombreGanador, organizacionGanador, config.background, '#ffffff');
             limpiarDatosCombate();
             avanzarSiguienteCombate();
         }
 
-        function propagarGanadorLocal(side, nombreGanador) {
+        function propagarGanadorLocal(side, nombreGanador, organizacionGanador) {
             const combateActual = combatesKumite[indiceCombateKumite] || null;
 
             if (!combateActual) {
@@ -1032,6 +1166,7 @@
 
             const ladoDestino = combateActual.match_index % 2 === 0 ? 'rojo' : 'azul';
             siguiente[ladoDestino] = nombreGanador;
+            siguiente[`${ladoDestino}_organizacion`] = organizacionGanador || '';
             siguiente.bye = false;
         }
 
@@ -1059,6 +1194,8 @@
                         faltas_rojo: faltasActivas('aka'),
                         faltas_azul: faltasActivas('ao'),
                         senshu: activeSenshu === 'aka' ? 'rojo' : (activeSenshu === 'ao' ? 'azul' : null),
+                        senshu_rojo: activeSenshu === 'aka',
+                        senshu_azul: activeSenshu === 'ao',
                         tecnicas_rojo: tecnicasCompetidor('Rojo'),
                         tecnicas_azul: tecnicasCompetidor('Azul'),
                         ganador: nombreGanador,
@@ -1101,8 +1238,6 @@
                 aka: [false, false, false, false, false]
             };
             activeSenshu = null;
-            clearTimeout(autoWinnerTimeout);
-            autoWinnerTimeout = null;
             timerSeconds = 0;
 
             $('#puntosAzul, #puntosRojo').text('0');
@@ -1120,6 +1255,7 @@
 
             if (siguienteIndice === null) {
                 $('#mirrorSpanRojo, #mirrorSpanAzul').text('---');
+                $('#mirrorSpanRojo, #mirrorSpanAzul').data('organizacion', '');
                 setFaseCombate('Categoria finalizada');
                 proximoIndiceCombateKumite = null;
                 cargarSiguienteCombateEnCampos();
@@ -1136,7 +1272,7 @@
             cargarCombateDesdeLlave(siguienteIndice);
         }
 
-        function logicaHantei(side) {
+        async function logicaHantei(side) {
             const config = sideConfig[side];
             const otherSide = side === 'ao' ? 'aka' : 'ao';
             const currentButton = $(`#btn-hantei-${config.colorName}`);
@@ -1153,7 +1289,7 @@
             }
 
             currentButton.addClass('hantei-activo');
-            mostrarModalGanador(config.title, $(`#${config.nameId}`).text(), config.background, '#ffffff');
+            await registrarGanador(side);
         }
 
         function trasladarDatos() {
@@ -1177,8 +1313,43 @@
                 return;
             }
 
+            if (combatesKumite.length > 0 && proximoIndiceCombateKumite === null && proximoIndiceVisibleKumite === null) {
+                guardarCombateActualEnHistorial();
+                limpiarDatosCombate();
+                $('#mirrorSpanAzul').text(nombreAzul || '---');
+                $('#mirrorSpanRojo').text(nombreRojo || '---');
+                $('#mirrorSpanAzul, #mirrorSpanRojo').data('organizacion', '');
+                inputAzul.value = '';
+                inputRojo.value = '';
+                inputAzul.classList.remove('border-primary');
+                inputRojo.classList.remove('border-primary');
+                inputAzul.focus();
+
+                return;
+            }
+
+            if (combatesKumite.length > 0 && proximoIndiceCombateKumite !== null) {
+                guardarCombateActualEnHistorial();
+                limpiarDatosCombate();
+                cargarCombateDesdeLlave(proximoIndiceCombateKumite);
+                inputAzul.focus();
+
+                return;
+            }
+
+            if (combatesKumite.length > 0 && proximoIndiceVisibleKumite !== null) {
+                guardarCombateActualEnHistorial();
+                limpiarDatosCombate();
+                cargarCombateVisibleDesdeLlave(proximoIndiceVisibleKumite);
+                inputAzul.focus();
+
+                return;
+            }
+
+            guardarCombateActualEnHistorial();
             $('#mirrorSpanAzul').text(nombreAzul || '---');
             $('#mirrorSpanRojo').text(nombreRojo || '---');
+            $('#mirrorSpanAzul, #mirrorSpanRojo').data('organizacion', '');
 
             scores = { ao: 0, aka: 0 };
             penalties = {
@@ -1186,8 +1357,6 @@
                 aka: [false, false, false, false, false]
             };
             activeSenshu = null;
-            clearTimeout(autoWinnerTimeout);
-            autoWinnerTimeout = null;
 
             $('#puntosAzul, #puntosRojo').text('0');
             $('#mirrorSpanYukoAzul, #mirrorSpanWazariAzul, #mirrorSpanIpponAzul, #mirrorSpanYukoRojo, #mirrorSpanWazariRojo, #mirrorSpanIpponRojo').text('0');
@@ -1214,11 +1383,13 @@
 
         function controlarEstadoBoton() {
             const btnNuevo = document.getElementById('btnNuevoCombate');
+            const btnAnterior = document.getElementById('btnAnteriorCombate');
             const btnGanador = document.getElementById('btnMuestraGanador');
             const btnStart = document.getElementById('btn-start');
             const btnPause = document.getElementById('btn-pause');
             const btnReset = document.getElementById('btn-reset');
             const btnCerrar = document.getElementById('btnCerrar');
+            const tiempoSelect = document.getElementById('tiempo');
             const ajusteButtons = document.querySelectorAll('.btn-Reloj');
             const combateButtons = document.querySelectorAll('.suma, .resta, .btn-senshu, .btn-hantei, .btn-falta');
             const isTimeZero = timerSeconds === 0;
@@ -1231,7 +1402,9 @@
                 if (btnReset) btnReset.disabled = true;
                 if (btnCerrar) btnCerrar.disabled = true;
                 if (btnNuevo) btnNuevo.disabled = true;
+                if (btnAnterior) btnAnterior.disabled = true;
                 if (btnGanador) btnGanador.disabled = true;
+                if (tiempoSelect) tiempoSelect.disabled = true;
                 ajusteButtons.forEach(function (button) {
                     button.disabled = true;
                 });
@@ -1246,6 +1419,8 @@
             if (btnReset) btnReset.disabled = false;
             if (btnCerrar) btnCerrar.disabled = false;
             if (btnGanador) btnGanador.disabled = !(isTimeZero || isPaused);
+            if (btnAnterior) btnAnterior.disabled = !isTimeZero || historialCombatesKumite.length === 0;
+            if (tiempoSelect) tiempoSelect.disabled = false;
             ajusteButtons.forEach(function (button) {
                 button.disabled = false;
             });

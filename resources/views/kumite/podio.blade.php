@@ -100,25 +100,33 @@
         </div>
 
         <section class="podio-list">
-            <article class="podio-row oro rounded">
-                <div class="podio-medalla">1</div>
-                <div class="podio-texto">1er Lugar - Oro - {{ $podio['oro'] ?: 'Pendiente' }}</div>
-            </article>
+            @if (! empty($podio['oro']))
+                <article class="podio-row oro rounded">
+                    <div class="podio-medalla">1</div>
+                    <div class="podio-texto">1er Lugar - Oro - {{ $podio['oro'] }}</div>
+                </article>
+            @endif
 
-            <article class="podio-row plata rounded">
-                <div class="podio-medalla">2</div>
-                <div class="podio-texto">2do Lugar - Plata - {{ $podio['plata'] ?: 'Pendiente' }}</div>
-            </article>
+            @if (! empty($podio['plata']))
+                <article class="podio-row plata rounded">
+                    <div class="podio-medalla">2</div>
+                    <div class="podio-texto">2do Lugar - Plata - {{ $podio['plata'] }}</div>
+                </article>
+            @endif
 
-            <article class="podio-row bronce rounded">
-                <div class="podio-medalla">3</div>
-                <div class="podio-texto">3er Lugar - Bronce - {{ $podio['bronce_1'] ?: 'Pendiente' }}</div>
-            </article>
+            @if (! empty($podio['bronce_1']))
+                <article class="podio-row bronce rounded">
+                    <div class="podio-medalla">3</div>
+                    <div class="podio-texto">3er Lugar - Bronce - {{ $podio['bronce_1'] }}</div>
+                </article>
+            @endif
 
-            <article class="podio-row bronce rounded">
-                <div class="podio-medalla">3</div>
-                <div class="podio-texto">3er Lugar - Bronce - {{ $podio['bronce_2'] ?: 'Pendiente' }}</div>
-            </article>
+            @if (! empty($podio['bronce_2']))
+                <article class="podio-row bronce rounded">
+                    <div class="podio-medalla">3</div>
+                    <div class="podio-texto">3er Lugar - Bronce - {{ $podio['bronce_2'] }}</div>
+                </article>
+            @endif
         </section>
     </main>
 </body>
