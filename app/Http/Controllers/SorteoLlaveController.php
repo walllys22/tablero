@@ -85,6 +85,22 @@ class SorteoLlaveController extends Controller
                         ->route('sorteo-llaves.index', $torneo)
                         ->with('status', 'Categoria sorteada correctamente.');
                 }
+
+                if ($request->ajax() && $request->boolean('sortear')) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $sorteoActual
+                            ? 'Esta categoria ya fue sorteada.'
+                            : 'Se necesitan al menos 2 competidores para sortear esta categoria.',
+                    ], 422);
+                }
+            }
+
+            if ($request->ajax() && $request->boolean('sortear')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La categoria seleccionada no esta disponible para sortear.',
+                ], 422);
             }
         }
 
@@ -168,22 +184,24 @@ class SorteoLlaveController extends Controller
         ]);
 
         $sorteos = SorteoLlave::withCount('resultadosKumite')
+            ->with('resultadosKumite')
             ->where('torneo_id', $torneo->id)
             ->orderByRaw('COALESCE(orden, 999999)')
             ->orderBy('id')
-            ->get()
-            ->keyBy('id');
+            ->get();
+        $this->prepararLlavesSorteos($sorteos);
+        $sorteos = $sorteos->keyBy('id');
         $ids = collect($data['orden'])->map(fn ($id) => (int) $id)->values();
 
         abort_unless($ids->count() === $sorteos->count() && $ids->diff($sorteos->keys())->isEmpty(), 422);
 
         $ordenActual = $sorteos->keys()->values();
-        $bloqueados = $sorteos->filter(fn ($sorteo) => (int) $sorteo->resultados_kumite_count > 0);
+        $bloqueados = $sorteos->filter(fn ($sorteo) => ($sorteo->categoria_estado ?? 'pendiente') !== 'pendiente');
 
         foreach ($bloqueados as $sorteo) {
             if ($ordenActual->search($sorteo->id) !== $ids->search($sorteo->id)) {
                 return back()->withErrors([
-                    'orden' => 'No se puede reordenar una categoria que tiene combates realizados o en curso.',
+                    'orden' => 'No se puede reordenar una categoria en ejecucion o realizada.',
                 ]);
             }
         }
@@ -191,7 +209,7 @@ class SorteoLlaveController extends Controller
         foreach ($ids as $index => $id) {
             $sorteo = $sorteos->get($id);
 
-            if ((int) $sorteo->resultados_kumite_count > 0) {
+            if (($sorteo->categoria_estado ?? 'pendiente') !== 'pendiente') {
                 continue;
             }
 

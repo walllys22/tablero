@@ -1,6 +1,5 @@
 @php
-    $katas = $sistemas->flatMap->katas;
-    $activeSystemId = optional($sistemas->first())->id;
+    $katas = $data;
 @endphp
 
 <div class="col-md-12">
@@ -9,7 +8,7 @@
             @foreach ($sistemas as $sistema)
                 <li class="nav-item" role="presentation">
                     <button
-                        class="nav-link {{ $loop->first ? 'active' : '' }}"
+                        class="nav-link {{ $sistema->id === $activeSystemId ? 'active' : '' }}"
                         id="tab-sistema-{{ $sistema->id }}"
                         data-sistema-id="{{ $sistema->id }}"
                         data-bs-toggle="tab"
@@ -17,7 +16,7 @@
                         type="button"
                         role="tab"
                         aria-controls="panel-sistema-{{ $sistema->id }}"
-                        aria-selected="{{ $loop->first ? 'true' : 'false' }}"
+                        aria-selected="{{ $sistema->id === $activeSystemId ? 'true' : 'false' }}"
                     >
                         <i class="fa-solid fa-sitemap me-1"></i> {{ $sistema->nombre }}
                     </button>
@@ -45,9 +44,10 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse ($sistema->katas as $kata)
-                                    <tr>
-                                        <td style="text-align: center; vertical-align: middle;">{{ $kata->id }}</td>
+                                @if ($sistema->id === $activeSystemId)
+                                @forelse ($data as $kata)
+                                    <tr data-kata-row data-kata-id="{{ $kata->id }}" data-sistema-id="{{ $kata->sistema_id }}" data-numero="{{ $kata->numero ?? $kata->id }}" data-nombre="{{ e($kata->nombre) }}" data-estado="{{ $kata->estado }}">
+                                        <td style="text-align: center; vertical-align: middle;">{{ $kata->numero ?? $kata->id }}</td>
                                         <td style="vertical-align: middle;">{{ $kata->nombre }}</td>
                                         <td style="text-align: center; vertical-align: middle;">
                                             @if ($kata->estado === 'Activo')
@@ -86,9 +86,25 @@
                                         <td colspan="4" class="text-center text-muted py-4">No hay katas registrados para este sistema.</td>
                                     </tr>
                                 @endforelse
+                                @endif
                             </tbody>
                         </table>
                     </div>
+
+                    @if ($sistema->id === $activeSystemId)
+                        <div class="row align-items-center">
+                            <div class="col-md-4" style="overflow-x:auto">
+                                @if(count($data) > 0)
+                                    <p class="text-muted mb-md-0">Mostrando del {{ $data->firstItem() }} al {{ $data->lastItem() }} de {{ $data->total() }} registros.</p>
+                                @endif
+                            </div>
+                            <div class="col-md-8" style="overflow-x:auto">
+                                <nav class="d-flex justify-content-md-end">
+                                    {{ $data->links() }}
+                                </nav>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             @endforeach
         </div>
@@ -99,6 +115,19 @@
             No hay resultados
         </h5>
     @endif
+</div>
+
+<div class="d-none" id="katas-order-data">
+    @foreach ($katasOrden as $kataOrden)
+        <span
+            data-kata-order-row
+            data-kata-id="{{ $kataOrden->id }}"
+            data-sistema-id="{{ $kataOrden->sistema_id }}"
+            data-numero="{{ $kataOrden->numero ?? $kataOrden->id }}"
+            data-nombre="{{ e($kataOrden->nombre) }}"
+            data-estado="{{ $kataOrden->estado }}"
+        ></span>
+    @endforeach
 </div>
 
 @foreach ($katas as $item)
@@ -136,7 +165,7 @@
                         <div class="col-md-3">
                             <div class="h-100 px-3 py-2 bg-white rounded-3 border">
                                 <div class="fw-bold" style="font-size: 12px; line-height: 1;">Nro. Kata</div>
-                                <div class="fw-semibold" style="font-size: 14px;">{{ $item->id }}</div>
+                                <div class="fw-semibold" style="font-size: 14px;">{{ $item->numero ?? $item->id }}</div>
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -180,16 +209,25 @@
                     </div>
                     <div class="modal-body">
                         <div class="row g-3">
-                            <div class="col-md-5">
+                            <div class="col-md-2">
+                                <label for="numero_edit_{{ $item->id }}" class="form-label">Nro. Kata</label>
+                                <input type="number" name="numero" id="numero_edit_{{ $item->id }}" value="{{ old('editing_kata') == $item->id ? old('numero') : ($item->numero ?? $item->id) }}" class="form-control @if(old('editing_kata') == $item->id) @error('numero') is-invalid @enderror @endif" min="1" required>
+                                @if (old('editing_kata') == $item->id)
+                                    @error('numero')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                @endif
+                            </div>
+                            <div class="col-md-4">
                                 <label for="nombre_edit_{{ $item->id }}" class="form-label">Nombre</label>
-                                <input type="text" name="nombre" id="nombre_edit_{{ $item->id }}" value="{{ old('editing_kata') == $item->id ? old('nombre') : $item->nombre }}" class="form-control @if(old('editing_kata') == $item->id) @error('nombre') is-invalid @enderror @endif" maxlength="255" required>
+                                <input type="text" name="nombre" id="nombre_edit_{{ $item->id }}" value="{{ old('editing_kata') == $item->id ? old('nombre') : $item->nombre }}" class="form-control @if(old('editing_kata') == $item->id) @error('nombre') is-invalid @enderror @endif" maxlength="255" required data-kata-name-field data-numero-field="#numero_edit_{{ $item->id }}" data-sistema-field="#sistema_edit_{{ $item->id }}" data-kata-id="{{ $item->id }}">
                                 @if (old('editing_kata') == $item->id)
                                     @error('nombre')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 @endif
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="sistema_edit_{{ $item->id }}" class="form-label">Sistema</label>
                                 @php
                                     $sistemaActual = old('editing_kata') == $item->id ? old('sistema_id') : $item->sistema_id;
@@ -238,6 +276,16 @@
 
 <script>
     $(document).ready(function () {
+        $('.page-link').click(function (event) {
+            event.preventDefault();
+
+            let link = $(this).attr('href');
+            if (link) {
+                let url = new URL(link, window.location.origin);
+                list(url.searchParams.get('page') || 1, '{{ $activeSystemId }}');
+            }
+        });
+
         @if ($errors->any() && old('editing_kata'))
             let editModal = document.getElementById('modal-edit-{{ old('editing_kata') }}');
             if (editModal) {

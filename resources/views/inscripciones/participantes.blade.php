@@ -67,7 +67,10 @@
         <div class="row g-3">
             <div class="col-lg-5">
                 <div class="card shadow-sm">
-                    <div class="card-header fw-bold">Inscribir participante</div>
+                    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <span class="fw-bold">Inscribir participante</span>
+                        <input type="text" id="buscar-competidor-disponible" class="form-control form-control-sm" style="max-width: 240px;" placeholder="Buscar por nombre...">
+                    </div>
                     <div class="card-body">
                         @if ($categoriasDisponibles->isEmpty())
                             <div class="alert alert-warning mb-0">No hay modalidades para el filtro seleccionado.</div>
@@ -83,7 +86,7 @@
                                             @php
                                                 $pesoCompetidor = $pesosCompetidores->get($persona->id);
                                             @endphp
-                                            <div class="form-check py-1">
+                                            <div class="form-check py-1 js-competidor-disponible-row" data-competidor-nombre="{{ mb_strtolower($persona->first_name ?? '') }}">
                                                 <input type="checkbox" name="persona_ids[]" id="persona_id_{{ $persona->id }}" value="{{ $persona->id }}" class="form-check-input" {{ collect(old('persona_ids', []))->contains((string) $persona->id) ? 'checked' : '' }}>
                                                 <label for="persona_id_{{ $persona->id }}" class="form-check-label">
                                                     {{ $persona->first_name }}{{ $persona->birth_date ? ' - ' . $persona->birth_date->diffInYears(now()) . ' años' : '' }}
@@ -95,6 +98,9 @@
                                         @empty
                                             <div class="text-muted">No hay competidores disponibles para el filtro seleccionado.</div>
                                         @endforelse
+                                        @if ($personas->isNotEmpty())
+                                            <div id="competidores-disponibles-empty-search" class="text-muted d-none">No hay competidores que coincidan con la busqueda.</div>
+                                        @endif
                                     </div>
                                     @error('persona_ids')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
@@ -154,7 +160,10 @@
 
             <div class="col-lg-7">
                 <div class="card shadow-sm">
-                    <div class="card-header fw-bold">Participantes inscritos</div>
+                    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <span class="fw-bold">Participantes inscritos</span>
+                        <input type="text" id="buscar-participante-inscrito" class="form-control form-control-sm" style="max-width: 240px;" placeholder="Buscar por nombre...">
+                    </div>
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover align-middle">
@@ -174,7 +183,7 @@
                                                 return str_contains(mb_strtolower((string) optional($detalle->modalidad)->nombre), 'kumite');
                                             });
                                         @endphp
-                                        <tr>
+                                        <tr class="js-participante-inscrito-row" data-competidor-nombre="{{ mb_strtolower($competidor->persona->first_name ?? '') }}">
                                             <td>
                                                 {{ $competidor->persona->first_name }}{{ $competidor->persona->birth_date ? ' - ' . $competidor->persona->birth_date->diffInYears(now()) . ' años' : '' }}
                                                 @if (($mostrarPesoFiltro || $competidorTieneKumite) && $competidorPeso !== null)
@@ -211,6 +220,11 @@
                                             <td colspan="4" class="text-center text-muted">No hay participantes inscritos para esta organizacion.</td>
                                         </tr>
                                     @endforelse
+                                    @if ($competidores->isNotEmpty())
+                                        <tr id="participantes-inscritos-empty-search" class="d-none">
+                                            <td colspan="4" class="text-center text-muted">No hay participantes inscritos que coincidan con la busqueda.</td>
+                                        </tr>
+                                    @endif
                                 </tbody>
                             </table>
                         </div>
@@ -290,8 +304,12 @@
             $('#modalidad_id').on('change', filterCategoriasByModalidad);
             $('.js-modalidad-check').on('change', syncModalidadCosts);
             $('.js-modalidad-costo').on('input', updateCompetidorTotal);
+            $('#buscar-competidor-disponible').on('input', filtrarCompetidoresDisponibles);
+            $('#buscar-participante-inscrito').on('input', filtrarParticipantesInscritos);
             filterCategoriasByModalidad();
             syncModalidadCosts();
+            filtrarCompetidoresDisponibles();
+            filtrarParticipantesInscritos();
         });
 
         function filterCategoriasByModalidad() {
@@ -335,6 +353,48 @@
             });
 
             updateCompetidorTotal();
+        }
+
+        function filtrarParticipantesInscritos() {
+            const search = ($('#buscar-participante-inscrito').val() || '').toLowerCase().trim();
+            let visibles = 0;
+
+            $('.js-participante-inscrito-row').each(function () {
+                const nombre = $(this).data('competidor-nombre') || '';
+                const visible = nombre.includes(search);
+
+                $(this).toggle(visible);
+
+                if (visible) {
+                    visibles++;
+                }
+            });
+
+            $('#participantes-inscritos-empty-search').toggleClass(
+                'd-none',
+                visibles > 0 || $('.js-participante-inscrito-row').length === 0
+            );
+        }
+
+        function filtrarCompetidoresDisponibles() {
+            const search = ($('#buscar-competidor-disponible').val() || '').toLowerCase().trim();
+            let visibles = 0;
+
+            $('.js-competidor-disponible-row').each(function () {
+                const nombre = $(this).data('competidor-nombre') || '';
+                const visible = nombre.includes(search);
+
+                $(this).toggle(visible);
+
+                if (visible) {
+                    visibles++;
+                }
+            });
+
+            $('#competidores-disponibles-empty-search').toggleClass(
+                'd-none',
+                visibles > 0 || $('.js-competidor-disponible-row').length === 0
+            );
         }
     </script>
 @endpush

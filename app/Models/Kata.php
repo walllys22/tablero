@@ -14,9 +14,14 @@ class Kata extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'numero',
         'nombre',
         'sistema_id',
         'estado',
+    ];
+
+    protected $casts = [
+        'numero' => 'integer',
     ];
 
     public function sistema()

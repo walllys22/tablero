@@ -57,6 +57,21 @@ class TableroController extends Controller
         return view('kata.tablero');
     }
 
+    public function resultadoKata(Request $request)
+    {
+        $resultadoKata = [
+            'color' => $request->query('color', 'rojo'),
+            'nombre' => $request->query('nombre', 'Walter Landivar Limpias'),
+            'kata_numero' => $request->query('kata_numero', '1'),
+            'kata_nombre' => $request->query('kata_nombre', 'Anan'),
+            'puntaje' => (int) $request->query('puntaje', 3),
+            'banderas_rojas' => (int) $request->query('banderas_rojas', 3),
+            'banderas_azules' => (int) $request->query('banderas_azules', 2),
+        ];
+
+        return view('kata.resultado', compact('resultadoKata'));
+    }
+
     public function podioKumite(Request $request)
     {
         $sorteo = $this->sorteoKumite($request);

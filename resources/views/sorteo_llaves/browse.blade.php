@@ -448,7 +448,7 @@
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
                                 <div class="alert alert-info">
-                                    Arrastre las categorias para definir el orden de competencia. Las categorias con combates realizados quedan bloqueadas.
+                                    Arrastre las categorias pendientes para definir el orden de competencia. Las categorias en ejecucion o realizadas quedan bloqueadas.
                                 </div>
 
                                 <div class="table-responsive">
@@ -464,7 +464,8 @@
                                         <tbody id="sorteos-orden-list">
                                             @foreach ($sorteos as $index => $sorteo)
                                                 @php
-                                                    $bloqueado = (int) ($sorteo->resultados_kumite_count ?? 0) > 0;
+                                                    $estadoOrden = $sorteo->categoria_estado ?? 'pendiente';
+                                                    $bloqueado = $estadoOrden !== 'pendiente';
                                                 @endphp
                                                 <tr class="js-orden-row {{ $bloqueado ? 'table-light' : '' }}"
                                                     data-id="{{ $sorteo->id }}"
@@ -483,9 +484,9 @@
                                                     </td>
                                                     <td class="text-center">
                                                         @if ($bloqueado)
-                                                            <span class="badge bg-secondary">Bloqueado</span>
+                                                            <span class="badge bg-secondary">{{ $estadoOrden === 'realizada' ? 'Realizada' : 'En ejecucion' }}</span>
                                                         @else
-                                                            <span class="badge bg-success">Movible</span>
+                                                            <span class="badge bg-success">Pendiente</span>
                                                         @endif
                                                     </td>
                                                 </tr>
@@ -703,7 +704,8 @@
 
                 categoria.querySelectorAll('option').forEach(function (option) {
                     const optionModalidadId = option.dataset.modalidadId;
-                    const visible = !option.value || !modalidadId || String(optionModalidadId) === String(modalidadId);
+                    const sorteada = option.dataset.sorteada === '1';
+                    const visible = !option.value || (!sorteada && (!modalidadId || String(optionModalidadId) === String(modalidadId)));
 
                     option.hidden = !visible;
                     option.disabled = !visible;
@@ -740,7 +742,11 @@
                     modalidadOption.textContent = item.nombre;
                     modalidad.appendChild(modalidadOption);
 
-                    item.categorias.forEach(function (categoriaItem) {
+                    item.categorias
+                        .filter(function (categoriaItem) {
+                            return !categoriaItem.sorteada;
+                        })
+                        .forEach(function (categoriaItem) {
                         const categoriaOption = document.createElement('option');
                         categoriaOption.value = categoriaItem.id;
                         categoriaOption.textContent = categoriaItem.nombre;
@@ -800,12 +806,12 @@
 
                         if (nextWrapper && currentWrapper) {
                             currentWrapper.innerHTML = nextWrapper.innerHTML;
-                            initSorteosListControls();
+                            initSorteosListControls('last');
                         }
                     });
             }
 
-            function initSorteosListControls() {
+            function initSorteosListControls(initialPage = 1) {
                 const wrapper = document.getElementById('sorteos-list-wrapper');
 
                 if (!wrapper) {
@@ -818,7 +824,7 @@
                 const summary = wrapper.querySelector('.js-sorteos-summary');
                 const noResults = wrapper.querySelector('.js-sorteos-no-results');
                 const rows = Array.from(wrapper.querySelectorAll('.js-sorteo-row'));
-                let currentPage = 1;
+                let currentPage = initialPage;
 
                 function render() {
                     const search = (searchInput?.value || '').trim().toLowerCase();
@@ -827,6 +833,10 @@
                         return !search || (row.dataset.search || '').includes(search);
                     });
                     const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+
+                    if (currentPage === 'last') {
+                        currentPage = totalPages;
+                    }
 
                     if (currentPage > totalPages) {
                         currentPage = totalPages;
@@ -971,7 +981,6 @@
                     return;
                 }
 
-                const previousModalidadId = modalidad.value;
                 const url = `${form.action}?${new URLSearchParams(new FormData(form)).toString()}`;
 
                 setSortingState(true);
@@ -983,22 +992,24 @@
                     }
                 })
                     .then(function (response) {
-                        if (!response.ok) {
-                            throw new Error('No se pudo sortear la categoria.');
-                        }
+                        return response.json().then(function (data) {
+                            if (!response.ok) {
+                                throw new Error(data.message || 'No se pudo sortear la categoria.');
+                            }
 
-                        return response.json();
+                            return data;
+                        });
                     })
                     .then(function () {
                         return Promise.all([
-                            refreshCategorias(previousModalidadId),
+                            refreshCategorias(null),
                             refreshSorteosList()
                         ]);
                     })
-                    .catch(function () {
+                    .catch(function (error) {
                         sortearButton.innerHTML = defaultButtonHtml;
                         filterCategorias();
-                        alert('No se pudo sortear la categoria.');
+                        alert(error.message || 'No se pudo sortear la categoria.');
                     });
             });
 

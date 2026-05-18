@@ -16,9 +16,8 @@ use App\Http\Controllers\SorteoLlaveController;
 use App\Http\Controllers\TableroController;
 use App\Http\Controllers\TorneoController;
 use App\Http\Controllers\UsuarioController;
-use App\Models\KumitePodio;
-use App\Models\Organizacion;
 use App\Models\Torneo;
+use App\Support\MedalleroTorneoBuilder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -34,7 +33,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('dashboard');
 });
 
 Route::get('/kumite/tablero', [TableroController::class, 'kumite'])->name('tablero.kumite');
@@ -42,81 +41,31 @@ Route::post('/kumite/tablero/combates', [TableroController::class, 'guardarComba
 Route::get('/kumite/podio', [TableroController::class, 'podioKumite'])->name('tablero.kumite.podio');
 
 Route::get('/kata/tablero', [TableroController::class, 'kata'])->name('tablero.kata');
+Route::get('/kata/resultado', [TableroController::class, 'resultadoKata'])->name('tablero.kata.resultado');
 
 Route::get('/dashboard', function () {
     $torneo = Torneo::where('status', 1)
         ->latest('id')
         ->first() ?? Torneo::latest('id')->first();
 
-    if (! $torneo) {
-        return view('dashboard', [
-            'torneo' => null,
-            'medallero' => collect(),
-        ]);
-    }
+    $medalleros = MedalleroTorneoBuilder::build($torneo);
 
-    $organizaciones = Organizacion::with('estilo')
-        ->whereHas('inscripciones', function ($query) use ($torneo) {
-            $query->where('torneo_id', $torneo->id);
-        })
-        ->orderBy('nombre')
-        ->get();
-    $medallero = $organizaciones->mapWithKeys(function ($organizacion) {
-        return [
-            $organizacion->id => [
-                'organizacion' => $organizacion,
-                'oro' => 0,
-                'plata' => 0,
-                'bronce' => 0,
-                'total' => 0,
-            ],
-        ];
-    });
-
-    KumitePodio::with('sorteoLlave')
-        ->whereHas('sorteoLlave', function ($query) use ($torneo) {
-            $query->where('torneo_id', $torneo->id);
-        })
-        ->get()
-        ->each(function ($podio) use (&$medallero) {
-            $organizacionesPorCompetidor = collect($podio->sorteoLlave->llaves ?? [])
-                ->flatMap(fn ($ronda) => $ronda['combates'] ?? [])
-                ->flatMap(fn ($combate) => collect([$combate['a'] ?? null, $combate['b'] ?? null]))
-                ->filter(fn ($competidor) => is_array($competidor) && ! empty($competidor['nombre']) && ! empty($competidor['organizacion_id']))
-                ->mapWithKeys(fn ($competidor) => [
-                    mb_strtolower(trim($competidor['nombre'])) => (int) $competidor['organizacion_id'],
-                ]);
-
-            foreach (['oro' => 'oro', 'plata' => 'plata', 'bronce_1' => 'bronce', 'bronce_2' => 'bronce'] as $campo => $medalla) {
-                $nombre = trim((string) $podio->{$campo});
-
-                if ($nombre === '') {
-                    continue;
-                }
-
-                $organizacionId = $organizacionesPorCompetidor->get(mb_strtolower($nombre));
-
-                if (! $organizacionId || ! $medallero->has($organizacionId)) {
-                    continue;
-                }
-
-                $fila = $medallero->get($organizacionId);
-                $fila[$medalla]++;
-                $fila['total']++;
-                $medallero->put($organizacionId, $fila);
-            }
-        });
-
-    $tieneMedallas = $medallero->contains(fn ($fila) => $fila['total'] > 0);
-    $medallero = $tieneMedallas
-        ? $medallero->sort(function ($a, $b) {
-            return [$b['oro'], $b['plata'], $b['bronce'], $a['organizacion']->nombre]
-                <=> [$a['oro'], $a['plata'], $a['bronce'], $b['organizacion']->nombre];
-        })->values()
-        : $medallero->sortBy(fn ($fila) => $fila['organizacion']->nombre)->values();
-
-    return view('dashboard', compact('torneo', 'medallero'));
+    return view('dashboard', array_merge(['torneo' => $torneo], $medalleros));
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/dashboard/medallero/imprimir', function () {
+    $torneo = Torneo::where('status', 1)
+        ->latest('id')
+        ->first() ?? Torneo::latest('id')->first();
+    $tipo = request('tipo', 'todos');
+    $tipo = in_array($tipo, ['todos', 'general', 'kumite_resumen', 'kumite_detallado', 'kata_resumen', 'kata_detallado'], true) ? $tipo : 'todos';
+    $medalleros = MedalleroTorneoBuilder::build($torneo);
+
+    return view('dashboard_medallero_print', array_merge([
+        'torneo' => $torneo,
+        'tipo' => $tipo,
+    ], $medalleros));
+})->middleware(['auth', 'verified'])->name('dashboard.medallero.print');
 
 Route::middleware('auth')->group(function () {
     Route::post('/limpiar-cache', function () {
@@ -163,6 +112,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/torneos/{torneo}/inscripciones/ajax/list', [InscripcionController::class, 'ajaxList'])->name('inscripciones.ajax.list');
     Route::get('/torneos/{torneo}/inscripciones/imprimir', [InscripcionController::class, 'print'])->name('inscripciones.print');
     Route::post('/torneos/{torneo}/inscripciones/organizaciones', [InscripcionController::class, 'storeOrganizacion'])->name('inscripciones.organizaciones.store');
+    Route::patch('/torneos/{torneo}/inscripciones/organizaciones/{inscripcion}/pagar', [InscripcionController::class, 'pagarOrganizacion'])->name('inscripciones.organizaciones.pagar');
     Route::delete('/torneos/{torneo}/inscripciones/organizaciones/{inscripcion}', [InscripcionController::class, 'destroyOrganizacion'])->name('inscripciones.organizaciones.destroy');
     Route::post('/torneos/{torneo}/inscripciones/competidores', [InscripcionController::class, 'storeCompetidor'])->name('inscripciones.competidores.store');
     Route::get('/torneos/{torneo}/inscripciones/{inscripcion}/participantes', [InscripcionController::class, 'participantes'])->name('inscripciones.participantes');
@@ -209,6 +159,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/katas', [KataController::class, 'index'])->name('katas.index');
     Route::get('/katas/ajax/list', [KataController::class, 'ajaxList'])->name('katas.ajax.list');
     Route::post('/katas', [KataController::class, 'store'])->name('katas.store');
+    Route::patch('/katas/orden', [KataController::class, 'updateOrden'])->name('katas.orden.update');
     Route::patch('/katas/{kata}', [KataController::class, 'update'])->name('katas.update');
     Route::patch('/katas/{kata}/estado', [KataController::class, 'toggleStatus'])->name('katas.toggle-status');
     Route::delete('/katas/{kata}', [KataController::class, 'destroy'])->name('katas.destroy');

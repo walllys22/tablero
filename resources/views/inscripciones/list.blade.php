@@ -1,4 +1,6 @@
 <div class="col-md-12">
+    <div id="inscripcionesToast" class="inscripciones-toast" role="alert" aria-live="assertive"></div>
+
     <div class="table-responsive">
         <table class="table table-bordered table-hover">
             <thead>
@@ -8,6 +10,7 @@
                     <th style="text-align: center">Costo organizacion</th>
                     <th style="text-align: center">Total competidores</th>
                     <th style="text-align: center">Total general</th>
+                    <th style="text-align: center">Pendiente de pago</th>
                     <th style="text-align: center">Acciones</th>
                 </tr>
             </thead>
@@ -33,6 +36,11 @@
                             return $competidor->modalidades->sum('costo');
                         });
                         $totalGeneral = $totalCompetidores + (float) $inscripcion->costo;
+                        $totalDeuda = (float) $inscripcion->costo + (float) $inscripcion->competidores->sum(function ($competidor) {
+                            return $competidor->modalidades->sum('costo');
+                        });
+                        $montoPagado = (float) ($inscripcion->monto_pagado ?? 0);
+                        $pendientePago = max(0, $totalDeuda - $montoPagado);
                         $categoriasInscritas = $competidoresParaMostrar
                             ->flatMap(function ($competidor) {
                                 return $competidor->modalidades->map(function ($detalle) use ($competidor) {
@@ -71,7 +79,19 @@
                             <label class="label label-success">{{ number_format((float) $totalGeneral, 2) }}</label>
                         </td>
                         <td style="text-align: center; vertical-align: top;">
+                            @if ($pendientePago > 0)
+                                <label class="label label-warning text-dark">{{ number_format($pendientePago, 2) }}</label>
+                            @else
+                                <label class="label label-success">Pagado</label>
+                            @endif
+                        </td>
+                        <td style="text-align: center; vertical-align: top;">
                             <div class="d-flex flex-wrap justify-content-center gap-1" style="min-width: 96px;">
+                                @if ($pendientePago > 0)
+                                    <button type="button" class="btn btn-sm btn-warning text-white p-1" title="Registrar pago" data-bs-toggle="modal" data-bs-target="#modal-pago-organizacion-{{ $inscripcion->id }}">
+                                        <i class="bi bi-cash-coin"></i>
+                                    </button>
+                                @endif
                                 <button type="button" class="btn btn-sm btn-primary p-1" title="Recibo" data-bs-toggle="modal" data-bs-target="#modal-recibo-organizacion-{{ $inscripcion->id }}">
                                     <i class="bi bi-receipt"></i>
                                 </button>
@@ -85,7 +105,7 @@
                         </td>
                     </tr>
                     <tr class="collapse {{ $filtrandoPorCompetidor ? 'show' : '' }}" id="organizacion-inscripcion-{{ $inscripcion->id }}">
-                        <td colspan="6" class="bg-light">
+                        <td colspan="7" class="bg-light">
                             <div class="row g-2">
                                 @if ($categoriasInscritas->isNotEmpty())
                                     @foreach ($categoriasInscritas as $categoriaId => $itemsCategoria)
@@ -132,7 +152,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6">
+                        <td colspan="7">
                             <h5 class="text-center eventos-empty">
                                 <img src="{{ asset('images/empty.png') }}" width="120" alt="Sin resultados">
                                 <br><br>
@@ -162,6 +182,14 @@
 </div>
 
 @foreach ($organizaciones as $inscripcion)
+    @php
+        $totalDeudaRecibo = (float) $inscripcion->costo + (float) $inscripcion->competidores->sum(function ($competidor) {
+            return $competidor->modalidades->sum('costo');
+        });
+        $montoPagadoRecibo = (float) ($inscripcion->monto_pagado ?? 0);
+        $pendientePagoRecibo = max(0, $totalDeudaRecibo - $montoPagadoRecibo);
+    @endphp
+
     <div class="modal fade" id="modal-delete-organizacion-{{ $inscripcion->id }}" tabindex="-1" aria-labelledby="modalDeleteOrganizacionLabel{{ $inscripcion->id }}" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <form method="POST" action="{{ route('inscripciones.organizaciones.destroy', [$torneo, $inscripcion]) }}">
@@ -191,6 +219,92 @@
             </form>
         </div>
     </div>
+
+    @if ($pendientePagoRecibo > 0)
+        <div class="modal fade" id="modal-pago-organizacion-{{ $inscripcion->id }}" tabindex="-1" aria-labelledby="modalPagoOrganizacionLabel{{ $inscripcion->id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <form method="POST" action="{{ route('inscripciones.organizaciones.pagar', [$torneo, $inscripcion]) }}" class="js-form-pago-organizacion" novalidate>
+                    @csrf
+                    @method('PATCH')
+
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title fw-bold" id="modalPagoOrganizacionLabel{{ $inscripcion->id }}">
+                                Registrar pago de organizacion
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <div class="fw-bold">Organizacion</div>
+                                <div>{{ $inscripcion->organizacion->nombre }}</div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">Competidores</th>
+                                            <th class="text-center">Costo organizacion</th>
+                                            <th class="text-center">Total competidores</th>
+                                            <th class="text-center">Total general</th>
+                                            <th class="text-center">Pendiente de pago</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-center">
+                                                {{ $inscripcion->competidores->count() }}
+                                            </td>
+                                            <td class="text-center">
+                                                {{ number_format((float) $inscripcion->costo, 2) }}
+                                            </td>
+                                            <td class="text-center">
+                                                {{ number_format($totalDeudaRecibo - (float) $inscripcion->costo, 2) }}
+                                            </td>
+                                            <td class="text-center">
+                                                {{ number_format($totalDeudaRecibo, 2) }}
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="js-pendiente-pago-preview">{{ number_format($pendientePagoRecibo, 2) }}</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="row g-3 mt-1">
+                                <div class="col-md-6">
+                                    <label for="monto_pago_{{ $inscripcion->id }}" class="form-label">Monto a pagar</label>
+                                    <input
+                                        type="number"
+                                        name="monto_pago"
+                                        id="monto_pago_{{ $inscripcion->id }}"
+                                        class="form-control js-monto-pago"
+                                        min="0.01"
+                                        max="{{ $pendientePagoRecibo }}"
+                                        step="0.01"
+                                        data-pendiente="{{ $pendientePagoRecibo }}"
+                                        placeholder="0.00"
+                                    >
+                                </div>
+                            </div>
+
+                            <div class="alert alert-warning mt-3 mb-0">
+                                Digite el monto que esta pagando la organizacion. El pendiente se actualizara automaticamente.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-warning text-white">
+                                <i class="bi bi-cash-coin"></i> Registrar pago
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 
     <div class="modal fade" id="modal-recibo-organizacion-{{ $inscripcion->id }}" tabindex="-1" aria-labelledby="modalReciboOrganizacionLabel{{ $inscripcion->id }}" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -229,7 +343,10 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="fw-bold">Monto pagado</div>
-                                <div class="fs-5 fw-bold">{{ number_format((float) $inscripcion->costo, 2) }} Bs.</div>
+                                <div class="fs-5 fw-bold">{{ number_format($montoPagadoRecibo, 2) }} Bs.</div>
+                                @if ($pendientePagoRecibo > 0)
+                                    <small class="text-muted">Pendiente: {{ number_format($pendientePagoRecibo, 2) }} Bs.</small>
+                                @endif
                             </div>
                         </div>
 
@@ -278,7 +395,49 @@
                 new bootstrap.Modal(reciboModal).show();
             }
         @endif
+
+        $('.js-monto-pago').on('input', function () {
+            let pendiente = parseFloat(this.dataset.pendiente || '0') || 0;
+            let pago = parseFloat(this.value || '0') || 0;
+
+            if (pago > pendiente) {
+                pago = pendiente;
+                this.value = pendiente.toFixed(2);
+            }
+
+            let nuevoPendiente = Math.max(0, pendiente - pago);
+            let modal = this.closest('.modal');
+            let preview = modal ? modal.querySelector('.js-pendiente-pago-preview') : null;
+
+            if (preview) {
+                preview.textContent = nuevoPendiente.toFixed(2);
+            }
+        });
+
+        $('.js-form-pago-organizacion').on('submit', function (event) {
+            let monto = parseFloat($(this).find('.js-monto-pago').val() || '0') || 0;
+
+            if (monto <= 0) {
+                event.preventDefault();
+                mostrarInscripcionesToast('El monto debe ser mayor a cero');
+            }
+        });
     });
+
+    function mostrarInscripcionesToast(mensaje) {
+        let toast = document.getElementById('inscripcionesToast');
+
+        if (!toast) {
+            return;
+        }
+
+        clearTimeout(window.inscripcionesToastTimeout);
+        toast.textContent = mensaje;
+        toast.classList.add('visible');
+        window.inscripcionesToastTimeout = setTimeout(function () {
+            toast.classList.remove('visible');
+        }, 3000);
+    }
 
     function printReciboOrganizacion(elementId) {
         let content = document.getElementById(elementId).innerHTML;
@@ -300,3 +459,26 @@
         printWindow.close();
     }
 </script>
+
+<style>
+    .inscripciones-toast {
+        background: #dc3545;
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .24);
+        color: #ffffff;
+        display: none;
+        font-weight: 700;
+        left: 50%;
+        min-width: 320px;
+        padding: 12px 18px;
+        position: fixed;
+        text-align: center;
+        top: 18px;
+        transform: translateX(-50%);
+        z-index: 3000;
+    }
+
+    .inscripciones-toast.visible {
+        display: block;
+    }
+</style>

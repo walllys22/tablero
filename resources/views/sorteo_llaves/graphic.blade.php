@@ -46,6 +46,7 @@
                 $matchHeight = 117;
                 $baseGap = 18;
                 $podiumPull = max(0, (count($llaves[0]['combates'] ?? []) - 2) * 70);
+                $mostrarLlave = ! empty($llaves);
                 $resultadosPorIndice = $sorteo
                     ? $sorteo->resultadosKumite->keyBy('indice_combate')
                     : collect();
@@ -166,6 +167,37 @@
 
                 $podio['bronce_1'] = $bronces[0] ?? '';
                 $podio['bronce_2'] = $bronces[1] ?? '';
+                $podiosVisibles = [
+                    [
+                        'class' => 'gold',
+                        'label' => '1er lugar - Oro',
+                        'value' => $podio['oro'],
+                    ],
+                ];
+
+                if ($competidores->count() >= 2) {
+                    $podiosVisibles[] = [
+                        'class' => 'silver',
+                        'label' => '2do lugar - Plata',
+                        'value' => $podio['plata'],
+                    ];
+                }
+
+                if ($competidores->count() >= 3) {
+                    $podiosVisibles[] = [
+                        'class' => 'bronze',
+                        'label' => '3er lugar - Bronce',
+                        'value' => $podio['bronce_1'],
+                    ];
+                }
+
+                if ($competidores->count() >= 4) {
+                    $podiosVisibles[] = [
+                        'class' => 'bronze',
+                        'label' => '3er lugar - Bronce',
+                        'value' => $podio['bronce_2'],
+                    ];
+                }
             @endphp
 
             <div class="graphic-sheet">
@@ -175,69 +207,61 @@
                     <span>{{ $competidores->count() }} competidor(es)</span>
                 </div>
 
-                <div class="graphic-bracket">
-                    @foreach ($llaves as $roundIndex => $ronda)
-                        @php
-                            $roundDistance = ($matchHeight + $baseGap) * (2 ** $roundIndex);
-                            $roundGap = $roundDistance - $matchHeight;
-                            $roundOffset = (($matchHeight + $baseGap) * ((2 ** $roundIndex) - 1)) / 2;
-                        @endphp
+                @if ($mostrarLlave)
+                    <div class="graphic-bracket">
+                        @foreach ($llaves as $roundIndex => $ronda)
+                            @php
+                                $roundDistance = ($matchHeight + $baseGap) * (2 ** $roundIndex);
+                                $roundGap = $roundDistance - $matchHeight;
+                                $roundOffset = (($matchHeight + $baseGap) * ((2 ** $roundIndex) - 1)) / 2;
+                            @endphp
 
-                        <div class="graphic-round" style="--round-gap: {{ $roundGap }}px; --round-offset: {{ $roundOffset }}px;">
-                            <div class="graphic-round-title">{{ $ronda['nombre'] }}</div>
+                            <div class="graphic-round" style="--round-gap: {{ $roundGap }}px; --round-offset: {{ $roundOffset }}px;">
+                                <div class="graphic-round-title">{{ $ronda['nombre'] }}</div>
 
-                            @foreach ($ronda['combates'] as $matchIndex => $combate)
-                                @php
-                                    $redSlot = $slotTexto($roundIndex, $matchIndex, 'a', $combate);
-                                    $blueSlot = $slotTexto($roundIndex, $matchIndex, 'b', $combate);
-                                    $matchNumber = $matchNumbers[$roundIndex][$matchIndex];
-                                    $matchPosition = $matchIndex % 2 === 0 ? 'match-top' : 'match-bottom';
-                                    $resultadoMatch = $roundIndex === 0 ? $resultadosPorIndice->get($matchIndex) : null;
-                                @endphp
+                                @foreach ($ronda['combates'] as $matchIndex => $combate)
+                                    @php
+                                        $redSlot = $slotTexto($roundIndex, $matchIndex, 'a', $combate);
+                                        $blueSlot = $slotTexto($roundIndex, $matchIndex, 'b', $combate);
+                                        $matchNumber = $matchNumbers[$roundIndex][$matchIndex];
+                                        $matchPosition = $matchIndex % 2 === 0 ? 'match-top' : 'match-bottom';
+                                        $resultadoMatch = $roundIndex === 0 ? $resultadosPorIndice->get($matchIndex) : null;
+                                    @endphp
 
-                                <div class="graphic-match {{ $roundIndex === 0 ? 'first-round' : '' }} {{ $matchPosition }}">
-                                    <div class="graphic-slot red-slot">
-                                        <strong>{{ $redSlot['nombre'] }}</strong>
-                                        @if ($redSlot['organizacion'])
-                                            <small>{{ $redSlot['organizacion'] }}</small>
-                                        @endif
-                                    </div>
-                                    <div class="graphic-slot blue-slot">
-                                        <strong>{{ $blueSlot['nombre'] }}</strong>
-                                        @if ($blueSlot['organizacion'])
-                                            <small>{{ $blueSlot['organizacion'] }}</small>
-                                        @endif
-                                    </div>
-                                    <div class="graphic-match-number">{{ $matchNumber }}</div>
-                                    @if ($resultadoMatch)
-                                        <div class="graphic-result">
-                                            {{ $resultadoMatch->puntaje_rojo }} - {{ $resultadoMatch->puntaje_azul }}
+                                    <div class="graphic-match {{ $roundIndex === 0 ? 'first-round' : '' }} {{ $matchPosition }}">
+                                        <div class="graphic-slot red-slot">
+                                            <strong>{{ $redSlot['nombre'] }}</strong>
+                                            @if ($redSlot['organizacion'])
+                                                <small>{{ $redSlot['organizacion'] }}</small>
+                                            @endif
                                         </div>
-                                    @endif
-                                    <span class="graphic-pair-exit" aria-hidden="true"></span>
-                                </div>
-                            @endforeach
+                                        <div class="graphic-slot blue-slot">
+                                            <strong>{{ $blueSlot['nombre'] }}</strong>
+                                            @if ($blueSlot['organizacion'])
+                                                <small>{{ $blueSlot['organizacion'] }}</small>
+                                            @endif
+                                        </div>
+                                        <div class="graphic-match-number">{{ $matchNumber }}</div>
+                                        @if ($resultadoMatch)
+                                            <div class="graphic-result">
+                                                {{ $resultadoMatch->puntaje_rojo }} - {{ $resultadoMatch->puntaje_azul }}
+                                            </div>
+                                        @endif
+                                        <span class="graphic-pair-exit" aria-hidden="true"></span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                <div class="podium-row {{ $mostrarLlave ? '' : 'podium-only' }}" style="--podium-pull: {{ $mostrarLlave ? $podiumPull : 0 }}px;">
+                    @foreach ($podiosVisibles as $podioVisible)
+                        <div class="podium-box {{ $podioVisible['class'] }}">
+                            <span>{{ $podioVisible['label'] }}</span>
+                            <strong>{{ $podioVisible['value'] ?: 'Pendiente' }}</strong>
                         </div>
                     @endforeach
-                </div>
-
-                <div class="podium-row" style="--podium-pull: {{ $podiumPull }}px;">
-                    <div class="podium-box gold">
-                        <span>1er lugar - Oro</span>
-                        <strong>{{ $podio['oro'] ?: 'Pendiente' }}</strong>
-                    </div>
-                    <div class="podium-box silver">
-                        <span>2do lugar - Plata</span>
-                        <strong>{{ $podio['plata'] ?: 'Pendiente' }}</strong>
-                    </div>
-                    <div class="podium-box bronze">
-                        <span>3er lugar - Bronce</span>
-                        <strong>{{ $podio['bronce_1'] ?: 'Pendiente' }}</strong>
-                    </div>
-                    <div class="podium-box bronze">
-                        <span>3er lugar - Bronce</span>
-                        <strong>{{ $podio['bronce_2'] ?: 'Pendiente' }}</strong>
-                    </div>
                 </div>
             </div>
         @else
@@ -408,6 +432,10 @@
             min-width: 760px;
             position: relative;
             z-index: 5;
+        }
+
+        .podium-row.podium-only {
+            margin-top: 12px;
         }
 
         .podium-box {

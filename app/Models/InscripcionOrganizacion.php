@@ -15,10 +15,12 @@ class InscripcionOrganizacion extends Model
         'torneo_id',
         'organizacion_id',
         'costo',
+        'monto_pagado',
     ];
 
     protected $casts = [
         'costo' => 'decimal:2',
+        'monto_pagado' => 'decimal:2',
     ];
 
     public function torneo()

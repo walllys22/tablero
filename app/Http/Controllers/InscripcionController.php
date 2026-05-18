@@ -8,6 +8,7 @@ use App\Models\InscripcionOrganizacion;
 use App\Models\Competidor;
 use App\Models\Organizacion;
 use App\Models\Persona;
+use App\Models\SorteoLlave;
 use App\Models\Torneo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -164,6 +165,33 @@ class InscripcionController extends Controller
             ->with('status', 'Organizacion eliminada de la inscripcion correctamente.');
     }
 
+    public function pagarOrganizacion(Request $request, Torneo $torneo, InscripcionOrganizacion $inscripcion)
+    {
+        abort_unless($inscripcion->torneo_id === $torneo->id, 404);
+
+        $data = $request->validate([
+            'monto_pago' => ['required', 'numeric', 'min:0.01', 'max:99999999.99'],
+        ]);
+
+        $inscripcion->load('competidores.modalidades');
+
+        $totalCompetidores = $inscripcion->competidores->sum(function ($competidor) {
+            return $competidor->modalidades->sum('costo');
+        });
+        $totalDeuda = (float) $inscripcion->costo + (float) $totalCompetidores;
+        $montoPagadoActual = (float) ($inscripcion->monto_pagado ?? 0);
+        $pendientePago = max(0, $totalDeuda - $montoPagadoActual);
+        $montoPago = min((float) $data['monto_pago'], $pendientePago);
+
+        $inscripcion->update([
+            'monto_pagado' => $montoPagadoActual + $montoPago,
+        ]);
+
+        return redirect()
+            ->route('inscripciones.index', $torneo)
+            ->with('status', 'Pago de la organizacion registrado correctamente.');
+    }
+
     public function storeCompetidor(Request $request, Torneo $torneo)
     {
         if (! $torneo->inscripcionOrganizaciones()->exists()) {
@@ -263,10 +291,16 @@ class InscripcionController extends Controller
                     ->when($categoriaSeleccionada && $categoriaSeleccionada->genero && $categoriaSeleccionada->genero !== 'Mixto', function ($query) use ($categoriaSeleccionada) {
                         $query->where('gender', $categoriaSeleccionada->genero);
                     })
-                    ->when($categoriaSeleccionada && $categoriaSeleccionada->edad_desde !== null, function ($query) use ($categoriaSeleccionada) {
+                    ->when($categoriaSeleccionada && $this->categoriaTieneEdadExacta($categoriaSeleccionada), function ($query) use ($categoriaSeleccionada) {
+                        $edad = (int) $categoriaSeleccionada->edad_desde;
+
+                        $query->whereDate('birth_date', '<=', now()->subYears($edad)->toDateString())
+                            ->whereDate('birth_date', '>=', now()->subYears($edad + 1)->addDay()->toDateString());
+                    })
+                    ->when($categoriaSeleccionada && ! $this->categoriaTieneEdadExacta($categoriaSeleccionada) && $categoriaSeleccionada->edad_desde !== null, function ($query) use ($categoriaSeleccionada) {
                         $query->whereDate('birth_date', '<=', now()->subYears((int) $categoriaSeleccionada->edad_desde)->toDateString());
                     })
-                    ->when($categoriaSeleccionada && $categoriaSeleccionada->edad_hasta !== null, function ($query) use ($categoriaSeleccionada) {
+                    ->when($categoriaSeleccionada && ! $this->categoriaTieneEdadExacta($categoriaSeleccionada) && $categoriaSeleccionada->edad_hasta !== null, function ($query) use ($categoriaSeleccionada) {
                         $query->whereDate('birth_date', '>=', now()->subYears(((int) $categoriaSeleccionada->edad_hasta) + 1)->addDay()->toDateString());
                     })
                     ->when($personasNoDisponibles->isNotEmpty(), function ($query) use ($personasNoDisponibles) {
@@ -280,8 +314,11 @@ class InscripcionController extends Controller
             ->pluck('persona')
             ->filter()
             ->values();
+        $categoriaIdsSorteadas = SorteoLlave::where('torneo_id', $torneo->id)
+            ->pluck('categoria_id');
         $categorias = $torneo->categorias()
             ->with('modalidad')
+            ->whereNotIn('categorias.id', $categoriaIdsSorteadas)
             ->when($request->filled('modalidad_id'), function ($query) use ($request) {
                 $query->where('modalidad_id', $request->input('modalidad_id'));
             })
@@ -348,6 +385,9 @@ class InscripcionController extends Controller
             ->whereIn('id', collect($data['modalidades'])->pluck('categoria_id'))
             ->get()
             ->keyBy('id');
+        $categoriaIdsSorteadas = SorteoLlave::where('torneo_id', $torneo->id)
+            ->pluck('categoria_id')
+            ->map(fn ($id) => (int) $id);
 
         foreach ($data['modalidades'] as $modalidad) {
             $categoria = $categoriasSeleccionadas->get($modalidad['categoria_id']);
@@ -355,6 +395,12 @@ class InscripcionController extends Controller
             if (! $categoria || (int) $categoria->modalidad_id !== (int) $modalidad['id']) {
                 return back()
                     ->withErrors(['modalidades' => 'La categoria seleccionada no corresponde a la modalidad.'])
+                    ->withInput();
+            }
+
+            if ($categoriaIdsSorteadas->contains((int) $categoria->id)) {
+                return back()
+                    ->withErrors(['modalidades' => 'No se puede inscribir participantes en una categoria que ya fue sorteada.'])
                     ->withInput();
             }
 
@@ -377,6 +423,10 @@ class InscripcionController extends Controller
                     }
 
                     $age = $persona->birth_date->diffInYears(now());
+
+                    if ($this->categoriaTieneEdadExacta($categoria)) {
+                        return $age !== (int) $categoria->edad_desde;
+                    }
 
                     return ($categoria->edad_desde !== null && $age < (int) $categoria->edad_desde)
                         || ($categoria->edad_hasta !== null && $age > (int) $categoria->edad_hasta);
@@ -509,8 +559,12 @@ class InscripcionController extends Controller
 
     private function categoriasQuery(Torneo $torneo, Request $request)
     {
+        $categoriaIdsSorteadas = SorteoLlave::where('torneo_id', $torneo->id)
+            ->pluck('categoria_id');
+
         return $torneo->categorias()
             ->with('modalidad')
+            ->whereNotIn('categorias.id', $categoriaIdsSorteadas)
             ->when($request->filled('modalidad_id') && ! $request->filled('categoria_id'), function ($query) use ($request) {
                 $query->where('modalidad_id', $request->input('modalidad_id'));
             })
@@ -535,6 +589,16 @@ class InscripcionController extends Controller
         $nombre = mb_strtolower((string) $categoria->nombre);
 
         return str_contains($nombre, 'mayor o igual') || str_contains($nombre, '>=');
+    }
+
+    private function categoriaTieneEdadExacta($categoria): bool
+    {
+        if ($categoria->edad_desde === null) {
+            return false;
+        }
+
+        return $categoria->edad_hasta === null
+            || (int) $categoria->edad_desde === (int) $categoria->edad_hasta;
     }
 
     private function pesoCumpleCategoria(float $peso, $categoria): bool
