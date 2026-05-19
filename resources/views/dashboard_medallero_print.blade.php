@@ -531,14 +531,11 @@
             paginas.style.cssText = 'display:block; position:absolute; left:-99999px; top:0; visibility:hidden; width:100%;';
             document.querySelector('.medallero-print-page').appendChild(paginas);
 
-            let paginaActual = crearPaginaImpresion(paginas, 1, 1);
-            let bloqueActual = null;
-            let tbodyActual = null;
-
             document.querySelectorAll('.print-medallero-block').forEach(function (bloqueOrigen) {
-                bloqueActual = crearBloqueVacioDesde(bloqueOrigen);
+                let paginaActual = crearPaginaImpresion(paginas, paginas.children.length + 1, 1);
+                let bloqueActual = crearBloqueVacioDesde(bloqueOrigen);
                 paginaActual.contenido.appendChild(bloqueActual);
-                tbodyActual = bloqueActual.querySelector('tbody');
+                let tbodyActual = bloqueActual.querySelector('tbody');
 
                 const filas = Array.from(bloqueOrigen.querySelectorAll('.print-medallero-table > tbody > tr'));
 
@@ -568,6 +565,14 @@
                             tbodyActual.appendChild(fila);
                         });
                     }
+                }
+            });
+
+            paginas.querySelectorAll('.print-page').forEach(function (pagina) {
+                const tieneFilas = pagina.querySelector('.print-medallero-table > tbody > tr');
+
+                if (!tieneFilas) {
+                    pagina.remove();
                 }
             });
 

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\KumiteCombateResultado;
 use App\Models\KumitePodio;
+use App\Models\Kata;
+use App\Models\KataCombateResultado;
 use App\Models\SorteoLlave;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -19,17 +21,25 @@ class TableroController extends Controller
 
         foreach ($llaves as $roundIndex => $ronda) {
             foreach (($ronda['combates'] ?? []) as $matchIndex => $combate) {
+                $esBye = (bool) ($combate['bye'] ?? false);
+                $rojo = $combate['a']['nombre'] ?? '';
+                $azul = $combate['b']['nombre'] ?? '';
+
+                if ($esBye && $rojo === '' && $azul === '') {
+                    $azul = 'BYE';
+                }
+
                 $combatesKumite[] = [
                     'indice' => count($combatesKumite),
                     'round_index' => $roundIndex,
                     'match_index' => $matchIndex,
                     'ronda' => $ronda['nombre'] ?? 'Combate',
                     'numero_llave' => $numeroLlave++,
-                    'rojo' => $combate['a']['nombre'] ?? '',
+                    'rojo' => $rojo,
                     'rojo_organizacion' => $combate['a']['organizacion'] ?? '',
-                    'azul' => $combate['b']['nombre'] ?? ($combate['bye'] ?? false ? 'BYE' : ''),
+                    'azul' => $azul,
                     'azul_organizacion' => $combate['b']['organizacion'] ?? '',
-                    'bye' => (bool) ($combate['bye'] ?? false),
+                    'bye' => $esBye,
                     'realizado' => (bool) ($combate['realizado'] ?? false),
                     'ganador' => $combate['ganador']['nombre'] ?? null,
                 ];
@@ -52,14 +62,36 @@ class TableroController extends Controller
         return view('kumite.tablero', compact('combateInicialKumite', 'combatesKumite'));
     }
 
-    public function kata()
+    public function kata(Request $request)
     {
-        return view('kata.tablero');
+        $tableroKata = $this->tableroKataInicial($request);
+        $sistemaCompetenciaId = $tableroKata['sistema_competencia_id'] ?? null;
+        $katasQuery = Kata::query()
+            ->where('estado', 'Activo');
+
+        if ($sistemaCompetenciaId) {
+            $katasQuery->where('sistema_id', $sistemaCompetenciaId);
+        }
+
+        $katas = $katasQuery
+            ->orderByRaw('CASE WHEN numero IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('numero')
+            ->orderBy('nombre')
+            ->get(['id', 'numero', 'nombre'])
+            ->values()
+            ->map(function ($kata, $index) {
+                $kata->numero_tablero = $kata->numero ?: ($index + 1);
+
+                return $kata;
+            });
+
+        return view('kata.tablero', compact('tableroKata', 'katas'));
     }
 
     public function resultadoKata(Request $request)
     {
         $resultadoKata = [
+            'sorteo_id' => $request->query('sorteo_id'),
             'color' => $request->query('color', 'rojo'),
             'nombre' => $request->query('nombre', 'Walter Landivar Limpias'),
             'kata_numero' => $request->query('kata_numero', '1'),
@@ -67,9 +99,125 @@ class TableroController extends Controller
             'puntaje' => (int) $request->query('puntaje', 3),
             'banderas_rojas' => (int) $request->query('banderas_rojas', 3),
             'banderas_azules' => (int) $request->query('banderas_azules', 2),
+            'kiken_rojo' => filter_var($request->query('kiken_rojo', false), FILTER_VALIDATE_BOOLEAN),
+            'kiken_azul' => filter_var($request->query('kiken_azul', false), FILTER_VALIDATE_BOOLEAN),
         ];
 
         return view('kata.resultado', compact('resultadoKata'));
+    }
+
+    public function podioKata(Request $request)
+    {
+        $sorteo = null;
+
+        if ($request->filled('sorteo_id')) {
+            $sorteo = SorteoLlave::with(['modalidad', 'categoria', 'resultadosKata'])
+                ->whereHas('modalidad', fn ($query) => $query->where('nombre', 'like', '%Kata%'))
+                ->findOrFail($request->query('sorteo_id'));
+            $llaves = $this->llavesConResultadosKata($sorteo);
+            $podio = $this->calcularPodioKata($llaves);
+            $modalidad = $sorteo->modalidad->nombre ?? 'Kata Individual';
+            $categoria = $sorteo->categoria->nombre ?? '';
+
+            return view('kata.podio', compact('podio', 'modalidad', 'categoria', 'sorteo'));
+        }
+
+        $podio = [
+            'oro' => trim((string) $request->query('oro', '')),
+            'plata' => trim((string) $request->query('plata', '')),
+            'bronce_1' => trim((string) $request->query('bronce_1', '')),
+            'bronce_2' => trim((string) $request->query('bronce_2', '')),
+        ];
+        $modalidad = $request->query('modalidad', 'Kata Individual');
+        $categoria = $request->query('categoria', '');
+
+        return view('kata.podio', compact('podio', 'modalidad', 'categoria', 'sorteo'));
+    }
+
+    public function guardarCombateKata(Request $request)
+    {
+        $data = $request->validate([
+            'sorteo_id' => ['nullable', 'exists:sorteo_llaves,id'],
+            'indice_combate' => ['required', 'integer', 'min:0'],
+            'competidor_rojo' => ['nullable', 'string', 'max:255'],
+            'competidor_azul' => ['nullable', 'string', 'max:255'],
+            'kata_numero_rojo' => ['nullable', 'string', 'max:50'],
+            'kata_numero_azul' => ['nullable', 'string', 'max:50'],
+            'kata_nombre_rojo' => ['nullable', 'string', 'max:255'],
+            'kata_nombre_azul' => ['nullable', 'string', 'max:255'],
+            'puntaje_rojo' => ['required', 'integer', 'min:0'],
+            'puntaje_azul' => ['required', 'integer', 'min:0'],
+            'kiken_rojo' => ['required', 'boolean'],
+            'kiken_azul' => ['required', 'boolean'],
+            'ganador' => ['nullable', 'string', 'max:255'],
+            'ganador_color' => ['nullable', 'in:rojo,azul'],
+            'realizado_at' => ['nullable', 'date'],
+        ]);
+
+        if ((int) $data['puntaje_rojo'] === 0 && (int) $data['puntaje_azul'] === 0) {
+            return response()->json([
+                'message' => 'Uno de los Competidores tienen que tener puntaje',
+            ], 422);
+        }
+
+        $ganadorColor = $data['ganador_color'] ?? null;
+        if ((int) $data['puntaje_rojo'] !== (int) $data['puntaje_azul']) {
+            $ganadorColor = (int) $data['puntaje_rojo'] > (int) $data['puntaje_azul'] ? 'rojo' : 'azul';
+        } elseif ($this->normalizarNombreCompetidor($data['ganador'] ?? null) === $this->normalizarNombreCompetidor($data['competidor_rojo'] ?? null)) {
+            $ganadorColor = 'rojo';
+        } elseif ($this->normalizarNombreCompetidor($data['ganador'] ?? null) === $this->normalizarNombreCompetidor($data['competidor_azul'] ?? null)) {
+            $ganadorColor = 'azul';
+        }
+
+        $ganador = $data['ganador'] ?? null;
+        if ($ganadorColor === 'rojo' && ! empty($data['competidor_rojo'])) {
+            $ganador = $data['competidor_rojo'];
+        } elseif ($ganadorColor === 'azul' && ! empty($data['competidor_azul'])) {
+            $ganador = $data['competidor_azul'];
+        }
+
+        $resultado = KataCombateResultado::updateOrCreate(
+            [
+                'sorteo_llave_id' => $data['sorteo_id'] ?? null,
+                'indice_combate' => $data['indice_combate'],
+            ],
+            [
+                'competidor_rojo' => $data['competidor_rojo'] ?? null,
+                'competidor_azul' => $data['competidor_azul'] ?? null,
+                'kata_numero_rojo' => $data['kata_numero_rojo'] ?? null,
+                'kata_numero_azul' => $data['kata_numero_azul'] ?? null,
+                'kata_nombre_rojo' => $data['kata_nombre_rojo'] ?? null,
+                'kata_nombre_azul' => $data['kata_nombre_azul'] ?? null,
+                'puntaje_rojo' => $data['puntaje_rojo'],
+                'puntaje_azul' => $data['puntaje_azul'],
+                'kiken_rojo' => $data['kiken_rojo'],
+                'kiken_azul' => $data['kiken_azul'],
+                'ganador' => $ganador,
+                'ganador_color' => $ganadorColor,
+                'realizado_at' => ! empty($data['realizado_at']) ? Carbon::parse($data['realizado_at']) : Carbon::now(),
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'resultado_id' => $resultado->id,
+        ]);
+    }
+
+    public function eliminarCombateKata(Request $request)
+    {
+        $data = $request->validate([
+            'sorteo_id' => ['required', 'exists:sorteo_llaves,id'],
+            'indice_combate' => ['required', 'integer', 'min:0'],
+        ]);
+
+        KataCombateResultado::where('sorteo_llave_id', $data['sorteo_id'])
+            ->where('indice_combate', $data['indice_combate'])
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+        ]);
     }
 
     public function podioKumite(Request $request)
@@ -197,14 +345,126 @@ class TableroController extends Controller
         $query->where('nombre', 'like', '%Kumite%');
     }
 
+    private function sorteoKata(Request $request): ?SorteoLlave
+    {
+        if ($request->filled('sorteo_id')) {
+            return SorteoLlave::with(['modalidad', 'categoria', 'torneo', 'resultadosKata'])
+                ->whereHas('modalidad', fn ($query) => $query->where('nombre', 'like', '%Kata%'))
+                ->find($request->input('sorteo_id'));
+        }
+
+        $sorteos = SorteoLlave::with(['modalidad', 'categoria', 'torneo', 'resultadosKata'])
+            ->whereHas('modalidad', fn ($query) => $query->where('nombre', 'like', '%Kata%'))
+            ->orderByRaw('COALESCE(area, 999)')
+            ->orderByRaw('COALESCE(orden, 999999)')
+            ->orderBy('id')
+            ->get();
+
+        return $sorteos->first(function ($sorteo) {
+            return $this->tieneCombatesPendientesKata($sorteo);
+        }) ?: $sorteos->last();
+    }
+
+    private function tableroKataInicial(Request $request): array
+    {
+        $sorteo = $this->sorteoKata($request);
+
+        if (! $sorteo) {
+            return [
+                'modalidad' => 'Kata Individual',
+                'categoria' => '',
+                'combate' => ['rojo' => '', 'azul' => ''],
+                'proximo' => ['rojo' => '', 'azul' => ''],
+                'llaves' => [],
+                'resultados_version' => 0,
+                'sistema_competencia_id' => null,
+            ];
+        }
+
+        $llaves = $this->llavesConResultadosKata($sorteo);
+        $combates = $this->combatesKataDisponibles($llaves);
+        $indiceCombate = collect($combates)->search(fn ($combate) => ! $combate['bye'] && ! $combate['realizado']);
+        $ultimoResultadoKata = $sorteo->resultadosKata->max('updated_at');
+        $versionLlavesKata = collect([$ultimoResultadoKata, $sorteo->updated_at])
+            ->filter()
+            ->map(fn ($fecha) => Carbon::parse($fecha)->timestamp)
+            ->max();
+        $sinCombatesPendientes = $indiceCombate === false;
+
+        $combateActual = $sinCombatesPendientes
+            ? ['rojo' => '********', 'azul' => '********']
+            : ($combates[$indiceCombate] ?? ['rojo' => '********', 'azul' => '********']);
+        $proximoCombate = $sinCombatesPendientes
+            ? ['rojo' => '********', 'azul' => '********']
+            : ($combates[$indiceCombate + 1] ?? ['rojo' => '********', 'azul' => '********']);
+
+        return [
+            'modalidad' => $sorteo->modalidad->nombre ?? 'Kata Individual',
+            'categoria' => $sorteo->categoria->nombre ?? '',
+            'combate' => $combateActual,
+            'proximo' => $proximoCombate,
+            'sorteo_id' => $sorteo->id,
+            'llaves' => $llaves,
+            'sin_combates_pendientes' => $sinCombatesPendientes,
+            'resultados_version' => $versionLlavesKata ?: 0,
+            'sistema_competencia_id' => $sorteo->torneo?->sistema_competencia,
+        ];
+    }
+
+    private function combatesKataDisponibles(array $llaves): array
+    {
+        $combates = [];
+
+        foreach ($llaves as $ronda) {
+            foreach (($ronda['combates'] ?? []) as $combate) {
+                $rojo = trim((string) ($combate['a']['nombre'] ?? ''));
+                $azul = trim((string) ($combate['b']['nombre'] ?? ''));
+                if ($rojo === '' && $azul === '') {
+                    continue;
+                }
+
+                $combates[] = [
+                    'rojo' => $rojo ?: 'BYE',
+                    'azul' => $azul ?: 'BYE',
+                    'bye' => ($combate['bye'] ?? false) && (($rojo !== '') !== ($azul !== '')),
+                    'realizado' => (bool) ($combate['realizado'] ?? false),
+                ];
+            }
+        }
+
+        return $combates;
+    }
+
+    private function tieneCombatesPendientesKata(SorteoLlave $sorteo): bool
+    {
+        foreach ($this->llavesConResultadosKata($sorteo) as $ronda) {
+            foreach (($ronda['combates'] ?? []) as $combate) {
+                $rojo = trim((string) ($combate['a']['nombre'] ?? ''));
+                $azul = trim((string) ($combate['b']['nombre'] ?? ''));
+                $byeReal = ($combate['bye'] ?? false) && (($rojo !== '') !== ($azul !== ''));
+
+                if (($combate['realizado'] ?? false) || $byeReal) {
+                    continue;
+                }
+
+                if ($rojo !== '' && $azul !== '' && strtoupper($rojo) !== 'BYE' && strtoupper($azul) !== 'BYE') {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private function tieneCombatesPendientes(SorteoLlave $sorteo): bool
     {
         foreach ($this->llavesConResultados($sorteo) as $ronda) {
             foreach (($ronda['combates'] ?? []) as $combate) {
                 $rojo = trim((string) ($combate['a']['nombre'] ?? ''));
                 $azul = trim((string) ($combate['b']['nombre'] ?? ''));
+                $byeReal = ($combate['bye'] ?? false) && (($rojo !== '') !== ($azul !== ''));
 
-                if (($combate['realizado'] ?? false) || ($combate['bye'] ?? false)) {
+                if (($combate['realizado'] ?? false) || $byeReal) {
                     continue;
                 }
 
@@ -222,8 +482,9 @@ class TableroController extends Controller
         foreach ($combates as $index => $combate) {
             $rojo = trim((string) ($combate['rojo'] ?? ''));
             $azul = trim((string) ($combate['azul'] ?? ''));
+            $byeReal = ($combate['bye'] ?? false) && (($rojo !== '') !== ($azul !== ''));
 
-            if (($combate['realizado'] ?? false) || ($combate['bye'] ?? false)) {
+            if (($combate['realizado'] ?? false) || $byeReal) {
                 continue;
             }
 
@@ -266,12 +527,134 @@ class TableroController extends Controller
             $nextMatch = (int) floor($matchIndex / 2);
             $nextSide = $matchIndex % 2 === 0 ? 'a' : 'b';
 
-            if (isset($llaves[$nextRound]['combates'][$nextMatch])) {
+            if (isset($llaves[$nextRound]['combates'][$nextMatch])
+                && $this->puedePropagarGanadorA($llaves[$nextRound]['combates'][$nextMatch][$nextSide] ?? null)) {
                 $llaves[$nextRound]['combates'][$nextMatch][$nextSide] = $ganadorCompetidor;
             }
         }
 
         return $llaves;
+    }
+
+    private function ladoGanadorKata($resultado, array $combate): string
+    {
+        $ganador = $this->normalizarNombreCompetidor($resultado->ganador ?? null);
+        $rojo = $this->normalizarNombreCompetidor(($combate['a']['nombre'] ?? null) ?: ($resultado->competidor_rojo ?? null));
+        $azul = $this->normalizarNombreCompetidor(($combate['b']['nombre'] ?? null) ?: ($resultado->competidor_azul ?? null));
+
+        if ($ganador !== '' && $ganador === $rojo) {
+            return 'a';
+        }
+
+        if ($ganador !== '' && $ganador === $azul) {
+            return 'b';
+        }
+
+        if ((int) ($resultado->puntaje_rojo ?? 0) !== (int) ($resultado->puntaje_azul ?? 0)) {
+            return (int) $resultado->puntaje_rojo > (int) $resultado->puntaje_azul ? 'a' : 'b';
+        }
+
+        return ($resultado->ganador_color ?? null) === 'azul' ? 'b' : 'a';
+    }
+
+    private function normalizarNombreCompetidor(?string $nombre): string
+    {
+        return trim(mb_strtolower(preg_replace('/\s+/', ' ', $nombre ?? '')));
+    }
+
+    private function llavesConResultadosKata(SorteoLlave $sorteo): array
+    {
+        $llaves = $this->propagarByes($this->reiniciarLlavesBase($sorteo->llaves ?? []));
+
+        foreach ($sorteo->resultadosKata->sortBy('indice_combate') as $resultado) {
+            $position = $this->posicionCombatePorIndice($llaves, (int) $resultado->indice_combate);
+
+            if (! $position) {
+                continue;
+            }
+
+            [$roundIndex, $matchIndex] = $position;
+            $combate = $llaves[$roundIndex]['combates'][$matchIndex];
+            $ganadorSide = $this->ladoGanadorKata($resultado, $combate);
+            $ganadorCompetidor = $combate[$ganadorSide] ?? [
+                'nombre' => $resultado->ganador,
+                'organizacion' => '',
+                'organizacion_id' => null,
+            ];
+
+            $llaves[$roundIndex]['combates'][$matchIndex]['realizado'] = true;
+            $llaves[$roundIndex]['combates'][$matchIndex]['ganador'] = [
+                'nombre' => $resultado->ganador,
+                'color' => $resultado->ganador_color,
+                'fecha' => optional($resultado->realizado_at)->toDateTimeString(),
+            ];
+
+            $nextRound = $roundIndex + 1;
+            $nextMatch = (int) floor($matchIndex / 2);
+            $nextSide = $matchIndex % 2 === 0 ? 'a' : 'b';
+
+            if (isset($llaves[$nextRound]['combates'][$nextMatch])
+                && $this->puedePropagarGanadorA($llaves[$nextRound]['combates'][$nextMatch][$nextSide] ?? null)) {
+                $llaves[$nextRound]['combates'][$nextMatch][$nextSide] = $ganadorCompetidor;
+            }
+
+            $llaves = $this->propagarByes($llaves);
+        }
+
+        return $llaves;
+    }
+
+    private function calcularPodioKata(array $llaves): array
+    {
+        $podio = [
+            'oro' => '',
+            'plata' => '',
+            'bronce_1' => '',
+            'bronce_2' => '',
+        ];
+
+        if (empty($llaves)) {
+            return $podio;
+        }
+
+        $finalRound = count($llaves) - 1;
+        $final = $llaves[$finalRound]['combates'][0] ?? null;
+
+        if ($final && ! empty($final['ganador']['nombre'])) {
+            $ganador = $final['ganador']['nombre'];
+            $rojo = $this->nombreCompetidorPodio($final['a'] ?? null);
+            $azul = $this->nombreCompetidorPodio($final['b'] ?? null);
+
+            $podio['oro'] = $ganador;
+            $podio['plata'] = $ganador === $rojo ? $azul : $rojo;
+        }
+
+        if (count($llaves) < 2) {
+            return $podio;
+        }
+
+        $semifinalRound = count($llaves) - 2;
+        $bronces = [];
+
+        foreach (($llaves[$semifinalRound]['combates'] ?? []) as $combate) {
+            if (empty($combate['ganador']['nombre'])) {
+                continue;
+            }
+
+            $ganador = $combate['ganador']['nombre'];
+            $rojo = $this->nombreCompetidorPodio($combate['a'] ?? null);
+            $azul = $this->nombreCompetidorPodio($combate['b'] ?? null);
+            $perdedor = $ganador === $rojo ? $azul : $rojo;
+
+            if ($perdedor) {
+                $bronces[] = $perdedor;
+            }
+        }
+
+        $podio['bronce_1'] = $bronces[0] ?? '';
+        $podio['bronce_2'] = $bronces[1] ?? '';
+
+        return $podio;
     }
 
     private function reiniciarLlavesBase(array $llaves): array
@@ -283,7 +666,7 @@ class TableroController extends Controller
                     $llaves[$roundIndex]['combates'][$matchIndex]['ganador']
                 );
 
-                if ($roundIndex > 0) {
+                if ($roundIndex > 0 && ! $this->combateTieneAsignacionManual($combate)) {
                     unset(
                         $llaves[$roundIndex]['combates'][$matchIndex]['a'],
                         $llaves[$roundIndex]['combates'][$matchIndex]['b']
@@ -295,6 +678,26 @@ class TableroController extends Controller
         return $llaves;
     }
 
+    private function combateTieneAsignacionManual(array $combate): bool
+    {
+        foreach (['a', 'b'] as $side) {
+            $nombre = $combate[$side]['nombre'] ?? '';
+
+            if ($nombre !== '' && ! str_starts_with($nombre, 'Ganador')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function puedePropagarGanadorA(?array $competidor): bool
+    {
+        $nombre = $competidor['nombre'] ?? '';
+
+        return $nombre === '' || str_starts_with($nombre, 'Ganador');
+    }
+
     private function propagarByes(array $llaves): array
     {
         foreach ($llaves as $roundIndex => $ronda) {
@@ -303,7 +706,10 @@ class TableroController extends Controller
             }
 
             foreach (($ronda['combates'] ?? []) as $matchIndex => $combate) {
-                if (! ($combate['bye'] ?? false)) {
+                $tieneRojo = ! empty($combate['a']);
+                $tieneAzul = ! empty($combate['b']);
+
+                if (! (($combate['bye'] ?? false) && ($tieneRojo !== $tieneAzul))) {
                     continue;
                 }
 
@@ -316,7 +722,8 @@ class TableroController extends Controller
                 $nextMatch = (int) floor($matchIndex / 2);
                 $nextSide = $matchIndex % 2 === 0 ? 'a' : 'b';
 
-                if (isset($llaves[$roundIndex + 1]['combates'][$nextMatch])) {
+                if (isset($llaves[$roundIndex + 1]['combates'][$nextMatch])
+                    && empty($llaves[$roundIndex + 1]['combates'][$nextMatch][$nextSide])) {
                     $llaves[$roundIndex + 1]['combates'][$nextMatch][$nextSide] = $ganador;
                 }
             }

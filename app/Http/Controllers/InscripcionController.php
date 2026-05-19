@@ -126,6 +126,50 @@ class InscripcionController extends Controller
         return view('inscripciones.print', compact('torneo', 'modalidades'));
     }
 
+    public function printParticipantes(Request $request, Torneo $torneo, InscripcionOrganizacion $inscripcion)
+    {
+        abort_unless($inscripcion->torneo_id === $torneo->id, 404);
+
+        $modalidadId = $request->filled('modalidad_id') ? (int) $request->input('modalidad_id') : null;
+        $categoriaId = $request->filled('categoria_id') ? (int) $request->input('categoria_id') : null;
+
+        $torneo->load('persona');
+        $inscripcion->load('organizacion');
+
+        $competidores = $inscripcion->competidores()
+            ->with(['persona', 'modalidades.modalidad', 'modalidades.categoria'])
+            ->when($modalidadId || $categoriaId, function ($query) use ($modalidadId, $categoriaId) {
+                $query->whereHas('modalidades', function ($query) use ($modalidadId, $categoriaId) {
+                    $query
+                        ->when($modalidadId, fn ($query) => $query->where('modalidad_id', $modalidadId))
+                        ->when($categoriaId, fn ($query) => $query->where('categoria_id', $categoriaId));
+                });
+            })
+            ->get()
+            ->map(function ($competidor) use ($modalidadId, $categoriaId) {
+                if ($modalidadId || $categoriaId) {
+                    $competidor->setRelation('modalidades', $competidor->modalidades->filter(function ($detalle) use ($modalidadId, $categoriaId) {
+                        return (! $modalidadId || (int) $detalle->modalidad_id === $modalidadId)
+                            && (! $categoriaId || (int) $detalle->categoria_id === $categoriaId);
+                    })->values());
+                }
+
+                return $competidor;
+            })
+            ->sortBy(fn ($competidor) => $competidor->persona->first_name ?? '')
+            ->values();
+
+        $pesosCompetidores = $inscripcion->organizacion->competidores()
+            ->pluck('peso', 'persona_id');
+
+        return view('inscripciones.participantes_print', compact(
+            'torneo',
+            'inscripcion',
+            'competidores',
+            'pesosCompetidores'
+        ));
+    }
+
     public function storeOrganizacion(Request $request, Torneo $torneo)
     {
         $data = $request->validate([

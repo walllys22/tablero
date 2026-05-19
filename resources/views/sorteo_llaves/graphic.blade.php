@@ -226,21 +226,37 @@
                                         $matchNumber = $matchNumbers[$roundIndex][$matchIndex];
                                         $matchPosition = $matchIndex % 2 === 0 ? 'match-top' : 'match-bottom';
                                         $resultadoMatch = $roundIndex === 0 ? $resultadosPorIndice->get($matchIndex) : null;
+                                        $tieneCompetidorRojo = ! empty($combate['a']);
+                                        $tieneCompetidorAzul = ! empty($combate['b']);
+                                        $esByeReal = ($combate['bye'] ?? false) && ($tieneCompetidorRojo !== $tieneCompetidorAzul);
+                                        $byeCompetitorSide = $esByeReal
+                                            ? (! empty($combate['a']) ? 'a' : (! empty($combate['b']) ? 'b' : null))
+                                            : null;
                                     @endphp
 
-                                    <div class="graphic-match {{ $roundIndex === 0 ? 'first-round' : '' }} {{ $matchPosition }}">
-                                        <div class="graphic-slot red-slot">
-                                            <strong>{{ $redSlot['nombre'] }}</strong>
-                                            @if ($redSlot['organizacion'])
-                                                <small>{{ $redSlot['organizacion'] }}</small>
-                                            @endif
-                                        </div>
-                                        <div class="graphic-slot blue-slot">
-                                            <strong>{{ $blueSlot['nombre'] }}</strong>
-                                            @if ($blueSlot['organizacion'])
-                                                <small>{{ $blueSlot['organizacion'] }}</small>
-                                            @endif
-                                        </div>
+                                    <div class="graphic-match {{ $roundIndex === 0 ? 'first-round' : '' }} {{ $matchPosition }} {{ $byeCompetitorSide ? 'bye-match' : '' }}">
+                                        @if (! $byeCompetitorSide || $byeCompetitorSide === 'a')
+                                            <div class="graphic-slot red-slot {{ $byeCompetitorSide === 'a' ? 'bye-slot' : '' }}">
+                                                <strong>{{ $redSlot['nombre'] }}</strong>
+                                                @if ($redSlot['organizacion'])
+                                                    <small>{{ $redSlot['organizacion'] }}</small>
+                                                @endif
+                                                @if ($byeCompetitorSide === 'a')
+                                                    <small class="bye-label">BYE</small>
+                                                @endif
+                                            </div>
+                                        @endif
+                                        @if (! $byeCompetitorSide || $byeCompetitorSide === 'b')
+                                            <div class="graphic-slot blue-slot {{ $byeCompetitorSide === 'b' ? 'bye-slot' : '' }}">
+                                                <strong>{{ $blueSlot['nombre'] }}</strong>
+                                                @if ($blueSlot['organizacion'])
+                                                    <small>{{ $blueSlot['organizacion'] }}</small>
+                                                @endif
+                                                @if ($byeCompetitorSide === 'b')
+                                                    <small class="bye-label">BYE</small>
+                                                @endif
+                                            </div>
+                                        @endif
                                         <div class="graphic-match-number">{{ $matchNumber }}</div>
                                         @if ($resultadoMatch)
                                             <div class="graphic-result">
@@ -389,6 +405,21 @@
             display: block;
             font-size: 10px;
             line-height: 1.2;
+        }
+
+        .graphic-match.bye-match {
+            padding-top: 16px;
+        }
+
+        .graphic-slot.bye-slot {
+            border-top: 1px solid #111;
+            height: 68px;
+        }
+
+        .bye-label {
+            font-size: 12px !important;
+            font-weight: 700;
+            margin-top: 4px;
         }
 
         .red-slot {
@@ -571,4 +602,16 @@
             }
         }
     </style>
+@endpush
+
+@push('scripts')
+    @if ($sorteo)
+        <script>
+            window.addEventListener('storage', function (event) {
+                if (event.key === @json('sorteo-llaves-updated-' . $sorteo->id)) {
+                    window.location.reload();
+                }
+            });
+        </script>
+    @endif
 @endpush

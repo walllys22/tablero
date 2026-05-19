@@ -58,11 +58,17 @@
                                             @if ($resultado->senshu === 'rojo')
                                                 <span class="badge bg-warning text-dark ms-1">Senshu</span>
                                             @endif
+                                            @if ($resultado->kiken_rojo)
+                                                <span class="badge bg-dark ms-1">Kiken</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <strong>{{ $resultado->competidor_azul ?: 'Sin competidor' }}</strong>
                                             @if ($resultado->senshu === 'azul')
                                                 <span class="badge bg-warning text-dark ms-1">Senshu</span>
+                                            @endif
+                                            @if ($resultado->kiken_azul)
+                                                <span class="badge bg-dark ms-1">Kiken</span>
                                             @endif
                                         </td>
                                         <td class="text-center">
@@ -73,10 +79,12 @@
                                         <td>
                                             <div><strong>Tecnicas:</strong> Y {{ $tecnicasRojo['yuko'] ?? 0 }}, W {{ $tecnicasRojo['wazari'] ?? 0 }}, I {{ $tecnicasRojo['ippon'] ?? 0 }}</div>
                                             <div><strong>Faltas:</strong> {{ $faltasRojo ?: 'Sin faltas' }}</div>
+                                            <div><strong>Kiken:</strong> {{ $resultado->kiken_rojo ? 'Si' : 'No' }}</div>
                                         </td>
                                         <td>
                                             <div><strong>Tecnicas:</strong> Y {{ $tecnicasAzul['yuko'] ?? 0 }}, W {{ $tecnicasAzul['wazari'] ?? 0 }}, I {{ $tecnicasAzul['ippon'] ?? 0 }}</div>
                                             <div><strong>Faltas:</strong> {{ $faltasAzul ?: 'Sin faltas' }}</div>
+                                            <div><strong>Kiken:</strong> {{ $resultado->kiken_azul ? 'Si' : 'No' }}</div>
                                         </td>
                                         <td class="text-center">
                                             @if ($resultado->ganador)

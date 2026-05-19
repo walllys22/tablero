@@ -48,6 +48,11 @@ class SorteoLlave extends Model
         return $this->hasMany(KumiteCombateResultado::class, 'sorteo_llave_id');
     }
 
+    public function resultadosKata()
+    {
+        return $this->hasMany(KataCombateResultado::class, 'sorteo_llave_id');
+    }
+
     public function podioKumite()
     {
         return $this->hasOne(KumitePodio::class, 'sorteo_llave_id');

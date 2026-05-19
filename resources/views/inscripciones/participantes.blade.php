@@ -20,9 +20,14 @@
                         {{ $torneo->nombre ?: 'Torneo sin nombre' }} / {{ $inscripcion->organizacion->nombre }}
                     </small>
                 </div>
-                <a href="{{ route('inscripciones.index', $torneo) }}" class="btn btn-warning text-white">
-                    <i class="bi bi-arrow-left"></i> Volver
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('inscripciones.participantes.print', [$torneo, $inscripcion, 'modalidad_id' => request('modalidad_id'), 'categoria_id' => request('categoria_id')]) }}" class="btn btn-success">
+                        <i class="bi bi-printer"></i> Imprimir
+                    </a>
+                    <a href="{{ route('inscripciones.index', $torneo) }}" class="btn btn-warning text-white">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
             </div>
         </div>
 

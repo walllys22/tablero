@@ -88,6 +88,18 @@
             text-align: right;
         }
 
+        .score-kiken-red {
+            color: var(--aka);
+            font-size: clamp(3.6rem, 8.4vw, 5.6rem);
+            text-shadow: 0 2px 4px rgba(255, 255, 255, .72);
+        }
+
+        .score-kiken-blue {
+            color: var(--ao);
+            font-size: clamp(3.6rem, 8.4vw, 5.6rem);
+            text-shadow: 0 2px 4px rgba(255, 255, 255, .72);
+        }
+
         .flags-row {
             align-items: center;
             background: #ffffff;
@@ -200,8 +212,12 @@
             </section>
 
             <section class="score-row" aria-label="Puntaje">
-                <div class="score score-red">{{ $resultadoKata['banderas_rojas'] }}</div>
-                <div class="score score-blue">{{ $resultadoKata['banderas_azules'] }}</div>
+                <div class="score score-red {{ ($resultadoKata['kiken_rojo'] ?? false) ? 'score-kiken-red' : '' }}">
+                    {{ ($resultadoKata['kiken_rojo'] ?? false) ? 'Kiken' : $resultadoKata['banderas_rojas'] }}
+                </div>
+                <div class="score score-blue {{ ($resultadoKata['kiken_azul'] ?? false) ? 'score-kiken-blue' : '' }}">
+                    {{ ($resultadoKata['kiken_azul'] ?? false) ? 'Kiken' : $resultadoKata['banderas_azules'] }}
+                </div>
             </section>
 
             <section class="flags-row">
@@ -220,7 +236,7 @@
         </section>
 
         <footer class="footer">
-            <button type="button" class="close-button" onclick="window.location.href='{{ route('tablero.kata') }}'">
+            <button type="button" class="close-button" onclick="window.location.href='{{ route('tablero.kata', array_filter(['sorteo_id' => $resultadoKata['sorteo_id'] ?? null])) }}'">
                 Cerrar
             </button>
         </footer>

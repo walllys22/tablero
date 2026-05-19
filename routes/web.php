@@ -41,7 +41,10 @@ Route::post('/kumite/tablero/combates', [TableroController::class, 'guardarComba
 Route::get('/kumite/podio', [TableroController::class, 'podioKumite'])->name('tablero.kumite.podio');
 
 Route::get('/kata/tablero', [TableroController::class, 'kata'])->name('tablero.kata');
+Route::post('/kata/tablero/combates', [TableroController::class, 'guardarCombateKata'])->name('tablero.kata.combates.store');
+Route::delete('/kata/tablero/combates', [TableroController::class, 'eliminarCombateKata'])->name('tablero.kata.combates.destroy');
 Route::get('/kata/resultado', [TableroController::class, 'resultadoKata'])->name('tablero.kata.resultado');
+Route::get('/kata/podio', [TableroController::class, 'podioKata'])->name('tablero.kata.podio');
 
 Route::get('/dashboard', function () {
     $torneo = Torneo::where('status', 1)
@@ -115,6 +118,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/torneos/{torneo}/inscripciones/organizaciones/{inscripcion}/pagar', [InscripcionController::class, 'pagarOrganizacion'])->name('inscripciones.organizaciones.pagar');
     Route::delete('/torneos/{torneo}/inscripciones/organizaciones/{inscripcion}', [InscripcionController::class, 'destroyOrganizacion'])->name('inscripciones.organizaciones.destroy');
     Route::post('/torneos/{torneo}/inscripciones/competidores', [InscripcionController::class, 'storeCompetidor'])->name('inscripciones.competidores.store');
+    Route::get('/torneos/{torneo}/inscripciones/{inscripcion}/participantes/imprimir', [InscripcionController::class, 'printParticipantes'])->name('inscripciones.participantes.print');
     Route::get('/torneos/{torneo}/inscripciones/{inscripcion}/participantes', [InscripcionController::class, 'participantes'])->name('inscripciones.participantes');
     Route::post('/torneos/{torneo}/inscripciones/{inscripcion}/participantes', [InscripcionController::class, 'storeParticipante'])->name('inscripciones.participantes.store');
     Route::patch('/torneos/{torneo}/inscripciones/{inscripcion}/participantes/{competidor}/pagos', [InscripcionController::class, 'updateParticipantePago'])->name('inscripciones.participantes.pagos.update');
@@ -124,6 +128,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/torneos/{torneo}/sorteo-llaves/grafico', [SorteoLlaveController::class, 'graphic'])->name('sorteo-llaves.graphic');
     Route::get('/torneos/{torneo}/sorteo-llaves/{sorteo}/resultados', [SorteoLlaveController::class, 'resultados'])->name('sorteo-llaves.resultados');
     Route::patch('/torneos/{torneo}/sorteo-llaves/orden', [SorteoLlaveController::class, 'updateOrden'])->name('sorteo-llaves.orden.update');
+    Route::patch('/torneos/{torneo}/sorteo-llaves/{sorteo}/competidores', [SorteoLlaveController::class, 'updateCompetidores'])->name('sorteo-llaves.competidores.update');
     Route::patch('/torneos/{torneo}/sorteo-llaves/{sorteo}/area', [SorteoLlaveController::class, 'updateArea'])->name('sorteo-llaves.area.update');
     Route::delete('/torneos/{torneo}/sorteo-llaves/{sorteo}', [SorteoLlaveController::class, 'destroy'])->name('sorteo-llaves.destroy');
     Route::get('/torneos/{torneo}/modalidades', [ModalidadController::class, 'index'])->name('modalidades.index');

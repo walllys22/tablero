@@ -129,18 +129,16 @@
                                         <td>
                                             <div>{{ $sorteo->categoria->nombre ?? 'Sin categoria' }}</div>
                                             @if ($sorteo->categoria_estado === 'realizada')
-                                                <span class="badge bg-success mt-1">Realizada</span>
+                                                <span class="badge bg-danger mt-1">Realizada</span>
                                             @elseif ($sorteo->categoria_estado === 'ejecucion')
                                                 <span class="badge bg-warning text-dark mt-1">En ejecucion</span>
                                             @else
-                                                <span class="badge bg-secondary mt-1">Pendiente</span>
+                                                <span class="badge bg-primary mt-1">Pendiente</span>
                                             @endif
                                         </td>
                                         <td class="text-center">
                                             @if ($sorteo->area)
-                                                <span class="area-badge area-color-{{ (($sorteo->area - 1) % 8) + 1 }}">
-                                                    Area {{ $sorteo->area }}
-                                                </span>
+                                                Area {{ $sorteo->area }}
                                             @else
                                                 <span class="text-muted">Sin area</span>
                                             @endif
@@ -154,13 +152,28 @@
                                                 data-bs-toggle="modal" data-bs-target="#modal-llaves-sorteadas-{{ $sorteo->id }}">
                                                 <i class="bi bi-list-check"></i>
                                             </button>
-                                            @if (($sorteo->resultados_kumite_count ?? 0) > 0)
-                                                <a href="{{ route('sorteo-llaves.resultados', [$torneo, $sorteo]) }}" class="btn btn-sm btn-info text-white p-1" title="Llaves realizadas">
-                                                    <i class="bi bi-clipboard-check"></i>
-                                                </a>
-                                                <a href="{{ route('tablero.kumite.podio', ['sorteo_id' => $sorteo->id]) }}" class="btn btn-sm btn-warning text-white p-1" title="Ver podio">
-                                                    <i class="bi bi-trophy"></i>
-                                                </a>
+                                            @if (($sorteo->resultados_competencia_count ?? 0) > 0)
+                                                @if ($sorteo->es_kata ?? false)
+                                                    <a href="{{ route('sorteo-llaves.resultados', [$torneo, $sorteo]) }}" class="btn btn-sm btn-info text-white p-1" title="Resultados de Kata">
+                                                        <i class="bi bi-clipboard-check"></i>
+                                                    </a>
+                                                    @if ($sorteo->categoria_completa)
+                                                        <a href="{{ route('tablero.kata.podio', ['sorteo_id' => $sorteo->id]) }}" class="btn btn-sm btn-warning text-white p-1" title="Ver podio Kata">
+                                                            <i class="bi bi-trophy"></i>
+                                                        </a>
+                                                    @else
+                                                        <button type="button" class="btn btn-sm btn-secondary p-1" title="Podio no disponible" disabled>
+                                                            <i class="bi bi-trophy"></i>
+                                                        </button>
+                                                    @endif
+                                                @else
+                                                    <a href="{{ route('sorteo-llaves.resultados', [$torneo, $sorteo]) }}" class="btn btn-sm btn-info text-white p-1" title="Llaves realizadas">
+                                                        <i class="bi bi-clipboard-check"></i>
+                                                    </a>
+                                                    <a href="{{ route('tablero.kumite.podio', ['sorteo_id' => $sorteo->id]) }}" class="btn btn-sm btn-warning text-white p-1" title="Ver podio">
+                                                        <i class="bi bi-trophy"></i>
+                                                    </a>
+                                                @endif
                                             @else
                                                 <button type="button" class="btn btn-sm btn-secondary p-1" title="Sin llaves realizadas" disabled>
                                                     <i class="bi bi-clipboard-check"></i>
@@ -175,10 +188,12 @@
                                                     <i class="bi bi-grid-3x3-gap"></i>
                                                 </button>
                                             @endif
-                                            <button type="button" class="btn btn-sm btn-danger p-1" title="Eliminar sorteo"
-                                                data-bs-toggle="modal" data-bs-target="#modal-delete-sorteo-{{ $sorteo->id }}">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                            @if (($sorteo->categoria_estado ?? 'pendiente') === 'pendiente')
+                                                <button type="button" class="btn btn-sm btn-danger p-1" title="Eliminar sorteo"
+                                                    data-bs-toggle="modal" data-bs-target="#modal-delete-sorteo-{{ $sorteo->id }}">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty
@@ -259,7 +274,7 @@
                         <div class="modal-content">
                             <div class="modal-header bg-success text-white">
                                 <h5 class="modal-title fw-bold" id="modalLlavesSorteadasLabel{{ $sorteo->id }}">
-                                    Llaves sorteadas
+                                    Mostrando llaves sorteadas
                                 </h5>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                                     aria-label="Cerrar"></button>
@@ -305,18 +320,258 @@
                                         @endif
                                     </div>
                                 @endif
-                                <div class="bracket-wrapper">
+                                @if (false)
+                                    <div class="kata-results-panel">
+                                        <div class="kata-results-title">Resultados de combate</div>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered align-middle mb-0 kata-results-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="width: 70px;">Llave</th>
+                                                        <th>Rojo</th>
+                                                        <th>Azul</th>
+                                                        <th style="width: 120px;">Resultado</th>
+                                                        <th>Detalle rojo</th>
+                                                        <th>Detalle azul</th>
+                                                        <th style="width: 180px;">Ganador</th>
+                                                        <th style="width: 135px;">Fecha</th>
+                                                        <th style="width: 105px;">Acciones</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @php
+                                                        $resultadosPorIndice = ($sorteo->resultados_competencia ?? collect())->keyBy('indice_combate');
+                                                        $kataRows = [];
+                                                        $indiceCombateModal = 0;
+                                                        $matchNumberModal = 1;
+
+                                                        foreach (($sorteo->llaves ?? []) as $ronda) {
+                                                            foreach (($ronda['combates'] ?? []) as $combate) {
+                                                                $resultadoCombate = $resultadosPorIndice->get($indiceCombateModal);
+                                                                $rojoNombre = $combate['a']['nombre'] ?? ($resultadoCombate ? ($resultadoCombate->competidor_rojo ?: '') : '');
+                                                                $azulNombre = $combate['b']['nombre'] ?? ($resultadoCombate ? ($resultadoCombate->competidor_azul ?: '') : '');
+                                                                $rojoOrganizacion = $combate['a']['organizacion'] ?? '';
+                                                                $azulOrganizacion = $combate['b']['organizacion'] ?? '';
+                                                                $tieneCompetidorRojo = trim((string) $rojoNombre) !== '';
+                                                                $tieneCompetidorAzul = trim((string) $azulNombre) !== '';
+                                                                $esByeReal = ($combate['bye'] ?? false) && ($tieneCompetidorRojo !== $tieneCompetidorAzul);
+
+                                                                if (!(($sorteo->categoria_completa && ! $resultadoCombate) || $esByeReal)) {
+                                                                    $ganadorVisible = '';
+
+                                                                    if ($resultadoCombate && $resultadoCombate->ganador_color) {
+                                                                        $ganadorVisible = $resultadoCombate->ganador_color === 'rojo' ? $rojoNombre : $azulNombre;
+                                                                        $ganadorVisible = $ganadorVisible ?: ($resultadoCombate->ganador ?? '');
+                                                                    }
+
+                                                                    $kataRows[] = [
+                                                                        'llave' => $matchNumberModal,
+                                                                        'indice' => $indiceCombateModal,
+                                                                        'rojo' => $rojoNombre ?: 'Competidor',
+                                                                        'azul' => $azulNombre ?: 'Competidor',
+                                                                        'rojo_org' => $rojoOrganizacion,
+                                                                        'azul_org' => $azulOrganizacion,
+                                                                        'resultado' => $resultadoCombate,
+                                                                        'ganador_visible' => $ganadorVisible,
+                                                                        'ganador_class' => $resultadoCombate && $resultadoCombate->ganador_color === 'rojo' ? 'bg-danger' : 'bg-primary',
+                                                                        'fecha_tabla' => $resultadoCombate && $resultadoCombate->realizado_at ? $resultadoCombate->realizado_at->format('d/m/Y H:i') : '-',
+                                                                        'fecha_input' => $resultadoCombate && $resultadoCombate->realizado_at ? $resultadoCombate->realizado_at->format('Y-m-d\\TH:i') : now()->format('Y-m-d\\TH:i'),
+                                                                    ];
+                                                                }
+
+                                                                $indiceCombateModal++;
+                                                                $matchNumberModal++;
+                                                            }
+                                                        }
+                                                    @endphp
+                                                    @foreach ($kataRows as $kataRow)
+                                                        <tr>
+                                                            <td class="text-center fw-bold">{{ $kataRow['llave'] }}</td>
+                                                            <td>
+                                                                <div class="kata-competidor-cell kata-competidor-rojo">
+                                                                    <strong>{{ $kataRow['rojo'] }}</strong>
+                                                                    {!! $kataRow['rojo_org'] ? '<small>' . e($kataRow['rojo_org']) . '</small>' : '' !!}
+                                                                    {!! $kataRow['resultado'] && $kataRow['resultado']->kiken_rojo ? '<span class="badge bg-dark mt-1">Kiken</span>' : '' !!}
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <div class="kata-competidor-cell kata-competidor-azul">
+                                                                    <strong>{{ $kataRow['azul'] }}</strong>
+                                                                    {!! $kataRow['azul_org'] ? '<small>' . e($kataRow['azul_org']) . '</small>' : '' !!}
+                                                                    {!! $kataRow['resultado'] && $kataRow['resultado']->kiken_azul ? '<span class="badge bg-dark mt-1">Kiken</span>' : '' !!}
+                                                                </div>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                {!! $kataRow['resultado'] ? '<span class="score-pill score-pill-red">' . e($kataRow['resultado']->puntaje_rojo) . '</span><span class="fw-bold mx-1">-</span><span class="score-pill score-pill-blue">' . e($kataRow['resultado']->puntaje_azul) . '</span>' : '<span class="badge bg-secondary">Pendiente</span>' !!}
+                                                            </td>
+                                                            <td>
+                                                                {!! $kataRow['resultado'] ? '<div><strong>Kata Nro.:</strong> ' . e($kataRow['resultado']->kata_numero_rojo ?: '-') . '</div><div><strong>Nombre:</strong> ' . e($kataRow['resultado']->kata_nombre_rojo ?: '-') . '</div><div><strong>Kiken:</strong> ' . ($kataRow['resultado']->kiken_rojo ? 'Si' : 'No') . '</div>' : '<span class="text-muted">Sin resultado</span>' !!}
+                                                            </td>
+                                                            <td>
+                                                                {!! $kataRow['resultado'] ? '<div><strong>Kata Nro.:</strong> ' . e($kataRow['resultado']->kata_numero_azul ?: '-') . '</div><div><strong>Nombre:</strong> ' . e($kataRow['resultado']->kata_nombre_azul ?: '-') . '</div><div><strong>Kiken:</strong> ' . ($kataRow['resultado']->kiken_azul ? 'Si' : 'No') . '</div>' : '<span class="text-muted">Sin resultado</span>' !!}
+                                                            </td>
+                                                            <td class="text-center">
+                                                                {!! $kataRow['ganador_visible'] ? '<span class="badge ' . e($kataRow['ganador_class']) . ' kata-winner-badge">' . e($kataRow['ganador_visible']) . '</span>' : '<span class="text-muted">Pendiente</span>' !!}
+                                                            </td>
+                                                            <td class="text-center">{{ $kataRow['fecha_tabla'] }}</td>
+                                                            <td class="text-center">
+                                                                @if ($kataRow['resultado'])
+                                                                    <div class="d-flex justify-content-center gap-1">
+                                                                        <button type="button" class="btn btn-sm btn-primary js-edit-kata-result"
+                                                                            data-sorteo-id="{{ $sorteo->id }}"
+                                                                            data-indice-combate="{{ $kataRow['indice'] }}"
+                                                                            data-competidor-rojo="{{ $kataRow['rojo'] }}"
+                                                                            data-competidor-azul="{{ $kataRow['azul'] }}"
+                                                                            data-kata-numero-rojo="{{ $kataRow['resultado']->kata_numero_rojo ?? '' }}"
+                                                                            data-kata-numero-azul="{{ $kataRow['resultado']->kata_numero_azul ?? '' }}"
+                                                                            data-kata-nombre-rojo="{{ $kataRow['resultado']->kata_nombre_rojo ?? '' }}"
+                                                                            data-kata-nombre-azul="{{ $kataRow['resultado']->kata_nombre_azul ?? '' }}"
+                                                                            data-puntaje-rojo="{{ $kataRow['resultado']->puntaje_rojo ?? 0 }}"
+                                                                            data-puntaje-azul="{{ $kataRow['resultado']->puntaje_azul ?? 0 }}"
+                                                                            data-kiken-rojo="{{ $kataRow['resultado']->kiken_rojo ? '1' : '0' }}"
+                                                                            data-kiken-azul="{{ $kataRow['resultado']->kiken_azul ? '1' : '0' }}"
+                                                                            data-ganador="{{ $kataRow['resultado']->ganador ?? '' }}"
+                                                                            data-ganador-color="{{ $kataRow['resultado']->ganador_color ?? '' }}"
+                                                                            data-realizado-at="{{ $kataRow['fecha_input'] }}">
+                                                                            <i class="bi bi-pencil-square"></i>
+                                                                        </button>
+                                                                        <button type="button" class="btn btn-sm btn-danger js-delete-kata-result"
+                                                                            data-sorteo-id="{{ $sorteo->id }}"
+                                                                            data-indice-combate="{{ $kataRow['indice'] }}"
+                                                                            data-llave="{{ $kataRow['llave'] }}">
+                                                                            <i class="bi bi-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                @else
+                                <div class="bracket-wrapper"
+                                    data-update-url="{{ route('sorteo-llaves.competidores.update', [$torneo, $sorteo]) }}"
+                                    data-editable="{{ in_array(($sorteo->categoria_estado ?? 'pendiente'), ['pendiente', 'ejecucion'], true) ? '1' : '0' }}">
                                     @php
-                                        $resultadosPorIndice = $sorteo->resultadosKumite->keyBy('indice_combate');
+                                        $resultadosPorIndice = ($sorteo->resultados_competencia ?? collect())->keyBy('indice_combate');
                                         $indiceCombateModal = 0;
+                                        $matchNumbersModal = [];
+                                        $nextMatchNumberModal = 1;
+
+                                        foreach (($sorteo->llaves ?? []) as $numberRoundIndex => $numberRound) {
+                                            foreach (($numberRound['combates'] ?? []) as $numberMatchIndex => $numberMatch) {
+                                                $matchNumbersModal[$numberRoundIndex][$numberMatchIndex] = $nextMatchNumberModal++;
+                                            }
+                                        }
+
+                                        $origenCompetidor = function ($llavesModal, $roundIndex, $matchIndex, $side) use (&$origenCompetidor) {
+                                            $competidor = $llavesModal[$roundIndex]['combates'][$matchIndex][$side] ?? null;
+
+                                            if (! $competidor) {
+                                                return null;
+                                            }
+
+                                            if ($roundIndex === 0) {
+                                                return [
+                                                    'round_index' => 0,
+                                                    'match_index' => $matchIndex,
+                                                    'side' => $side,
+                                                    'bye' => (bool) ($llavesModal[$roundIndex]['combates'][$matchIndex]['bye'] ?? false),
+                                                ];
+                                            }
+
+                                            $combateActual = $llavesModal[$roundIndex]['combates'][$matchIndex] ?? [];
+                                            $rondaActualNombre = mb_strtolower($llavesModal[$roundIndex]['nombre'] ?? '');
+                                            $esSemifinalActualCompleta = str_contains($rondaActualNombre, 'semifinal')
+                                                && ! empty($combateActual['a'])
+                                                && ! empty($combateActual['b'])
+                                                && ! ($combateActual['bye'] ?? false);
+
+                                            if ($esSemifinalActualCompleta) {
+                                                return [
+                                                    'round_index' => $roundIndex,
+                                                    'match_index' => $matchIndex,
+                                                    'side' => $side,
+                                                    'bye' => false,
+                                                ];
+                                            }
+
+                                            $sourceIndex = ($matchIndex * 2) + ($side === 'a' ? 0 : 1);
+                                            $sourceCombat = $llavesModal[$roundIndex - 1]['combates'][$sourceIndex] ?? null;
+
+                                            if (! ($sourceCombat['bye'] ?? false)) {
+                                                return null;
+                                            }
+
+                                            $sourceSide = ! empty($sourceCombat['a']) ? 'a' : (! empty($sourceCombat['b']) ? 'b' : null);
+
+                                            return $sourceSide
+                                                ? $origenCompetidor($llavesModal, $roundIndex - 1, $sourceIndex, $sourceSide)
+                                                : null;
+                                        };
+                                        $slotModal = function ($llavesModal, $matchNumbers, $roundIndex, $matchIndex, $side, $combate) {
+                                            $competidor = $combate[$side] ?? null;
+
+                                            if ($competidor) {
+                                                return [
+                                                    'nombre' => $competidor['nombre'] ?? 'Competidor',
+                                                    'organizacion' => $competidor['organizacion'] ?? '',
+                                                ];
+                                            }
+
+                                            if ($roundIndex === 0) {
+                                                return [
+                                                    'nombre' => ($combate['bye'] ?? false) ? 'BYE' : 'Competidor',
+                                                    'organizacion' => '',
+                                                ];
+                                            }
+
+                                            $sourceIndex = ($matchIndex * 2) + ($side === 'a' ? 0 : 1);
+                                            $sourceNumber = $matchNumbers[$roundIndex - 1][$sourceIndex] ?? null;
+
+                                            return [
+                                                'nombre' => $sourceNumber ? 'Ganador ' . $sourceNumber : 'Ganador',
+                                                'organizacion' => '',
+                                            ];
+                                        };
                                     @endphp
-                                    @foreach (($sorteo->llaves ?? []) as $ronda)
+                                    @foreach (($sorteo->llaves ?? []) as $roundIndex => $ronda)
                                         <div class="bracket-round">
                                             <div class="bracket-round-title">{{ $ronda['nombre'] ?? 'Ronda' }}</div>
-                                            @foreach (($ronda['combates'] ?? []) as $combate)
+                                            @foreach (($ronda['combates'] ?? []) as $matchIndex => $combate)
                                                 @php
                                                     $resultadoCombate = $resultadosPorIndice->get($indiceCombateModal);
                                                     $llaveRealizada = (bool) $resultadoCombate;
+                                                    $llavesModal = $sorteo->llaves ?? [];
+                                                    $matchNumberModal = $matchNumbersModal[$roundIndex][$matchIndex] ?? $indiceCombateModal + 1;
+                                                    $redSlotModal = $slotModal($llavesModal, $matchNumbersModal, $roundIndex, $matchIndex, 'a', $combate);
+                                                    $blueSlotModal = $slotModal($llavesModal, $matchNumbersModal, $roundIndex, $matchIndex, 'b', $combate);
+                                                    $rondaNombre = mb_strtolower($ronda['nombre'] ?? '');
+                                                    $esSemifinalModal = str_contains($rondaNombre, 'semifinal');
+                                                    $semifinalCompletaSinBye = $esSemifinalModal
+                                                        && ! empty($combate['a'])
+                                                        && ! empty($combate['b'])
+                                                        && ! ($combate['bye'] ?? false);
+                                                    $esRondaEditableBase = $roundIndex === 0
+                                                        || $semifinalCompletaSinBye
+                                                        || (! $esSemifinalModal && ! str_contains($rondaNombre, 'final'));
+                                                    $puedeEditarCategoria = (($sorteo->categoria_estado ?? 'pendiente') === 'pendiente'
+                                                            || ($semifinalCompletaSinBye && ! $llaveRealizada))
+                                                        && (($ronda['sistema'] ?? null) !== 'round_robin');
+                                                    $origenRojo = $origenCompetidor($llavesModal, $roundIndex, $matchIndex, 'a');
+                                                    $origenAzul = $origenCompetidor($llavesModal, $roundIndex, $matchIndex, 'b');
+                                                    $puedeMoverRojo = $puedeEditarCategoria
+                                                        && ! empty($combate['a'])
+                                                        && $origenRojo
+                                                        && ($esRondaEditableBase || $origenRojo['bye']);
+                                                    $puedeMoverAzul = $puedeEditarCategoria
+                                                        && ! empty($combate['b'])
+                                                        && $origenAzul
+                                                        && ($esRondaEditableBase || $origenAzul['bye']);
+                                                    $puedeRecibirRojo = $puedeEditarCategoria && ! empty($combate['a']) && $origenRojo;
+                                                    $puedeRecibirAzul = $puedeEditarCategoria && ! empty($combate['b']) && $origenAzul;
                                                 @endphp
                                                 @if ($sorteo->categoria_completa && ! $llaveRealizada)
                                                     @php $indiceCombateModal++; @endphp
@@ -341,16 +596,29 @@
                                                                     <strong>Ganador:</strong> {{ $resultadoCombate->ganador }}
                                                                 </div>
                                                             @endif
-                                                            <div class="bracket-result">
-                                                                <strong>Senshu:</strong>
-                                                                @if ($resultadoCombate->senshu === 'rojo')
-                                                                    {{ $resultadoCombate->competidor_rojo ?: ($combate['a']['nombre'] ?? 'Rojo') }}
-                                                                @elseif ($resultadoCombate->senshu === 'azul')
-                                                                    {{ $resultadoCombate->competidor_azul ?: ($combate['b']['nombre'] ?? 'Azul') }}
-                                                                @else
-                                                                    No
-                                                                @endif
-                                                            </div>
+                                                            @if ($sorteo->es_kata ?? false)
+                                                                <div class="bracket-result">
+                                                                    <strong>Kata rojo:</strong>
+                                                                    {{ $resultadoCombate->kata_numero_rojo ?: '-' }}
+                                                                    {{ $resultadoCombate->kata_nombre_rojo ?: '' }}
+                                                                </div>
+                                                                <div class="bracket-result">
+                                                                    <strong>Kata azul:</strong>
+                                                                    {{ $resultadoCombate->kata_numero_azul ?: '-' }}
+                                                                    {{ $resultadoCombate->kata_nombre_azul ?: '' }}
+                                                                </div>
+                                                            @else
+                                                                <div class="bracket-result">
+                                                                    <strong>Senshu:</strong>
+                                                                    @if ($resultadoCombate->senshu === 'rojo')
+                                                                        {{ $resultadoCombate->competidor_rojo ?: ($combate['a']['nombre'] ?? 'Rojo') }}
+                                                                    @elseif ($resultadoCombate->senshu === 'azul')
+                                                                        {{ $resultadoCombate->competidor_azul ?: ($combate['b']['nombre'] ?? 'Azul') }}
+                                                                    @else
+                                                                        No
+                                                                    @endif
+                                                                </div>
+                                                            @endif
                                                             <div class="bracket-result">
                                                                 <strong>Kiken:</strong>
                                                                 Rojo {{ $resultadoCombate->kiken_rojo ? 'Si' : 'No' }}
@@ -359,76 +627,255 @@
                                                             </div>
                                                         @endif
                                                     </div>
-                                                    <div class="bracket-player">
-                                                        <strong>{{ $combate['a']['nombre'] ?? 'BYE' }}</strong>
-                                                        @if (! empty($combate['a']['organizacion']))
-                                                            <small>{{ $combate['a']['organizacion'] }}</small>
-                                                        @endif
-                                                    </div>
-                                                    <div class="bracket-player">
-                                                        <strong>{{ $combate['b']['nombre'] ?? (($combate['bye'] ?? false) ? 'BYE' : 'Por definir') }}</strong>
-                                                        @if (! empty($combate['b']['organizacion']))
-                                                            <small>{{ $combate['b']['organizacion'] }}</small>
-                                                        @endif
-                                                    </div>
+                                                    @php
+                                                        $tieneCompetidorRojo = ! empty($combate['a']);
+                                                        $tieneCompetidorAzul = ! empty($combate['b']);
+                                                        $esByeReal = ($combate['bye'] ?? false) && ($tieneCompetidorRojo !== $tieneCompetidorAzul);
+                                                        $byeCompetitorSide = $esByeReal
+                                                            ? (! empty($combate['a']) ? 'a' : (! empty($combate['b']) ? 'b' : null))
+                                                            : null;
+                                                    @endphp
+
+                                                    @if (! $byeCompetitorSide || $byeCompetitorSide === 'a')
+                                                        <div class="bracket-player bracket-player-red {{ $puedeRecibirRojo ? 'js-bracket-player-slot' : '' }} {{ $puedeMoverRojo ? 'js-bracket-player-editable' : '' }}"
+                                                            @if ($puedeRecibirRojo)
+                                                                @if ($puedeMoverRojo)
+                                                                    draggable="true"
+                                                                @endif
+                                                                data-round-index="{{ $roundIndex }}"
+                                                                data-match-index="{{ $matchIndex }}"
+                                                                data-side="a"
+                                                                data-origin-round-index="{{ $origenRojo['round_index'] ?? 0 }}"
+                                                                data-origin-match-index="{{ $origenRojo['match_index'] }}"
+                                                                data-origin-side="{{ $origenRojo['side'] }}"
+                                                                data-competidor-id="{{ $combate['a']['id'] }}"
+                                                                data-player-name="{{ $combate['a']['nombre'] ?? '' }}"
+                                                                data-player-org="{{ $combate['a']['organizacion'] ?? '' }}"
+                                                            @endif>
+                                                            <strong>{{ $redSlotModal['nombre'] }}</strong>
+                                                            @if ($redSlotModal['organizacion'])
+                                                                <small>{{ $redSlotModal['organizacion'] }}</small>
+                                                            @endif
+                                                            @if ($byeCompetitorSide === 'a')
+                                                                <small class="d-block fw-bold">BYE</small>
+                                                            @endif
+                                                        </div>
+                                                    @endif
+                                                    @if ($byeCompetitorSide === 'a' && $puedeEditarCategoria && $roundIndex === 0)
+                                                        <div class="bracket-player bracket-player-blue bracket-player-bye-target js-bracket-player-slot"
+                                                            data-round-index="{{ $roundIndex }}"
+                                                            data-match-index="{{ $matchIndex }}"
+                                                            data-side="b"
+                                                            data-origin-round-index="{{ $roundIndex }}"
+                                                            data-origin-match-index="{{ $matchIndex }}"
+                                                            data-origin-side="b"
+                                                            data-competidor-id="">
+                                                            <strong>Soltar aqui</strong>
+                                                            <small>Cambiar a azul</small>
+                                                        </div>
+                                                    @endif
+                                                    @if ($byeCompetitorSide === 'b' && $puedeEditarCategoria && $roundIndex === 0)
+                                                        <div class="bracket-player bracket-player-red bracket-player-bye-target js-bracket-player-slot"
+                                                            data-round-index="{{ $roundIndex }}"
+                                                            data-match-index="{{ $matchIndex }}"
+                                                            data-side="a"
+                                                            data-origin-round-index="{{ $roundIndex }}"
+                                                            data-origin-match-index="{{ $matchIndex }}"
+                                                            data-origin-side="a"
+                                                            data-competidor-id="">
+                                                            <strong>Soltar aqui</strong>
+                                                            <small>Cambiar a rojo</small>
+                                                        </div>
+                                                    @endif
+                                                    @if (! $byeCompetitorSide || $byeCompetitorSide === 'b')
+                                                        <div class="bracket-player bracket-player-blue {{ $puedeRecibirAzul ? 'js-bracket-player-slot' : '' }} {{ $puedeMoverAzul ? 'js-bracket-player-editable' : '' }}"
+                                                            @if ($puedeRecibirAzul)
+                                                                @if ($puedeMoverAzul)
+                                                                    draggable="true"
+                                                                @endif
+                                                                data-round-index="{{ $roundIndex }}"
+                                                                data-match-index="{{ $matchIndex }}"
+                                                                data-side="b"
+                                                                data-origin-round-index="{{ $origenAzul['round_index'] ?? 0 }}"
+                                                                data-origin-match-index="{{ $origenAzul['match_index'] }}"
+                                                                data-origin-side="{{ $origenAzul['side'] }}"
+                                                                data-competidor-id="{{ $combate['b']['id'] }}"
+                                                                data-player-name="{{ $combate['b']['nombre'] ?? '' }}"
+                                                                data-player-org="{{ $combate['b']['organizacion'] ?? '' }}"
+                                                            @endif>
+                                                            <strong>{{ $blueSlotModal['nombre'] }}</strong>
+                                                            @if ($blueSlotModal['organizacion'])
+                                                                <small>{{ $blueSlotModal['organizacion'] }}</small>
+                                                            @endif
+                                                            @if ($byeCompetitorSide === 'b')
+                                                                <small class="d-block fw-bold">BYE</small>
+                                                            @endif
+                                                        </div>
+                                                    @endif
+                                                    <div class="bracket-match-number">{{ $matchNumberModal }}</div>
                                                 </div>
                                                 @php $indiceCombateModal++; @endphp
                                             @endforeach
                                         </div>
                                     @endforeach
                                 </div>
+                                @endif
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                <button type="button" class="btn btn-warning text-white js-cancel-bracket-changes" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-success js-save-bracket-changes" disabled>
+                                    <i class="bi bi-check-lg"></i> Guardar cambios
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="modal fade" id="modal-delete-sorteo-{{ $sorteo->id }}" tabindex="-1"
-                    aria-labelledby="modalDeleteSorteoLabel{{ $sorteo->id }}" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <form method="POST" action="{{ route('sorteo-llaves.destroy', [$torneo, $sorteo]) }}">
-                            @csrf
-                            @method('DELETE')
+                @if (($sorteo->categoria_estado ?? 'pendiente') === 'pendiente')
+                    <div class="modal fade" id="modal-delete-sorteo-{{ $sorteo->id }}" tabindex="-1"
+                        aria-labelledby="modalDeleteSorteoLabel{{ $sorteo->id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <form method="POST" action="{{ route('sorteo-llaves.destroy', [$torneo, $sorteo]) }}">
+                                @csrf
+                                @method('DELETE')
 
-                            <div class="modal-content">
-                                <div class="modal-header bg-danger text-white">
-                                    <h5 class="modal-title fw-bold" id="modalDeleteSorteoLabel{{ $sorteo->id }}">
-                                        Eliminar sorteo
-                                    </h5>
-                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                                        aria-label="Cerrar"></button>
-                                </div>
-                                <div class="modal-body">
-                                    Seguro que desea eliminar el sorteo de:
-                                    <div class="fw-bold mt-2">
-                                        {{ $sorteo->modalidad->nombre ?? 'Sin modalidad' }} /
-                                        {{ $sorteo->categoria->nombre ?? 'Sin categoria' }}
+                                <div class="modal-content">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title fw-bold" id="modalDeleteSorteoLabel{{ $sorteo->id }}">
+                                            Eliminar sorteo
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                            aria-label="Cerrar"></button>
                                     </div>
-                                    <small class="text-muted d-block mt-2">
-                                        La categoria volvera a estar disponible para sortear nuevamente si tiene 2 o mas competidores inscritos.
-                                    </small>
-                                    <div class="form-check mt-3">
-                                        <input type="checkbox" class="form-check-input js-confirm-delete-sorteo"
-                                            id="confirm-delete-sorteo-{{ $sorteo->id }}"
-                                            data-target="#btn-delete-sorteo-{{ $sorteo->id }}">
-                                        <label for="confirm-delete-sorteo-{{ $sorteo->id }}" class="form-check-label">
-                                            Estoy seguro de eliminar
-                                        </label>
+                                    <div class="modal-body">
+                                        Seguro que desea eliminar el sorteo de:
+                                        <div class="fw-bold mt-2">
+                                            {{ $sorteo->modalidad->nombre ?? 'Sin modalidad' }} /
+                                            {{ $sorteo->categoria->nombre ?? 'Sin categoria' }}
+                                        </div>
+                                        <small class="text-muted d-block mt-2">
+                                            La categoria volvera a estar disponible para sortear nuevamente si tiene 2 o mas competidores inscritos.
+                                        </small>
+                                        <div class="form-check mt-3">
+                                            <input type="checkbox" class="form-check-input js-confirm-delete-sorteo"
+                                                id="confirm-delete-sorteo-{{ $sorteo->id }}"
+                                                data-target="#btn-delete-sorteo-{{ $sorteo->id }}">
+                                            <label for="confirm-delete-sorteo-{{ $sorteo->id }}" class="form-check-label">
+                                                Estoy seguro de eliminar
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" id="btn-delete-sorteo-{{ $sorteo->id }}" class="btn btn-danger" disabled>
+                                            <i class="bi bi-trash"></i> Eliminar
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                    <button type="submit" id="btn-delete-sorteo-{{ $sorteo->id }}" class="btn btn-danger" disabled>
-                                        <i class="bi bi-trash"></i> Eliminar
-                                    </button>
+                            </form>
+                        </div>
+                    </div>
+                @endif
+            @endforeach
+
+            <div class="modal fade" id="modal-edit-kata-result" tabindex="-1" aria-labelledby="modalEditKataResultLabel" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <form id="form-edit-kata-result" class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title fw-bold" id="modalEditKataResultLabel">Editar llave Kata</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="sorteo_id">
+                            <input type="hidden" name="indice_combate">
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="edit-kata-side edit-kata-side-red">
+                                        <h6 class="fw-bold">Rojo</h6>
+                                        <div class="mb-2">
+                                            <label class="form-label">Competidor</label>
+                                            <input type="text" name="competidor_rojo" class="form-control">
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Puntaje</label>
+                                                <input type="number" name="puntaje_rojo" class="form-control" min="0" step="1" required>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Kata Nro.</label>
+                                                <input type="text" name="kata_numero_rojo" class="form-control">
+                                            </div>
+                                            <div class="col-md-4 d-flex align-items-end">
+                                                <div class="form-check mb-2">
+                                                    <input type="checkbox" name="kiken_rojo" id="edit_kiken_rojo" class="form-check-input">
+                                                    <label for="edit_kiken_rojo" class="form-check-label">Kiken</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <label class="form-label">Nombre Kata</label>
+                                            <input type="text" name="kata_nombre_rojo" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="edit-kata-side edit-kata-side-blue">
+                                        <h6 class="fw-bold">Azul</h6>
+                                        <div class="mb-2">
+                                            <label class="form-label">Competidor</label>
+                                            <input type="text" name="competidor_azul" class="form-control">
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Puntaje</label>
+                                                <input type="number" name="puntaje_azul" class="form-control" min="0" step="1" required>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Kata Nro.</label>
+                                                <input type="text" name="kata_numero_azul" class="form-control">
+                                            </div>
+                                            <div class="col-md-4 d-flex align-items-end">
+                                                <div class="form-check mb-2">
+                                                    <input type="checkbox" name="kiken_azul" id="edit_kiken_azul" class="form-check-input">
+                                                    <label for="edit_kiken_azul" class="form-check-label">Kiken</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <label class="form-label">Nombre Kata</label>
+                                            <input type="text" name="kata_nombre_azul" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Ganador</label>
+                                    <input type="text" name="ganador" class="form-control">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Color ganador</label>
+                                    <select name="ganador_color" class="form-select">
+                                        <option value="">Seleccione</option>
+                                        <option value="rojo">Rojo</option>
+                                        <option value="azul">Azul</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Fecha</label>
+                                    <input type="datetime-local" name="realizado_at" class="form-control">
                                 </div>
                             </div>
-                        </form>
-                    </div>
+                            <div class="alert alert-danger mt-3 d-none" id="edit-kata-error"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i> Guardar cambios
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            @endforeach
+            </div>
 
             <div class="modal fade" id="modal-orden-sorteos" tabindex="-1" aria-labelledby="modalOrdenSorteosLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
@@ -615,6 +1062,14 @@
             text-align: left;
         }
 
+        .bracket-match-number {
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1;
+            padding: 7px 10px 9px;
+            text-align: center;
+        }
+
         .podio-horizontal {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -659,14 +1114,173 @@
             color: #ffffff;
         }
 
+        .kata-results-panel {
+            border: 1px solid #d7dde5;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .kata-results-title {
+            background: #f8f9fa;
+            border-bottom: 1px solid #d7dde5;
+            font-weight: 800;
+            padding: 12px 16px;
+        }
+
+        .kata-results-table {
+            font-size: 15px;
+        }
+
+        .kata-results-table th {
+            background: #ffffff;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .kata-results-table td {
+            min-height: 68px;
+            padding: 12px 10px;
+            vertical-align: middle;
+        }
+
+        .kata-competidor-cell {
+            border-left: 6px solid transparent;
+            padding-left: 10px;
+        }
+
+        .kata-competidor-cell strong,
+        .kata-competidor-cell small {
+            display: block;
+        }
+
+        .kata-competidor-cell small {
+            color: #6c757d;
+            margin-top: 3px;
+        }
+
+        .kata-competidor-rojo {
+            border-left-color: #dc3545;
+        }
+
+        .kata-competidor-azul {
+            border-left-color: #0d6efd;
+        }
+
+        .score-pill {
+            border-radius: 7px;
+            color: #ffffff;
+            display: inline-flex;
+            font-weight: 900;
+            justify-content: center;
+            line-height: 1;
+            min-width: 28px;
+            padding: 7px 8px;
+        }
+
+        .score-pill-red {
+            background: #dc3545;
+        }
+
+        .score-pill-blue {
+            background: #0d6efd;
+        }
+
+        .kata-winner-badge {
+            max-width: 160px;
+            overflow-wrap: anywhere;
+            padding: 8px 10px;
+            white-space: normal;
+        }
+
+        .edit-kata-side {
+            border: 1px solid #d9e2ef;
+            border-left: 7px solid transparent;
+            border-radius: 6px;
+            padding: 14px;
+        }
+
+        .edit-kata-side-red {
+            border-left-color: #dc3545;
+        }
+
+        .edit-kata-side-blue {
+            border-left-color: #0d6efd;
+        }
+
         .bracket-player {
             min-height: 58px;
-            padding: 8px 10px;
+            padding: 8px 10px 8px 20px;
             border-bottom: 1px solid #e9ecef;
+            position: relative;
         }
 
         .bracket-player:last-child {
             border-bottom: 0;
+        }
+
+        .bracket-player::before {
+            bottom: 0;
+            content: "";
+            left: 0;
+            position: absolute;
+            top: 0;
+            width: 8px;
+        }
+
+        .bracket-player-red::before {
+            background: #dc3545;
+        }
+
+        .bracket-player-blue::before {
+            background: #0d6efd;
+        }
+
+        .js-bracket-player-editable {
+            cursor: grab;
+        }
+
+        .js-bracket-player-slot.is-selected {
+            background: #fff3cd;
+            outline: 2px solid #ffc107;
+            outline-offset: -3px;
+        }
+
+        .js-bracket-player-editable.dragging strong,
+        .js-bracket-player-editable.dragging small {
+            opacity: .45;
+        }
+
+        .bracket-drag-preview {
+            background: #ffffff;
+            border: 1px solid #d9e2ef;
+            border-radius: 6px;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, .18);
+            color: #212529;
+            left: -9999px;
+            max-width: 220px;
+            padding: 8px 10px;
+            position: fixed;
+            top: -9999px;
+            z-index: 9999;
+        }
+
+        .bracket-drag-preview strong,
+        .bracket-drag-preview small {
+            display: block;
+        }
+
+        .js-bracket-player-slot.drag-over {
+            outline: 2px dashed #198754;
+            outline-offset: -4px;
+        }
+
+        .bracket-player-bye-target {
+            display: none;
+            opacity: .68;
+        }
+
+        .bracket-wrapper.is-bracket-dragging .bracket-player-bye-target {
+            display: block;
         }
 
         .bracket-player small {
@@ -697,6 +1311,87 @@
             const categoria = document.getElementById('categoria_id');
             const sortearButton = document.getElementById('btn-sortear');
             const defaultButtonHtml = sortearButton.innerHTML;
+            const guardarCombateKataUrl = @json(route('tablero.kata.combates.store'));
+            const eliminarCombateKataUrl = @json(route('tablero.kata.combates.destroy'));
+            const editKataModalElement = document.getElementById('modal-edit-kata-result');
+            const editKataForm = document.getElementById('form-edit-kata-result');
+            const editKataError = document.getElementById('edit-kata-error');
+            const editKataModal = editKataModalElement && window.bootstrap
+                ? new bootstrap.Modal(editKataModalElement)
+                : null;
+            let kataParentModal = null;
+
+            function setFormValue(formElement, name, value) {
+                const field = formElement.elements[name];
+
+                if (!field) {
+                    return;
+                }
+
+                if (field.type === 'checkbox') {
+                    field.checked = value === '1' || value === 1 || value === true;
+                    return;
+                }
+
+                field.value = value ?? '';
+            }
+
+            function fillEditKataForm(button) {
+                if (!editKataForm) {
+                    return;
+                }
+
+                editKataForm.reset();
+                editKataError?.classList.add('d-none');
+                if (editKataError) {
+                    editKataError.textContent = '';
+                }
+
+                const fields = {
+                    sorteo_id: button.dataset.sorteoId,
+                    indice_combate: button.dataset.indiceCombate,
+                    competidor_rojo: button.dataset.competidorRojo,
+                    competidor_azul: button.dataset.competidorAzul,
+                    kata_numero_rojo: button.dataset.kataNumeroRojo,
+                    kata_numero_azul: button.dataset.kataNumeroAzul,
+                    kata_nombre_rojo: button.dataset.kataNombreRojo,
+                    kata_nombre_azul: button.dataset.kataNombreAzul,
+                    puntaje_rojo: button.dataset.puntajeRojo,
+                    puntaje_azul: button.dataset.puntajeAzul,
+                    kiken_rojo: button.dataset.kikenRojo,
+                    kiken_azul: button.dataset.kikenAzul,
+                    ganador: button.dataset.ganador,
+                    ganador_color: button.dataset.ganadorColor,
+                    realizado_at: button.dataset.realizadoAt,
+                };
+
+                Object.entries(fields).forEach(function ([name, value]) {
+                    setFormValue(editKataForm, name, value);
+                });
+
+                actualizarGanadorKataEditado(false);
+            }
+
+            function actualizarGanadorKataEditado(forzarPorPuntaje = true) {
+                if (!editKataForm) {
+                    return;
+                }
+
+                const rojo = parseInt(editKataForm.elements.puntaje_rojo.value || '0', 10);
+                const azul = parseInt(editKataForm.elements.puntaje_azul.value || '0', 10);
+                let color = editKataForm.elements.ganador_color.value;
+
+                if (forzarPorPuntaje && rojo !== azul) {
+                    color = rojo > azul ? 'rojo' : 'azul';
+                    editKataForm.elements.ganador_color.value = color;
+                }
+
+                if (color === 'rojo') {
+                    editKataForm.elements.ganador.value = editKataForm.elements.competidor_rojo.value;
+                } else if (color === 'azul') {
+                    editKataForm.elements.ganador.value = editKataForm.elements.competidor_azul.value;
+                }
+            }
 
             function filterCategorias() {
                 const modalidadId = modalidad.value;
@@ -911,9 +1606,188 @@
                 return target.closest('#sorteos-orden-list .js-orden-row');
             }
 
+            function closestBracketPlayer(target) {
+                return target.closest('.js-bracket-player-slot');
+            }
+
+            function bracketSlotKey(player) {
+                return `${player.dataset.originRoundIndex || player.dataset.roundIndex || 0}:${player.dataset.originMatchIndex || player.dataset.matchIndex}:${player.dataset.originSide || player.dataset.side}`;
+            }
+
+            function bracketSlots(wrapper) {
+                const slotsByOrigin = new Map();
+                const dirtyRoundIndex = wrapper.dataset.dirtyRoundIndex || '';
+
+                Array.from(wrapper.querySelectorAll('.js-bracket-player-slot')).forEach(function (player) {
+                    const originRoundIndex = player.dataset.originRoundIndex || player.dataset.roundIndex || 0;
+
+                    if (dirtyRoundIndex !== '' && String(originRoundIndex) !== dirtyRoundIndex) {
+                        return;
+                    }
+
+                    const originMatchIndex = player.dataset.originMatchIndex || player.dataset.matchIndex;
+                    const originSide = player.dataset.originSide || player.dataset.side;
+                    const origin = `${originRoundIndex}:${originMatchIndex}:${originSide}`;
+
+                    if (slotsByOrigin.has(origin)) {
+                        return;
+                    }
+
+                    const competidorId = player.dataset.competidorId;
+
+                    slotsByOrigin.set(origin, {
+                        round_index: parseInt(originRoundIndex || '0', 10),
+                        match_index: parseInt(originMatchIndex, 10),
+                        side: originSide,
+                        competidor_id: competidorId ? parseInt(competidorId, 10) : null
+                    });
+                });
+
+                return Array.from(slotsByOrigin.values());
+            }
+
+            function slotData(player) {
+                return {
+                    competidorId: player.dataset.competidorId || '',
+                    name: player.dataset.playerName || player.querySelector('strong')?.textContent?.trim() || '',
+                    org: player.dataset.playerOrg || player.querySelector('small:not(.d-block)')?.textContent?.trim() || ''
+                };
+            }
+
+            function renderBracketSlot(player, data) {
+                player.dataset.competidorId = data.competidorId || '';
+                player.dataset.playerName = data.name || '';
+                player.dataset.playerOrg = data.org || '';
+
+                const color = player.dataset.side === 'a' ? 'rojo' : 'azul';
+                const strong = player.querySelector('strong') || player.appendChild(document.createElement('strong'));
+                let small = player.querySelector('small:not(.d-block)');
+
+                if (!small) {
+                    small = document.createElement('small');
+                    player.appendChild(small);
+                }
+
+                strong.textContent = data.name || 'Soltar aqui';
+                small.textContent = data.name ? data.org : `Cambiar a ${color}`;
+                player.classList.toggle('js-bracket-player-editable', Boolean(data.competidorId));
+                if (data.competidorId) {
+                    player.setAttribute('draggable', 'true');
+                } else {
+                    player.removeAttribute('draggable');
+                }
+            }
+
+            function markBracketDirty(wrapper, roundIndex = null) {
+                const saveButton = wrapper.closest('.modal')?.querySelector('.js-save-bracket-changes');
+
+                wrapper.dataset.dirty = '1';
+                if (roundIndex !== null) {
+                    wrapper.dataset.dirtyRoundIndex = String(roundIndex);
+                }
+                if (saveButton) {
+                    saveButton.disabled = false;
+                }
+            }
+
+            function saveBracketMove(draggedPlayer, targetPlayer) {
+                const wrapper = targetPlayer.closest('.bracket-wrapper');
+                const draggedOrigin = bracketSlotKey(draggedPlayer);
+                const targetOrigin = bracketSlotKey(targetPlayer);
+
+                if (!wrapper || wrapper.dataset.editable !== '1' || draggedPlayer === targetPlayer || draggedOrigin === targetOrigin) {
+                    return;
+                }
+
+                const draggedData = slotData(draggedPlayer);
+                const targetData = slotData(targetPlayer);
+                const dirtyRoundIndex = draggedPlayer.dataset.originRoundIndex || draggedPlayer.dataset.roundIndex || 0;
+
+                renderBracketSlot(draggedPlayer, targetData);
+                renderBracketSlot(targetPlayer, draggedData);
+                markBracketDirty(wrapper, dirtyRoundIndex);
+            }
+
+            function clearSelectedBracketPlayers(scope = document) {
+                scope.querySelectorAll('.js-bracket-player-slot.is-selected').forEach(function (player) {
+                    player.classList.remove('is-selected');
+                });
+            }
+
+            function persistBracketChanges(wrapper, button) {
+                const originalHtml = button.innerHTML;
+
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span> Guardando...';
+
+                fetch(wrapper.dataset.updateUrl, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify({
+                        slots: bracketSlots(wrapper)
+                    })
+                })
+                    .then(function (response) {
+                        return response.json().then(function (data) {
+                            if (!response.ok) {
+                                throw new Error(data.message || 'No se pudo mover el competidor.');
+                            }
+
+                            return data;
+                        });
+                    })
+                    .then(function () {
+                        wrapper.dataset.dirty = '0';
+                        const modal = wrapper.closest('.modal');
+                        const sorteoId = modal?.id?.replace('modal-llaves-sorteadas-', '') || '';
+
+                        if (sorteoId) {
+                            localStorage.setItem(`sorteo-llaves-updated-${sorteoId}`, String(Date.now()));
+                        }
+
+                        bootstrap.Modal.getOrCreateInstance(wrapper.closest('.modal')).hide();
+                        return refreshSorteosList();
+                    })
+                    .catch(function (error) {
+                        alert(error.message || 'No se pudo mover el competidor.');
+                    })
+                    .finally(function () {
+                        button.innerHTML = originalHtml;
+                        button.disabled = wrapper.dataset.dirty !== '1';
+                    });
+            }
+
             let draggedOrdenRow = null;
+            let draggedBracketPlayer = null;
+            let bracketDragPreview = null;
+            let selectedBracketPlayer = null;
 
             document.addEventListener('dragstart', function (event) {
+                const bracketPlayer = closestBracketPlayer(event.target);
+
+                if (bracketPlayer && bracketPlayer.classList.contains('js-bracket-player-editable')) {
+                    draggedBracketPlayer = bracketPlayer;
+                    bracketPlayer.classList.add('dragging');
+                    bracketPlayer.closest('.bracket-wrapper')?.classList.add('is-bracket-dragging');
+                    event.dataTransfer.effectAllowed = 'move';
+                    event.dataTransfer.setData('text/plain', bracketPlayer.querySelector('strong')?.textContent || '');
+
+                    bracketDragPreview = document.createElement('div');
+                    bracketDragPreview.className = 'bracket-drag-preview';
+                    bracketDragPreview.innerHTML = bracketPlayer.innerHTML;
+                    bracketDragPreview.querySelectorAll('.d-block').forEach(function (item) {
+                        item.classList.remove('d-block', 'fw-bold');
+                    });
+                    document.body.appendChild(bracketDragPreview);
+                    event.dataTransfer.setDragImage(bracketDragPreview, 12, 12);
+
+                    return;
+                }
+
                 const row = closestOrdenRow(event.target);
 
                 if (!row) {
@@ -931,6 +1805,15 @@
             });
 
             document.addEventListener('dragover', function (event) {
+                const bracketPlayer = closestBracketPlayer(event.target);
+
+                if (bracketPlayer && draggedBracketPlayer && bracketPlayer !== draggedBracketPlayer) {
+                    event.preventDefault();
+                    event.dataTransfer.dropEffect = 'move';
+                    bracketPlayer.classList.add('drag-over');
+                    return;
+                }
+
                 const row = closestOrdenRow(event.target);
 
                 if (!row || !draggedOrdenRow || row === draggedOrdenRow || row.dataset.locked === '1') {
@@ -946,11 +1829,79 @@
                 updateOrdenNumbers();
             });
 
+            document.addEventListener('dragleave', function (event) {
+                const bracketPlayer = closestBracketPlayer(event.target);
+
+                if (bracketPlayer) {
+                    bracketPlayer.classList.remove('drag-over');
+                }
+            });
+
+            document.addEventListener('drop', function (event) {
+                const bracketPlayer = closestBracketPlayer(event.target);
+
+                if (!bracketPlayer || !draggedBracketPlayer) {
+                    return;
+                }
+
+                event.preventDefault();
+                bracketPlayer.classList.remove('drag-over');
+                saveBracketMove(draggedBracketPlayer, bracketPlayer);
+            });
+
+            document.addEventListener('click', function (event) {
+                const bracketPlayer = closestBracketPlayer(event.target);
+
+                if (!bracketPlayer || !bracketPlayer.closest('.bracket-wrapper') || bracketPlayer.closest('.bracket-wrapper').dataset.editable !== '1') {
+                    return;
+                }
+
+                const wrapper = bracketPlayer.closest('.bracket-wrapper');
+
+                if (!selectedBracketPlayer) {
+                    if (!bracketPlayer.classList.contains('js-bracket-player-editable')) {
+                        return;
+                    }
+
+                    selectedBracketPlayer = bracketPlayer;
+                    clearSelectedBracketPlayers(wrapper);
+                    bracketPlayer.classList.add('is-selected');
+                    return;
+                }
+
+                if (selectedBracketPlayer === bracketPlayer) {
+                    bracketPlayer.classList.remove('is-selected');
+                    selectedBracketPlayer = null;
+                    return;
+                }
+
+                saveBracketMove(selectedBracketPlayer, bracketPlayer);
+                clearSelectedBracketPlayers(wrapper);
+                selectedBracketPlayer = null;
+            });
+
             document.addEventListener('dragend', function () {
+                if (draggedBracketPlayer) {
+                    draggedBracketPlayer.closest('.bracket-wrapper')?.classList.remove('is-bracket-dragging');
+                    draggedBracketPlayer.classList.remove('dragging');
+                    document.querySelectorAll('.js-bracket-player-slot.drag-over').forEach(function (player) {
+                        player.classList.remove('drag-over');
+                    });
+                    draggedBracketPlayer = null;
+                }
+
+                if (bracketDragPreview) {
+                    bracketDragPreview.remove();
+                    bracketDragPreview = null;
+                }
+
                 if (draggedOrdenRow) {
                     draggedOrdenRow.classList.remove('dragging');
                     draggedOrdenRow = null;
                 }
+
+                selectedBracketPlayer = null;
+                clearSelectedBracketPlayers();
 
                 updateOrdenNumbers();
             });
@@ -959,6 +1910,54 @@
                 if (event.target.id === 'modal-orden-sorteos') {
                     updateOrdenNumbers();
                 }
+
+                if (event.target.id?.startsWith('modal-llaves-sorteadas-')) {
+                    const wrapper = event.target.querySelector('.bracket-wrapper');
+                    const saveButton = event.target.querySelector('.js-save-bracket-changes');
+
+                    if (wrapper) {
+                        wrapper.dataset.originalHtml = wrapper.innerHTML;
+                        wrapper.dataset.dirty = '0';
+                        wrapper.dataset.dirtyRoundIndex = '';
+                    }
+
+                    if (saveButton) {
+                        saveButton.disabled = true;
+                    }
+                }
+            });
+
+            document.addEventListener('click', function (event) {
+                const button = event.target.closest('.js-cancel-bracket-changes');
+
+                if (!button) {
+                    return;
+                }
+
+                const modal = button.closest('.modal');
+                const wrapper = modal?.querySelector('.bracket-wrapper');
+
+                if (wrapper?.dataset.originalHtml) {
+                    wrapper.innerHTML = wrapper.dataset.originalHtml;
+                    wrapper.dataset.dirty = '0';
+                    wrapper.dataset.dirtyRoundIndex = '';
+                }
+            });
+
+            document.addEventListener('click', function (event) {
+                const button = event.target.closest('.js-save-bracket-changes');
+
+                if (!button) {
+                    return;
+                }
+
+                const wrapper = button.closest('.modal')?.querySelector('.bracket-wrapper');
+
+                if (!wrapper || wrapper.dataset.dirty !== '1') {
+                    return;
+                }
+
+                persistBracketChanges(wrapper, button);
             });
 
             document.addEventListener('change', function (event) {
@@ -971,6 +1970,160 @@
                 if (button) {
                     button.disabled = !event.target.checked;
                 }
+            });
+
+            document.addEventListener('click', function (event) {
+                const button = event.target.closest('.js-edit-kata-result');
+
+                if (!button) {
+                    return;
+                }
+
+                fillEditKataForm(button);
+                kataParentModal = button.closest('.modal');
+
+                if (kataParentModal) {
+                    bootstrap.Modal.getOrCreateInstance(kataParentModal).hide();
+                }
+
+                if (editKataModal) {
+                    editKataModal.show();
+                }
+            });
+
+            document.addEventListener('click', function (event) {
+                const button = event.target.closest('.js-delete-kata-result');
+
+                if (!button) {
+                    return;
+                }
+
+                if (!confirm(`Eliminar resultado de la llave ${button.dataset.llave}? La llave quedara pendiente.`)) {
+                    return;
+                }
+
+                const originalHtml = button.innerHTML;
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span>';
+
+                fetch(eliminarCombateKataUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    },
+                    body: JSON.stringify({
+                        sorteo_id: button.dataset.sorteoId,
+                        indice_combate: parseInt(button.dataset.indiceCombate || '0', 10),
+                    }),
+                })
+                    .then(function (response) {
+                        return response.json().then(function (data) {
+                            if (!response.ok) {
+                                throw new Error(data.message || 'No se pudo eliminar el resultado.');
+                            }
+
+                            return data;
+                        });
+                    })
+                    .then(function () {
+                        window.location.reload();
+                    })
+                    .catch(function (error) {
+                        button.disabled = false;
+                        button.innerHTML = originalHtml;
+                        alert(error.message || 'No se pudo eliminar el resultado.');
+                    });
+            });
+
+            editKataModalElement?.addEventListener('hidden.bs.modal', function () {
+                if (!kataParentModal) {
+                    return;
+                }
+
+                bootstrap.Modal.getOrCreateInstance(kataParentModal).show();
+                kataParentModal = null;
+            });
+
+            editKataForm?.elements.puntaje_rojo?.addEventListener('input', function () {
+                actualizarGanadorKataEditado(true);
+            });
+            editKataForm?.elements.puntaje_azul?.addEventListener('input', function () {
+                actualizarGanadorKataEditado(true);
+            });
+            editKataForm?.elements.ganador_color?.addEventListener('change', function () {
+                actualizarGanadorKataEditado(false);
+            });
+            editKataForm?.elements.competidor_rojo?.addEventListener('input', function () {
+                actualizarGanadorKataEditado(false);
+            });
+            editKataForm?.elements.competidor_azul?.addEventListener('input', function () {
+                actualizarGanadorKataEditado(false);
+            });
+
+            editKataForm?.addEventListener('submit', function (event) {
+                event.preventDefault();
+                actualizarGanadorKataEditado(true);
+
+                const submitButton = editKataForm.querySelector('button[type="submit"]');
+                const originalHtml = submitButton.innerHTML;
+                const payload = {
+                    sorteo_id: editKataForm.elements.sorteo_id.value || null,
+                    indice_combate: parseInt(editKataForm.elements.indice_combate.value || '0', 10),
+                    competidor_rojo: editKataForm.elements.competidor_rojo.value,
+                    competidor_azul: editKataForm.elements.competidor_azul.value,
+                    kata_numero_rojo: editKataForm.elements.kata_numero_rojo.value,
+                    kata_numero_azul: editKataForm.elements.kata_numero_azul.value,
+                    kata_nombre_rojo: editKataForm.elements.kata_nombre_rojo.value,
+                    kata_nombre_azul: editKataForm.elements.kata_nombre_azul.value,
+                    puntaje_rojo: parseInt(editKataForm.elements.puntaje_rojo.value || '0', 10),
+                    puntaje_azul: parseInt(editKataForm.elements.puntaje_azul.value || '0', 10),
+                    kiken_rojo: editKataForm.elements.kiken_rojo.checked,
+                    kiken_azul: editKataForm.elements.kiken_azul.checked,
+                    ganador: editKataForm.elements.ganador.value,
+                    ganador_color: editKataForm.elements.ganador_color.value || null,
+                    realizado_at: editKataForm.elements.realizado_at.value || null,
+                };
+
+                editKataError?.classList.add('d-none');
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span> Guardando...';
+
+                fetch(guardarCombateKataUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    },
+                    body: JSON.stringify(payload),
+                })
+                    .then(function (response) {
+                        return response.json().then(function (data) {
+                            if (!response.ok) {
+                                throw new Error(data.message || 'No se pudo guardar la llave Kata.');
+                            }
+
+                            return data;
+                        });
+                    })
+                    .then(function () {
+                        kataParentModal = null;
+                        window.location.reload();
+                    })
+                    .catch(function (error) {
+                        if (editKataError) {
+                            editKataError.textContent = error.message || 'No se pudo guardar la llave Kata.';
+                            editKataError.classList.remove('d-none');
+                        } else {
+                            alert(error.message || 'No se pudo guardar la llave Kata.');
+                        }
+                    })
+                    .finally(function () {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalHtml;
+                    });
             });
 
             form.addEventListener('submit', function (event) {

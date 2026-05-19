@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tablero Kata</title>
     <link rel="icon" type="image/png" href="{{ asset('images/icono.png') }}">
@@ -65,13 +66,13 @@
             border: 1px solid #e2d2ad;
             border-radius: 9px;
             display: grid;
-            font-size: clamp(1.45rem, 2.25vw, 2.45rem);
+            font-size: clamp(1.15rem, 1.65vw, 1.85rem);
             font-weight: 700;
             gap: 28px;
             grid-template-columns: 1fr 1fr;
             line-height: 1.1;
-            min-height: 62px;
-            padding: 10px 18px;
+            min-height: 54px;
+            padding: 8px 16px;
         }
 
         .combat-layout {
@@ -131,6 +132,112 @@
 
         .kata-meta span {
             display: block;
+        }
+
+        .kata-meta .kata-select-line {
+            align-items: center;
+            display: flex;
+            gap: 5px;
+            flex-wrap: nowrap;
+        }
+
+        .kata-select-wrap {
+            flex: 0 0 auto;
+            min-width: 0;
+            position: relative;
+        }
+
+        .kata-label {
+            flex: 0 0 auto;
+            font-size: .82em;
+            white-space: nowrap;
+        }
+
+        .kata-search {
+            background: rgba(255, 255, 255, .98);
+            border: 1px solid rgba(0, 0, 0, .28);
+            border-radius: 6px 6px 0 0;
+            color: #111827;
+            display: none;
+            font: inherit;
+            font-size: .78em;
+            font-weight: 700;
+            height: 28px;
+            min-width: 0;
+            padding: 2px 6px;
+            width: 220px;
+        }
+
+        .kata-select {
+            background: rgba(255, 255, 255, .94);
+            border: 1px solid rgba(0, 0, 0, .28);
+            border-radius: 6px;
+            color: #111827;
+            font: inherit;
+            font-size: .82em;
+            font-weight: 700;
+            height: 28px;
+            min-width: 0;
+            padding: 1px 6px;
+            width: 220px;
+        }
+
+        .kata-select-wrap.is-searching .kata-search {
+            display: block;
+        }
+
+        .kata-select-wrap.is-searching .kata-select {
+            border-radius: 0 0 6px 6px;
+        }
+
+        .kata-ok {
+            background: #ffd400;
+            border: 1px solid rgba(0, 0, 0, .35);
+            border-radius: 5px;
+            color: #111827;
+            cursor: pointer;
+            flex: 0 0 auto;
+            font-size: .72em;
+            font-weight: 800;
+            height: 30px;
+            line-height: 1;
+            padding: 3px 7px;
+        }
+
+        .kata-back {
+            align-items: center;
+            background: #ffd400;
+            border: 1px solid rgba(0, 0, 0, .35);
+            border-radius: 5px;
+            color: #111827;
+            cursor: pointer;
+            display: none;
+            flex: 0 0 auto;
+            font-size: .78em;
+            font-weight: 800;
+            height: 30px;
+            justify-content: center;
+            line-height: 1;
+            padding: 3px 8px;
+        }
+
+        .kata-numero-confirmado {
+            display: none;
+            font-weight: 800;
+        }
+
+        .kata-select-line.is-confirmed .kata-select,
+        .kata-select-line.is-confirmed .kata-search,
+        .kata-select-line.is-confirmed .kata-ok {
+            display: none;
+        }
+
+        .kata-select-line.is-confirmed .kata-numero-confirmado {
+            display: inline;
+        }
+
+        .kata-select-line.is-confirmed .kata-back {
+            display: inline-flex;
         }
 
         .puntaje-panel {
@@ -402,27 +509,60 @@
             cursor: pointer;
         }
 
+        .btn-kiken {
+            box-shadow: 0 3px 6px rgba(0, 0, 0, .28);
+            color: #ffffff;
+            font-size: .85rem;
+            line-height: 1;
+            min-height: 30px;
+            padding: 4px 10px;
+            width: max-content;
+        }
+
+        .btn-kiken-aka {
+            background: var(--aka);
+            justify-self: start;
+        }
+
+        .btn-kiken-ao {
+            background: var(--ao);
+            justify-self: end;
+        }
+
+        .btn-kiken.is-active {
+            background: var(--amarillo);
+            color: #000000;
+        }
+
         .kata-toast {
             background: #ffff00;
             border: 2px solid #000000;
-            border-radius: 8px;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, .28);
+            border-radius: 10px;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, .34);
             color: #000000;
             display: none;
-            font-size: 1rem;
-            font-weight: 700;
+            font-size: clamp(1.3rem, 1.8vw, 2rem);
+            font-weight: 900;
             left: 50%;
-            min-width: 320px;
-            padding: 12px 18px;
+            line-height: 1.15;
+            max-width: min(92vw, 760px);
+            min-width: min(92vw, 560px);
+            padding: 18px 26px;
             position: fixed;
             text-align: center;
-            top: 18px;
+            top: 20px;
             transform: translateX(-50%);
             z-index: 9999;
         }
 
         .kata-toast.visible {
             display: block;
+        }
+
+        .kata-toast.is-error {
+            background: #dc3545;
+            border-color: #dc3545;
+            color: #ffffff;
         }
 
         @media (max-width: 920px) {
@@ -468,8 +608,8 @@
     <main class="kata-screen">
         <section class="kata-board">
             <header class="kata-header">
-                <div>Modalidad: Kata Individual</div>
-                <div>Categoría: Masculino 6 -7 años</div>
+                <div>Modalidad: <span id="kataModalidadTexto">Kata Individual</span></div>
+                <div>Categoría: <span id="kataCategoriaTexto">Masculino 6 -7 años</span></div>
             </header>
 
             <section class="combat-layout">
@@ -477,19 +617,39 @@
                     <article class="competidor competidor-aka">
                         <div class="estado">
                             En Competencia :
-                            <strong>Walter Landivar Limpias</strong>
+                            <strong id="kataCompetidorRojo">**********</strong>
                         </div>
                         <div class="kata-meta">
-                            <span>Kata Nro. : 1</span>
-                            <span>Nombre Kata: Anan</span>
+            <span id="kataLineaRojo" class="kata-select-line">
+                                <span class="kata-label">Kata Nro. :</span>
+                                <span class="kata-select-wrap">
+                                    <input type="search" class="kata-search" data-select="kataSelectRojo" placeholder="Buscar kata..." autocomplete="off">
+                                    <select id="kataSelectRojo" class="kata-select" aria-label="Kata rojo">
+                                        <option value="">Seleccione</option>
+                                        @foreach ($katas as $kata)
+                                            @php($numeroKata = $kata->numero_tablero ?: $loop->iteration)
+                                            <option value="{{ $kata->id }}" data-numero="{{ $numeroKata }}" data-nombre="{{ $kata->nombre }}" data-search="{{ mb_strtolower($numeroKata . ' ' . $kata->nombre) }}">
+                                                {{ $numeroKata }} - {{ $kata->nombre }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </span>
+                                <button type="button" class="kata-ok" data-select="kataSelectRojo" data-linea="kataLineaRojo" data-numero="kataNumeroRojo" data-nombre="kataNombreRojo">OK</button>
+                                <button type="button" class="kata-back" data-select="kataSelectRojo" data-linea="kataLineaRojo" data-numero="kataNumeroRojo" data-nombre="kataNombreRojo" title="Volver a seleccionar">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                                <strong id="kataNumeroRojo" class="kata-numero-confirmado"></strong>
+                            </span>
+                            <span>Nombre Kata: <strong id="kataNombreRojo">*****</strong></span>
                         </div>
                         <div id="puntajeRojo" class="puntaje-panel"></div>
                         <div class="proximo">
                             Proximo Combate
-                            <span>Luis Sillo Mayuco</span>
+                            <span id="kataProximoRojo">**********</span>
                         </div>
                     </article>
                     <div id="banderasRojo" class="banderas-display" aria-label="Banderas rojas"></div>
+                    <button type="button" id="btnKikenRojo" class="btn-kiken btn-kiken-aka">Kiken</button>
                 </section>
 
                 <section class="center-panel">
@@ -524,19 +684,39 @@
                     <article class="competidor competidor-ao">
                         <div class="estado">
                             En Competencia :
-                            <strong>Alfredo Taraune Becerra</strong>
+                            <strong id="kataCompetidorAzul">**********</strong>
                         </div>
                         <div class="kata-meta">
-                            <span>Kata Nro. : 2</span>
-                            <span>Nombre Kata: Anan Dai</span>
+            <span id="kataLineaAzul" class="kata-select-line">
+                                <span class="kata-label">Kata Nro. :</span>
+                                <span class="kata-select-wrap">
+                                    <input type="search" class="kata-search" data-select="kataSelectAzul" placeholder="Buscar kata..." autocomplete="off">
+                                    <select id="kataSelectAzul" class="kata-select" aria-label="Kata azul">
+                                        <option value="">Seleccione</option>
+                                        @foreach ($katas as $kata)
+                                            @php($numeroKata = $kata->numero_tablero ?: $loop->iteration)
+                                            <option value="{{ $kata->id }}" data-numero="{{ $numeroKata }}" data-nombre="{{ $kata->nombre }}" data-search="{{ mb_strtolower($numeroKata . ' ' . $kata->nombre) }}">
+                                                {{ $numeroKata }} - {{ $kata->nombre }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </span>
+                                <button type="button" class="kata-ok" data-select="kataSelectAzul" data-linea="kataLineaAzul" data-numero="kataNumeroAzul" data-nombre="kataNombreAzul">OK</button>
+                                <button type="button" class="kata-back" data-select="kataSelectAzul" data-linea="kataLineaAzul" data-numero="kataNumeroAzul" data-nombre="kataNombreAzul" title="Volver a seleccionar">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                                <strong id="kataNumeroAzul" class="kata-numero-confirmado"></strong>
+                            </span>
+                            <span>Nombre Kata: <strong id="kataNombreAzul">*****</strong></span>
                         </div>
                         <div id="puntajeAzul" class="puntaje-panel"></div>
                         <div class="proximo">
                             Proximo Combate
-                            <span>Gustavo Roca Nacif</span>
+                            <span id="kataProximoAzul">**********</span>
                         </div>
                     </article>
                     <div id="banderasAzul" class="banderas-display" aria-label="Banderas azules"></div>
+                    <button type="button" id="btnKikenAzul" class="btn-kiken btn-kiken-ao">Kiken</button>
                 </section>
             </section>
 
@@ -554,7 +734,7 @@
 
             <section class="bottom-actions">
                 <button type="button" id="btnGanadorKata" class="btn-bottom">Ganador</button>
-                <button type="button" class="btn-bottom">Nuevo</button>
+                <button type="button" id="btnNuevoKata" class="btn-bottom">Nuevo</button>
                 <button type="button" class="btn-bottom">Anterior</button>
                 <button type="button" class="btn-bottom btn-cerrar" onclick="window.location.href='{{ route('dashboard') }}'">
                     Cerrar
@@ -570,14 +750,378 @@
         const banderasAzul = document.getElementById('banderasAzul');
         const resultados = document.getElementById('resultados');
         const kataToast = document.getElementById('kataToast');
+        const tableroKata = @json($tableroKata ?? []);
+        const podioKataUrl = @json(route('tablero.kata.podio'));
+        const guardarCombateKataUrl = @json(route('tablero.kata.combates.store'));
+        const kataStorageKey = `kata-tablero-v3-${tableroKata.sorteo_id || 'default'}-${tableroKata.resultados_version || 0}`;
         let toastTimeout = null;
+        let kataState = null;
+        let kataCurrentPosition = null;
 
-        function mostrarToast(mensaje) {
+        function textoKata(valor, fallback = '') {
+            return (valor || '').trim() || fallback;
+        }
+
+        function cargarNuevoCombateKata() {
+            kataState = estadoKata();
+
+            if (!Array.isArray(kataState.llaves) || kataState.llaves.length === 0) {
+                document.getElementById('kataModalidadTexto').textContent = textoKata(tableroKata.modalidad, 'Kata Individual');
+                document.getElementById('kataCategoriaTexto').textContent = textoKata(tableroKata.categoria, 'Sin categoria pendiente');
+                document.getElementById('kataCompetidorRojo').textContent = '********';
+                document.getElementById('kataCompetidorAzul').textContent = '********';
+                document.getElementById('kataProximoRojo').textContent = '********';
+                document.getElementById('kataProximoAzul').textContent = '********';
+                return;
+            }
+
+            propagarByesKata(kataState.llaves);
+
+            const posicion = siguienteCombateKata(kataState.llaves);
+
+            if (!posicion) {
+                kataCurrentPosition = null;
+                document.getElementById('kataModalidadTexto').textContent = textoKata(tableroKata.modalidad, 'Kata Individual');
+                document.getElementById('kataCategoriaTexto').textContent = textoKata(tableroKata.categoria, 'Sin categoria pendiente');
+                document.getElementById('kataCompetidorRojo').textContent = '********';
+                document.getElementById('kataCompetidorAzul').textContent = '********';
+                document.getElementById('kataProximoRojo').textContent = '********';
+                document.getElementById('kataProximoAzul').textContent = '********';
+                reiniciarKataSeleccionado('kataSelectRojo', 'kataLineaRojo', 'kataNumeroRojo', 'kataNombreRojo');
+                reiniciarKataSeleccionado('kataSelectAzul', 'kataLineaAzul', 'kataNumeroAzul', 'kataNombreAzul');
+                limpiarKikenKata();
+                resultados.value = '';
+                limpiarResultadoBanderas();
+                return;
+            }
+
+            kataCurrentPosition = posicion;
+            const combate = combatePorPosicion(kataState.llaves, posicion) || {};
+            const proximo = siguienteCombateKata(kataState.llaves, posicion.indice + 1);
+            const proximoCombate = proximo ? combatePorPosicion(kataState.llaves, proximo) : {};
+            const rojoCombate = competidorRojoTableroKata(kataState.llaves, posicion, combate);
+            const azulCombate = competidorAzulTableroKata(kataState.llaves, posicion, combate);
+            const rojoProximo = proximo ? competidorRojoTableroKata(kataState.llaves, proximo, proximoCombate) : null;
+            const azulProximo = proximo ? competidorAzulTableroKata(kataState.llaves, proximo, proximoCombate) : null;
+
+            document.getElementById('kataModalidadTexto').textContent = textoKata(tableroKata.modalidad, 'Kata Individual');
+            document.getElementById('kataCategoriaTexto').textContent = textoKata(tableroKata.categoria, 'Sin categoria pendiente');
+            document.getElementById('kataCompetidorRojo').textContent = textoKata(rojoCombate?.nombre, 'Sin competidor');
+            document.getElementById('kataCompetidorAzul').textContent = textoKata(azulCombate?.nombre, 'Sin competidor');
+            document.getElementById('kataProximoRojo').textContent = textoKata(rojoProximo?.nombre, 'Sin proximo');
+            document.getElementById('kataProximoAzul').textContent = textoKata(azulProximo?.nombre, 'Sin proximo');
+            reiniciarKataSeleccionado('kataSelectRojo', 'kataLineaRojo', 'kataNumeroRojo', 'kataNombreRojo');
+            reiniciarKataSeleccionado('kataSelectAzul', 'kataLineaAzul', 'kataNumeroAzul', 'kataNombreAzul');
+            limpiarKikenKata();
+            resultados.value = '';
+            limpiarResultadoBanderas();
+        }
+
+        function actualizarKataSeleccionado(select, nombreTargetId) {
+            const option = select.selectedOptions[0];
+            const nombre = option?.dataset.nombre || '';
+
+            document.getElementById(nombreTargetId).textContent = nombre || 'Sin kata';
+        }
+
+        function normalizarBusquedaKata(valor) {
+            return (valor || '')
+                .toString()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .trim();
+        }
+
+        function filtrarKatasSelect(input) {
+            const select = document.getElementById(input.dataset.select);
+            const busqueda = normalizarBusquedaKata(input.value);
+            let primerVisible = null;
+
+            if (!select) {
+                return;
+            }
+
+            select.querySelectorAll('option').forEach(function (option) {
+                if (!option.value) {
+                    option.hidden = false;
+                    option.disabled = false;
+                    return;
+                }
+
+                const texto = normalizarBusquedaKata(option.dataset.search || option.textContent);
+                const visible = !busqueda || texto.includes(busqueda);
+
+                option.hidden = !visible;
+                option.disabled = !visible;
+
+                if (visible && !primerVisible) {
+                    primerVisible = option;
+                }
+            });
+
+            if (select.value && select.selectedOptions[0]?.disabled) {
+                select.value = '';
+            }
+
+            if (!select.value && primerVisible && busqueda) {
+                select.value = primerVisible.value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+
+        function confirmarKataSeleccionado(button) {
+            const select = document.getElementById(button.dataset.select);
+            const option = select.selectedOptions[0];
+            const numero = option?.dataset.numero || '';
+            const nombre = option?.dataset.nombre || '';
+
+            if (!numero) {
+                mostrarToast('Seleccione un kata primero');
+                return;
+            }
+
+            document.getElementById(button.dataset.numero).textContent = numero;
+            document.getElementById(button.dataset.nombre).textContent = nombre || 'Sin kata';
+            document.getElementById(button.dataset.linea).classList.add('is-confirmed');
+        }
+
+        function volverASeleccionarKata(button) {
+            const select = document.getElementById(button.dataset.select);
+            const search = document.querySelector(`.kata-search[data-select="${button.dataset.select}"]`);
+
+            document.getElementById(button.dataset.linea).classList.remove('is-confirmed');
+            document.getElementById(button.dataset.numero).textContent = '';
+            document.getElementById(button.dataset.nombre).textContent = 'Seleccione';
+
+            if (search) {
+                search.closest('.kata-select-wrap')?.classList.add('is-searching');
+                search.focus();
+                search.select();
+            } else {
+                select?.focus();
+            }
+        }
+
+        function reiniciarKataSeleccionado(selectId, lineaId, numeroId, nombreId) {
+            const select = document.getElementById(selectId);
+            const search = document.querySelector(`.kata-search[data-select="${selectId}"]`);
+
+            select.value = '';
+            select.querySelectorAll('option').forEach(function (option) {
+                option.hidden = false;
+                option.disabled = false;
+            });
+            if (search) {
+                search.value = '';
+                search.closest('.kata-select-wrap')?.classList.remove('is-searching');
+            }
+            document.getElementById(lineaId).classList.remove('is-confirmed');
+            document.getElementById(numeroId).textContent = '';
+            document.getElementById(nombreId).textContent = 'Seleccione';
+        }
+
+        function limpiarKikenKata() {
+            document.querySelectorAll('.btn-kiken').forEach(function (button) {
+                button.classList.remove('is-active');
+            });
+        }
+
+        function aplicarResultadoKikenKata(perdedorColor) {
+            const rojoPierde = perdedorColor === 'rojo';
+            const rojo = rojoPierde ? 0 : 5;
+            const azul = rojoPierde ? 5 : 0;
+
+            puntajeRojo.textContent = rojoPierde ? 'Kiken' : rojo;
+            puntajeAzul.textContent = rojoPierde ? azul : 'Kiken';
+            puntajeRojo.dataset.valor = rojo;
+            puntajeAzul.dataset.valor = azul;
+            crearBanderas(banderasRojo, rojo, 'roja');
+            crearBanderas(banderasAzul, azul, 'azul');
+        }
+
+        function estadoKata() {
+            if (kataState) {
+                return kataState;
+            }
+
+            const guardado = sessionStorage.getItem(kataStorageKey);
+            kataState = guardado
+                ? JSON.parse(guardado)
+                : { llaves: JSON.parse(JSON.stringify(tableroKata.llaves || [])) };
+
+            return kataState;
+        }
+
+        function guardarEstadoKata() {
+            sessionStorage.setItem(kataStorageKey, JSON.stringify(kataState));
+        }
+
+        function combatePorPosicion(llaves, posicion) {
+            return llaves?.[posicion.roundIndex]?.combates?.[posicion.matchIndex] || null;
+        }
+
+        function esFinalKata(llaves, posicion) {
+            return Boolean(posicion) && posicion.roundIndex === (llaves.length - 1);
+        }
+
+        function competidorRojoTableroKata(llaves, posicion, combate) {
+            return esFinalKata(llaves, posicion) ? combate?.b : combate?.a;
+        }
+
+        function competidorAzulTableroKata(llaves, posicion, combate) {
+            return esFinalKata(llaves, posicion) ? combate?.a : combate?.b;
+        }
+
+        function esByeKata(combate) {
+            const tieneRojo = Boolean(combate?.a?.nombre);
+            const tieneAzul = Boolean(combate?.b?.nombre);
+
+            return Boolean(combate?.bye) && tieneRojo !== tieneAzul;
+        }
+
+        function puedePropagarGanadorKata(competidor) {
+            const nombre = competidor?.nombre || '';
+
+            return !nombre || nombre.startsWith('Ganador');
+        }
+
+        function propagarByesKata(llaves) {
+            llaves.forEach(function (ronda, roundIndex) {
+                if (!llaves[roundIndex + 1]) {
+                    return;
+                }
+
+                (ronda.combates || []).forEach(function (combate, matchIndex) {
+                    if (!esByeKata(combate)) {
+                        return;
+                    }
+
+                    const ganador = combate.a || combate.b || null;
+                    const nextMatch = Math.floor(matchIndex / 2);
+                    const nextSide = matchIndex % 2 === 0 ? 'a' : 'b';
+
+                    if (
+                        ganador
+                        && llaves[roundIndex + 1]?.combates?.[nextMatch]
+                        && puedePropagarGanadorKata(llaves[roundIndex + 1].combates[nextMatch][nextSide])
+                    ) {
+                        llaves[roundIndex + 1].combates[nextMatch][nextSide] = ganador;
+                    }
+                });
+            });
+        }
+
+        function siguienteCombateKata(llaves, desde = 0) {
+            let indice = 0;
+
+            for (let roundIndex = 0; roundIndex < llaves.length; roundIndex++) {
+                const combates = llaves[roundIndex].combates || [];
+
+                for (let matchIndex = 0; matchIndex < combates.length; matchIndex++) {
+                    const combate = combates[matchIndex];
+                    const rojo = combate?.a?.nombre || '';
+                    const azul = combate?.b?.nombre || '';
+
+                    if (indice >= desde && !combate.realizado && !esByeKata(combate) && rojo && azul) {
+                        return { roundIndex, matchIndex, indice };
+                    }
+
+                    indice++;
+                }
+            }
+
+            return null;
+        }
+
+        function registrarGanadorKataLocal(colorGanador) {
+            const state = estadoKata();
+
+            if (!kataCurrentPosition) {
+                cargarNuevoCombateKata();
+            }
+
+            const posicion = kataCurrentPosition || siguienteCombateKata(state.llaves);
+            const combate = posicion ? combatePorPosicion(state.llaves, posicion) : null;
+
+            if (!combate) {
+                return;
+            }
+
+            const ganador = colorGanador === 'aka'
+                ? competidorRojoTableroKata(state.llaves, posicion, combate)
+                : competidorAzulTableroKata(state.llaves, posicion, combate);
+            const nextRound = posicion.roundIndex + 1;
+            const nextMatch = Math.floor(posicion.matchIndex / 2);
+            const nextSide = posicion.matchIndex % 2 === 0 ? 'a' : 'b';
+
+            combate.realizado = true;
+            combate.ganador = ganador;
+
+            if (state.llaves[nextRound]?.combates?.[nextMatch]) {
+                state.llaves[nextRound].combates[nextMatch][nextSide] = ganador;
+            }
+
+            propagarByesKata(state.llaves);
+            guardarEstadoKata();
+        }
+
+        function calcularPodioKata() {
+            const state = estadoKata();
+            const llaves = state.llaves || [];
+            const podio = { oro: '', plata: '', bronce_1: '', bronce_2: '' };
+            const finalRound = llaves.length - 1;
+            const final = llaves[finalRound]?.combates?.[0] || null;
+
+            if (final?.ganador?.nombre) {
+                podio.oro = final.ganador.nombre;
+                podio.plata = final.ganador.id === final.a?.id ? (final.b?.nombre || '') : (final.a?.nombre || '');
+            }
+
+            const semifinalRound = llaves.length - 2;
+            const bronces = [];
+
+            if (semifinalRound >= 0) {
+                (llaves[semifinalRound].combates || []).forEach(function (combate) {
+                    if (!combate.ganador?.nombre) {
+                        return;
+                    }
+
+                    const perdedor = combate.ganador.id === combate.a?.id ? combate.b?.nombre : combate.a?.nombre;
+
+                    if (perdedor) {
+                        bronces.push(perdedor);
+                    }
+                });
+            }
+
+            podio.bronce_1 = bronces[0] || '';
+            podio.bronce_2 = bronces[1] || '';
+
+            return podio;
+        }
+
+        function mostrarPodioKata() {
+            const params = tableroKata.sorteo_id
+                ? new URLSearchParams({ sorteo_id: tableroKata.sorteo_id })
+                : new URLSearchParams({
+                    modalidad: tableroKata.modalidad || 'Kata Individual',
+                    categoria: tableroKata.categoria || '',
+                    ...calcularPodioKata(),
+                });
+
+            sessionStorage.removeItem(kataStorageKey);
+            window.location.href = `${podioKataUrl}?${params.toString()}`;
+        }
+
+        function mostrarToast(mensaje, tipo = 'info') {
             clearTimeout(toastTimeout);
             kataToast.textContent = mensaje;
+            kataToast.classList.toggle('is-error', tipo === 'error');
             kataToast.classList.add('visible');
             toastTimeout = setTimeout(function () {
                 kataToast.classList.remove('visible');
+                kataToast.classList.remove('is-error');
             }, 2200);
         }
 
@@ -595,6 +1139,8 @@
         function limpiarResultadoBanderas() {
             puntajeRojo.textContent = '';
             puntajeAzul.textContent = '';
+            puntajeRojo.dataset.valor = '';
+            puntajeAzul.dataset.valor = '';
             crearBanderas(banderasRojo, 0, 'roja');
             crearBanderas(banderasAzul, 0, 'azul');
         }
@@ -616,6 +1162,8 @@
 
             puntajeRojo.textContent = rojo;
             puntajeAzul.textContent = azul;
+            puntajeRojo.dataset.valor = rojo;
+            puntajeAzul.dataset.valor = azul;
             crearBanderas(banderasRojo, rojo, 'roja');
             crearBanderas(banderasAzul, azul, 'azul');
         }
@@ -667,6 +1215,8 @@
 
             puntajeRojo.textContent = resultado.rojo;
             puntajeAzul.textContent = resultado.azul;
+            puntajeRojo.dataset.valor = resultado.rojo;
+            puntajeAzul.dataset.valor = resultado.azul;
             crearBanderas(banderasRojo, resultado.rojo, 'roja');
             crearBanderas(banderasAzul, resultado.azul, 'azul');
         }
@@ -690,20 +1240,87 @@
 
         function datosCompetidor(color) {
             const panel = document.querySelector(`.competidor-${color}`);
+            const select = color === 'aka'
+                ? document.getElementById('kataSelectRojo')
+                : document.getElementById('kataSelectAzul');
+            const option = select.selectedOptions[0];
 
             return {
                 nombre: panel.querySelector('.estado strong').textContent.trim(),
-                kataNumero: panel.querySelector('.kata-meta span:nth-child(1)').textContent.replace('Kata Nro. :', '').trim(),
-                kataNombre: panel.querySelector('.kata-meta span:nth-child(2)').textContent.replace('Nombre Kata:', '').trim(),
+                kataNumero: option?.dataset.numero || '',
+                kataNombre: option?.dataset.nombre || '',
             };
         }
 
-        function abrirResultadoGanador() {
-            const rojo = parseInt(puntajeRojo.textContent, 10) || 0;
-            const azul = parseInt(puntajeAzul.textContent, 10) || 0;
+        function datosResultadoKata(rojo, azul, ganadorColor, ganador) {
+            const competidorRojo = datosCompetidor('aka');
+            const competidorAzul = datosCompetidor('ao');
+
+            return {
+                sorteo_id: tableroKata.sorteo_id || null,
+                indice_combate: kataCurrentPosition?.indice ?? 0,
+                competidor_rojo: competidorRojo.nombre,
+                competidor_azul: competidorAzul.nombre,
+                kata_numero_rojo: competidorRojo.kataNumero,
+                kata_numero_azul: competidorAzul.kataNumero,
+                kata_nombre_rojo: competidorRojo.kataNombre,
+                kata_nombre_azul: competidorAzul.kataNombre,
+                puntaje_rojo: rojo,
+                puntaje_azul: azul,
+                kiken_rojo: document.getElementById('btnKikenRojo').classList.contains('is-active'),
+                kiken_azul: document.getElementById('btnKikenAzul').classList.contains('is-active'),
+                ganador: ganador.nombre,
+                ganador_color: ganadorColor === 'aka' ? 'rojo' : 'azul',
+            };
+        }
+
+        async function guardarResultadoKata(payload) {
+            const response = await fetch(guardarCombateKataUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'No se pudo guardar el resultado Kata.');
+            }
+
+            return data;
+        }
+
+        async function abrirResultadoGanador() {
+            const rojo = parseInt(puntajeRojo.dataset.valor || puntajeRojo.textContent, 10) || 0;
+            const azul = parseInt(puntajeAzul.dataset.valor || puntajeAzul.textContent, 10) || 0;
+
+            if (rojo === 0 && azul === 0) {
+                mostrarToast('Uno de los Competidores tienen que tener puntaje', 'error');
+                return;
+            }
+
             const ganadorColor = azul > rojo ? 'ao' : 'aka';
             const ganador = datosCompetidor(ganadorColor);
+
+            try {
+                await guardarResultadoKata(datosResultadoKata(rojo, azul, ganadorColor, ganador));
+            } catch (error) {
+                mostrarToast(error.message || 'No se pudo guardar el resultado Kata.', 'error');
+                return;
+            }
+
+            registrarGanadorKataLocal(ganadorColor);
+
+            if (!siguienteCombateKata(estadoKata().llaves)) {
+                mostrarPodioKata();
+                return;
+            }
+
             const params = new URLSearchParams({
+                sorteo_id: tableroKata.sorteo_id || '',
                 color: ganadorColor === 'aka' ? 'rojo' : 'azul',
                 nombre: ganador.nombre,
                 kata_numero: ganador.kataNumero,
@@ -711,6 +1328,8 @@
                 puntaje: ganadorColor === 'aka' ? rojo : azul,
                 banderas_rojas: rojo,
                 banderas_azules: azul,
+                kiken_rojo: document.getElementById('btnKikenRojo').classList.contains('is-active') ? 1 : 0,
+                kiken_azul: document.getElementById('btnKikenAzul').classList.contains('is-active') ? 1 : 0,
             });
 
             window.location.href = `{{ route('tablero.kata.resultado') }}?${params.toString()}`;
@@ -754,6 +1373,59 @@
         });
 
         document.getElementById('btnGanadorKata').addEventListener('click', abrirResultadoGanador);
+        document.getElementById('btnNuevoKata').addEventListener('click', cargarNuevoCombateKata);
+        document.getElementById('kataSelectRojo').addEventListener('change', function () {
+            actualizarKataSeleccionado(this, 'kataNombreRojo');
+        });
+        document.getElementById('kataSelectAzul').addEventListener('change', function () {
+            actualizarKataSeleccionado(this, 'kataNombreAzul');
+        });
+        document.querySelectorAll('.kata-select').forEach(function (select) {
+            select.addEventListener('focus', function () {
+                this.closest('.kata-select-wrap')?.classList.add('is-searching');
+            });
+        });
+        document.querySelectorAll('.kata-search').forEach(function (input) {
+            input.addEventListener('input', function () {
+                filtrarKatasSelect(this);
+            });
+            input.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    document.getElementById(this.dataset.select)?.focus();
+                }
+            });
+        });
+        document.querySelectorAll('.kata-ok').forEach(function (button) {
+            button.addEventListener('click', function () {
+                confirmarKataSeleccionado(this);
+            });
+        });
+        document.querySelectorAll('.kata-back').forEach(function (button) {
+            button.addEventListener('click', function () {
+                volverASeleccionarKata(this);
+            });
+        });
+        document.querySelectorAll('.btn-kiken').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const otroKiken = this.id === 'btnKikenRojo'
+                    ? document.getElementById('btnKikenAzul')
+                    : document.getElementById('btnKikenRojo');
+
+                if (!this.classList.contains('is-active') && otroKiken?.classList.contains('is-active')) {
+                    mostrarToast('Solo se puede dar Kiken a un competidor', 'error');
+                    return;
+                }
+
+                this.classList.toggle('is-active');
+
+                if (this.classList.contains('is-active')) {
+                    aplicarResultadoKikenKata(this.id === 'btnKikenRojo' ? 'rojo' : 'azul');
+                } else {
+                    limpiarResultadoBanderas();
+                }
+            });
+        });
 
         resultados.addEventListener('change', function () {
             mostrarResultadoBanderas(this.value);
@@ -805,6 +1477,8 @@
                 refrescarResultadoJueces();
             });
         });
+
+        cargarNuevoCombateKata();
     </script>
 </body>
 </html>

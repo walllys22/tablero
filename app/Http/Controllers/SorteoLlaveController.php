@@ -23,8 +23,8 @@ class SorteoLlaveController extends Controller
         $sistemaSorteo = $request->input('sistema_sorteo') === 'round_robin'
             ? 'round_robin'
             : 'eliminacion_directa';
-        $sorteos = SorteoLlave::with(['modalidad', 'categoria', 'resultadosKumite'])
-            ->withCount('resultadosKumite')
+        $sorteos = SorteoLlave::with(['modalidad', 'categoria', 'resultadosKumite', 'resultadosKata'])
+            ->withCount(['resultadosKumite', 'resultadosKata'])
             ->where('torneo_id', $torneo->id)
             ->orderByRaw('COALESCE(orden, 999999)')
             ->orderBy('id')
@@ -48,7 +48,7 @@ class SorteoLlaveController extends Controller
 
                 if ($sorteoActual && ! $request->boolean('sortear')) {
                     $seed = $sorteoActual->seed;
-                    $sorteoActual->loadMissing('resultadosKumite');
+                    $sorteoActual->loadMissing(['modalidad', 'resultadosKumite', 'resultadosKata']);
                     $llaves = $this->llavesConPases($sorteoActual->llaves, $sorteoActual);
                 }
 
@@ -65,8 +65,8 @@ class SorteoLlaveController extends Controller
                         'area' => ((int) ($torneo->cantidad_areas ?? 1)) === 1 ? 1 : null,
                         'orden' => $this->siguienteOrden($torneo),
                     ]);
-                    $sorteos = SorteoLlave::with(['modalidad', 'categoria', 'resultadosKumite'])
-                        ->withCount('resultadosKumite')
+                    $sorteos = SorteoLlave::with(['modalidad', 'categoria', 'resultadosKumite', 'resultadosKata'])
+                        ->withCount(['resultadosKumite', 'resultadosKata'])
                         ->where('torneo_id', $torneo->id)
                         ->orderByRaw('COALESCE(orden, 999999)')
                         ->orderBy('id')
@@ -140,7 +140,7 @@ class SorteoLlaveController extends Controller
             'seed' => ['required', 'integer'],
         ]);
 
-        $sorteo = SorteoLlave::with(['modalidad', 'categoria.modalidad', 'resultadosKumite'])
+        $sorteo = SorteoLlave::with(['modalidad', 'categoria.modalidad', 'resultadosKumite', 'resultadosKata'])
             ->where('torneo_id', $torneo->id)
             ->where('categoria_id', $request->input('categoria_id'))
             ->first();
@@ -165,6 +165,20 @@ class SorteoLlaveController extends Controller
     {
         abort_unless((int) $sorteo->torneo_id === (int) $torneo->id, 404);
 
+        $sorteo->loadMissing('modalidad');
+
+        if ($this->esSorteoKata($sorteo)) {
+            $sorteo->load([
+                'modalidad',
+                'categoria',
+                'resultadosKata' => function ($query) {
+                    $query->orderBy('indice_combate');
+                },
+            ]);
+
+            return view('sorteo_llaves.resultados_kata', compact('torneo', 'sorteo'));
+        }
+
         $sorteo->load([
             'modalidad',
             'categoria',
@@ -183,8 +197,8 @@ class SorteoLlaveController extends Controller
             'orden.*' => ['required', 'integer', 'distinct'],
         ]);
 
-        $sorteos = SorteoLlave::withCount('resultadosKumite')
-            ->with('resultadosKumite')
+        $sorteos = SorteoLlave::withCount(['resultadosKumite', 'resultadosKata'])
+            ->with(['modalidad', 'resultadosKumite', 'resultadosKata'])
             ->where('torneo_id', $torneo->id)
             ->orderByRaw('COALESCE(orden, 999999)')
             ->orderBy('id')
@@ -223,6 +237,173 @@ class SorteoLlaveController extends Controller
             ->with('status', 'Orden de categorias actualizado correctamente.');
     }
 
+    public function updateCompetidores(Request $request, Torneo $torneo, SorteoLlave $sorteo)
+    {
+        abort_unless((int) $sorteo->torneo_id === (int) $torneo->id, 404);
+
+        $data = $request->validate([
+            'slots' => ['required', 'array', 'min:1'],
+            'slots.*.round_index' => ['nullable', 'integer', 'min:0'],
+            'slots.*.match_index' => ['required', 'integer', 'min:0'],
+            'slots.*.side' => ['required', 'in:a,b'],
+            'slots.*.competidor_id' => ['nullable', 'integer'],
+        ]);
+
+        $sorteo->loadMissing(['modalidad', 'resultadosKumite', 'resultadosKata']);
+        $llaves = $sorteo->llaves ?? [];
+
+        $resultadosPorIndice = $this->resultadosCompetencia($sorteo)->keyBy('indice_combate');
+
+        if (($llaves[0]['sistema'] ?? null) === 'round_robin') {
+            return response()->json([
+                'message' => 'El movimiento manual solo esta disponible para eliminacion directa.',
+            ], 422);
+        }
+
+        if (! isset($llaves[0]['combates'])) {
+            return response()->json([
+                'message' => 'No hay llaves disponibles para actualizar.',
+            ], 422);
+        }
+
+        $competidores = $this->competidoresCategoria($torneo, (int) $sorteo->categoria_id)->keyBy('id');
+        $slots = collect($data['slots']);
+        $slotKeys = $slots->map(fn ($slot) => ($slot['round_index'] ?? 0) . ':' . $slot['match_index'] . ':' . $slot['side']);
+        $tocaRondasPosteriores = $slots->contains(fn ($slot) => (int) ($slot['round_index'] ?? 0) > 0);
+
+        if ($slotKeys->duplicates()->isNotEmpty()) {
+            return response()->json([
+                'message' => 'La distribucion enviada contiene posiciones repetidas.',
+            ], 422);
+        }
+
+        $competidorIds = $slots
+            ->pluck('competidor_id')
+            ->filter(fn ($id) => $id !== null)
+            ->map(fn ($id) => (int) $id)
+            ->values();
+
+        if (
+            $competidorIds->diff($competidores->keys())->isNotEmpty()
+            || (! $tocaRondasPosteriores && $competidorIds->duplicates()->isNotEmpty())
+        ) {
+            return response()->json([
+                'message' => 'La distribucion enviada contiene competidores invalidos.',
+            ], 422);
+        }
+
+        foreach ($slots->groupBy(fn ($slot) => (int) ($slot['round_index'] ?? 0)) as $roundSlots) {
+            $idsPorRonda = $roundSlots
+                ->pluck('competidor_id')
+                ->filter(fn ($id) => $id !== null)
+                ->map(fn ($id) => (int) $id)
+                ->values();
+
+            if ($idsPorRonda->duplicates()->isNotEmpty()) {
+                return response()->json([
+                    'message' => 'La distribucion enviada contiene competidores repetidos en una misma ronda.',
+                ], 422);
+            }
+        }
+
+        foreach ($slots as $slot) {
+            $roundIndex = (int) ($slot['round_index'] ?? 0);
+            $matchIndex = (int) $slot['match_index'];
+            $side = $slot['side'];
+
+            if (! isset($llaves[$roundIndex]['combates'][$matchIndex])) {
+                return response()->json([
+                    'message' => 'La distribucion enviada contiene posiciones invalidas.',
+                ], 422);
+            }
+
+            $indiceCombate = $this->indiceCombatePorPosicion($llaves, $roundIndex, $matchIndex);
+
+            if ($indiceCombate !== null && $resultadosPorIndice->has($indiceCombate)) {
+                return response()->json([
+                    'message' => 'No se puede cambiar una llave que ya fue realizada.',
+                ], 422);
+            }
+
+            $competidorId = ($slot['competidor_id'] ?? null) !== null ? (int) $slot['competidor_id'] : null;
+            $llaves[$roundIndex]['combates'][$matchIndex][$side] = $competidorId ? $competidores->get($competidorId) : null;
+        }
+
+        if (! $tocaRondasPosteriores) {
+            $idsActuales = collect($llaves[0]['combates'])
+                ->flatMap(fn ($combate) => [
+                    $combate['a']['id'] ?? null,
+                    $combate['b']['id'] ?? null,
+                ])
+                ->filter(fn ($id) => $id !== null)
+                ->map(fn ($id) => (int) $id)
+                ->values();
+            $competidoresFaltantes = $competidores->keys()
+                ->map(fn ($id) => (int) $id)
+                ->diff($idsActuales);
+
+            foreach ($competidoresFaltantes as $competidorFaltanteId) {
+                foreach ($llaves[0]['combates'] as $matchIndex => $combate) {
+                    foreach (['a', 'b'] as $side) {
+                        if (! empty($llaves[0]['combates'][$matchIndex][$side])) {
+                            continue;
+                        }
+
+                        $llaves[0]['combates'][$matchIndex][$side] = $competidores->get($competidorFaltanteId);
+                        continue 3;
+                    }
+                }
+            }
+
+            $idsDistribuidos = collect($llaves[0]['combates'])
+                ->flatMap(fn ($combate) => [
+                    $combate['a']['id'] ?? null,
+                    $combate['b']['id'] ?? null,
+                ])
+                ->filter(fn ($id) => $id !== null)
+                ->map(fn ($id) => (int) $id)
+                ->values();
+
+            if (
+                $idsDistribuidos->duplicates()->isNotEmpty()
+                || $idsDistribuidos->sort()->values()->all() !== $competidores->keys()->sort()->values()->all()
+            ) {
+                return response()->json([
+                    'message' => 'La distribucion debe mantener todos los competidores una sola vez.',
+                ], 422);
+            }
+        }
+
+        foreach ($slots->groupBy(fn ($slot) => (int) ($slot['round_index'] ?? 0)) as $roundIndex => $roundSlots) {
+            foreach ($roundSlots->pluck('match_index')->unique() as $matchIndex) {
+                if (! isset($llaves[$roundIndex]['combates'][$matchIndex])) {
+                    continue;
+                }
+
+                $tieneRojo = ! empty($llaves[$roundIndex]['combates'][$matchIndex]['a']);
+                $tieneAzul = ! empty($llaves[$roundIndex]['combates'][$matchIndex]['b']);
+                $llaves[$roundIndex]['combates'][$matchIndex]['bye'] = $tieneRojo !== $tieneAzul;
+            }
+        }
+
+        if (! $tocaRondasPosteriores) {
+            for ($roundIndex = 1; $roundIndex < count($llaves); $roundIndex++) {
+                foreach (($llaves[$roundIndex]['combates'] ?? []) as $matchIndex => $combate) {
+                    $llaves[$roundIndex]['combates'][$matchIndex]['a'] = null;
+                    $llaves[$roundIndex]['combates'][$matchIndex]['b'] = null;
+                    $llaves[$roundIndex]['combates'][$matchIndex]['bye'] = false;
+                }
+            }
+        }
+
+        $sorteo->update(['llaves' => $llaves]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Competidores actualizados correctamente.',
+        ]);
+    }
+
     public function updateArea(Request $request, Torneo $torneo, SorteoLlave $sorteo)
     {
         abort_unless((int) $sorteo->torneo_id === (int) $torneo->id, 404);
@@ -243,6 +424,16 @@ class SorteoLlaveController extends Controller
     public function destroy(Torneo $torneo, SorteoLlave $sorteo)
     {
         abort_unless((int) $sorteo->torneo_id === (int) $torneo->id, 404);
+
+        $sorteo->loadMissing(['modalidad', 'resultadosKumite', 'resultadosKata']);
+        $llaves = $this->llavesConPases($sorteo->llaves, $sorteo);
+        $categoriaCompleta = $this->categoriaCompleta($llaves, $sorteo);
+
+        if ($this->estadoCategoria($sorteo, $categoriaCompleta) !== 'pendiente') {
+            return redirect()
+                ->route('sorteo-llaves.index', $torneo)
+                ->withErrors(['delete' => 'Solo se puede eliminar una categoria pendiente.']);
+        }
 
         $sorteo->delete();
 
@@ -278,11 +469,23 @@ class SorteoLlaveController extends Controller
             ->values();
     }
 
+    private function esSorteoKata(SorteoLlave $sorteo): bool
+    {
+        return str_contains(mb_strtolower($sorteo->modalidad->nombre ?? ''), 'kata');
+    }
+
+    private function resultadosCompetencia(SorteoLlave $sorteo)
+    {
+        return $this->esSorteoKata($sorteo)
+            ? $sorteo->resultadosKata
+            : $sorteo->resultadosKumite;
+    }
+
     private function llavesConPases(array $llaves, SorteoLlave $sorteo): array
     {
         $llaves = $this->propagarByes($this->reiniciarLlavesBase($llaves));
 
-        foreach ($sorteo->resultadosKumite->sortBy('indice_combate') as $resultado) {
+        foreach ($this->resultadosCompetencia($sorteo)->sortBy('indice_combate') as $resultado) {
             $position = $this->posicionCombatePorIndice($llaves, (int) $resultado->indice_combate);
 
             if (! $position) {
@@ -291,7 +494,9 @@ class SorteoLlaveController extends Controller
 
             [$roundIndex, $matchIndex] = $position;
             $combate = $llaves[$roundIndex]['combates'][$matchIndex];
-            $ganadorSide = $resultado->ganador_color === 'rojo' ? 'a' : 'b';
+            $ganadorSide = $this->esSorteoKata($sorteo)
+                ? $this->ladoGanadorKata($resultado, $combate)
+                : ($resultado->ganador_color === 'rojo' ? 'a' : 'b');
             $ganadorCompetidor = $combate[$ganadorSide] ?? [
                 'nombre' => $resultado->ganador,
                 'organizacion' => '',
@@ -302,25 +507,129 @@ class SorteoLlaveController extends Controller
             $nextMatch = (int) floor($matchIndex / 2);
             $nextSide = $matchIndex % 2 === 0 ? 'a' : 'b';
 
-            if (isset($llaves[$nextRound]['combates'][$nextMatch])) {
+            if (isset($llaves[$nextRound]['combates'][$nextMatch])
+                && $this->puedePropagarGanadorA($llaves[$nextRound]['combates'][$nextMatch][$nextSide] ?? null)) {
                 $llaves[$nextRound]['combates'][$nextMatch][$nextSide] = $ganadorCompetidor;
             }
+
+            $llaves = $this->propagarByes($llaves);
         }
 
         return $llaves;
     }
 
+    private function ladoGanadorKata($resultado, array $combate): string
+    {
+        $ganador = $this->normalizarNombreCompetidor($resultado->ganador ?? null);
+        $rojo = $this->normalizarNombreCompetidor(($combate['a']['nombre'] ?? null) ?: ($resultado->competidor_rojo ?? null));
+        $azul = $this->normalizarNombreCompetidor(($combate['b']['nombre'] ?? null) ?: ($resultado->competidor_azul ?? null));
+
+        if ($ganador !== '' && $ganador === $rojo) {
+            return 'a';
+        }
+
+        if ($ganador !== '' && $ganador === $azul) {
+            return 'b';
+        }
+
+        if ((int) ($resultado->puntaje_rojo ?? 0) !== (int) ($resultado->puntaje_azul ?? 0)) {
+            return (int) $resultado->puntaje_rojo > (int) $resultado->puntaje_azul ? 'a' : 'b';
+        }
+
+        return ($resultado->ganador_color ?? null) === 'azul' ? 'b' : 'a';
+    }
+
+    private function normalizarNombreCompetidor(?string $nombre): string
+    {
+        return trim(mb_strtolower(preg_replace('/\s+/', ' ', $nombre ?? '')));
+    }
+
     private function prepararLlavesSorteos($sorteos): void
     {
         $sorteos->each(function ($sorteo) {
+            $resultadosCompetencia = $this->resultadosCompetencia($sorteo);
+
+            if ($resultadosCompetencia->isEmpty()) {
+                $sorteo->llaves = $this->repararLlavesPendientes($sorteo);
+            }
+
             $llaves = $this->llavesConPases($sorteo->llaves, $sorteo);
             $categoriaCompleta = $this->categoriaCompleta($llaves, $sorteo);
 
             $sorteo->setAttribute('llaves', $llaves);
+            $sorteo->setAttribute('es_kata', $this->esSorteoKata($sorteo));
+            $sorteo->setAttribute('resultados_competencia', $resultadosCompetencia);
+            $sorteo->setAttribute('resultados_competencia_count', $resultadosCompetencia->count());
             $sorteo->setAttribute('categoria_completa', $categoriaCompleta);
             $sorteo->setAttribute('categoria_estado', $this->estadoCategoria($sorteo, $categoriaCompleta));
             $sorteo->setAttribute('podio_modal', $this->podioSorteo($llaves, $sorteo));
         });
+    }
+
+    private function repararLlavesPendientes(SorteoLlave $sorteo): array
+    {
+        $llaves = $sorteo->llaves ?? [];
+
+        if (($llaves[0]['sistema'] ?? null) === 'round_robin' || ! isset($llaves[0]['combates'])) {
+            return $llaves;
+        }
+
+        $torneo = Torneo::find($sorteo->torneo_id);
+
+        if (! $torneo) {
+            return $llaves;
+        }
+
+        $competidores = $this->competidoresCategoria($torneo, (int) $sorteo->categoria_id)->keyBy('id');
+        $vistos = collect();
+
+        foreach ($llaves[0]['combates'] as $matchIndex => $combate) {
+            foreach (['a', 'b'] as $side) {
+                $competidorId = $llaves[0]['combates'][$matchIndex][$side]['id'] ?? null;
+
+                if (! $competidorId) {
+                    continue;
+                }
+
+                $competidorId = (int) $competidorId;
+
+                if ($vistos->contains($competidorId) || ! $competidores->has($competidorId)) {
+                    $llaves[0]['combates'][$matchIndex][$side] = null;
+                    continue;
+                }
+
+                $vistos->push($competidorId);
+            }
+        }
+
+        $faltantes = $competidores->keys()
+            ->map(fn ($id) => (int) $id)
+            ->diff($vistos);
+
+        foreach ($faltantes as $competidorFaltanteId) {
+            foreach ($llaves[0]['combates'] as $matchIndex => $combate) {
+                foreach (['a', 'b'] as $side) {
+                    if (! empty($llaves[0]['combates'][$matchIndex][$side])) {
+                        continue;
+                    }
+
+                    $llaves[0]['combates'][$matchIndex][$side] = $competidores->get($competidorFaltanteId);
+                    continue 3;
+                }
+            }
+        }
+
+        foreach ($llaves[0]['combates'] as $matchIndex => $combate) {
+            $tieneRojo = ! empty($llaves[0]['combates'][$matchIndex]['a']);
+            $tieneAzul = ! empty($llaves[0]['combates'][$matchIndex]['b']);
+            $llaves[0]['combates'][$matchIndex]['bye'] = $tieneRojo !== $tieneAzul;
+        }
+
+        if ($llaves !== ($sorteo->llaves ?? [])) {
+            $sorteo->update(['llaves' => $llaves]);
+        }
+
+        return $llaves;
     }
 
     private function estadoCategoria(SorteoLlave $sorteo, bool $categoriaCompleta): string
@@ -329,12 +638,20 @@ class SorteoLlaveController extends Controller
             return 'realizada';
         }
 
-        return $sorteo->resultadosKumite->isNotEmpty() ? 'ejecucion' : 'pendiente';
+        return $this->resultadosCompetencia($sorteo)->isNotEmpty() ? 'ejecucion' : 'pendiente';
     }
 
     private function categoriaCompleta(array $llaves, SorteoLlave $sorteo): bool
     {
-        $resultadosPorIndice = $sorteo->resultadosKumite->keyBy('indice_combate');
+        $resultadosPorIndice = $this->resultadosCompetencia($sorteo)->keyBy('indice_combate');
+
+        if (! $this->esRoundRobin($llaves)) {
+            $finalRound = count($llaves) - 1;
+            $finalIndex = $this->indiceCombatePorPosicion($llaves, $finalRound, 0);
+
+            return $finalIndex !== null && $resultadosPorIndice->has($finalIndex);
+        }
+
         $indice = 0;
         $combatesNecesarios = 0;
 
@@ -342,7 +659,8 @@ class SorteoLlaveController extends Controller
             foreach (($ronda['combates'] ?? []) as $combate) {
                 $rojo = trim((string) ($combate['a']['nombre'] ?? ''));
                 $azul = trim((string) ($combate['b']['nombre'] ?? ''));
-                $requiereResultado = ! ($combate['bye'] ?? false)
+                $byeReal = ($combate['bye'] ?? false) && (($rojo !== '') !== ($azul !== ''));
+                $requiereResultado = ! $byeReal
                     && $rojo !== ''
                     && $azul !== ''
                     && strtoupper($rojo) !== 'BYE'
@@ -380,7 +698,7 @@ class SorteoLlaveController extends Controller
             return $this->podioRoundRobin($llaves, $sorteo, $podio);
         }
 
-        $resultadosPorIndice = $sorteo->resultadosKumite->keyBy('indice_combate');
+        $resultadosPorIndice = $this->resultadosCompetencia($sorteo)->keyBy('indice_combate');
         $finalRound = count($llaves) - 1;
         $finalIndex = $this->indiceCombatePorPosicion($llaves, $finalRound, 0);
         $finalResultado = $finalIndex !== null ? $resultadosPorIndice->get($finalIndex) : null;
@@ -432,7 +750,7 @@ class SorteoLlaveController extends Controller
     private function podioRoundRobin(array $llaves, SorteoLlave $sorteo, array $podio): array
     {
         $tabla = [];
-        $resultadosPorIndice = $sorteo->resultadosKumite->keyBy('indice_combate');
+        $resultadosPorIndice = $this->resultadosCompetencia($sorteo)->keyBy('indice_combate');
         $indice = 0;
 
         foreach ($llaves as $ronda) {
@@ -510,7 +828,7 @@ class SorteoLlaveController extends Controller
                     $llaves[$roundIndex]['combates'][$matchIndex]['ganador']
                 );
 
-                if ($roundIndex > 0) {
+                if ($roundIndex > 0 && ! $this->combateTieneAsignacionManual($combate)) {
                     unset(
                         $llaves[$roundIndex]['combates'][$matchIndex]['a'],
                         $llaves[$roundIndex]['combates'][$matchIndex]['b']
@@ -522,6 +840,26 @@ class SorteoLlaveController extends Controller
         return $llaves;
     }
 
+    private function combateTieneAsignacionManual(array $combate): bool
+    {
+        foreach (['a', 'b'] as $side) {
+            $nombre = $combate[$side]['nombre'] ?? '';
+
+            if ($nombre !== '' && ! str_starts_with($nombre, 'Ganador')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function puedePropagarGanadorA(?array $competidor): bool
+    {
+        $nombre = $competidor['nombre'] ?? '';
+
+        return $nombre === '' || str_starts_with($nombre, 'Ganador');
+    }
+
     private function propagarByes(array $llaves): array
     {
         foreach ($llaves as $roundIndex => $ronda) {
@@ -530,7 +868,10 @@ class SorteoLlaveController extends Controller
             }
 
             foreach (($ronda['combates'] ?? []) as $matchIndex => $combate) {
-                if (! ($combate['bye'] ?? false)) {
+                $tieneRojo = ! empty($combate['a']);
+                $tieneAzul = ! empty($combate['b']);
+
+                if (! (($combate['bye'] ?? false) && ($tieneRojo !== $tieneAzul))) {
                     continue;
                 }
 
@@ -543,7 +884,8 @@ class SorteoLlaveController extends Controller
                 $nextMatch = (int) floor($matchIndex / 2);
                 $nextSide = $matchIndex % 2 === 0 ? 'a' : 'b';
 
-                if (isset($llaves[$roundIndex + 1]['combates'][$nextMatch])) {
+                if (isset($llaves[$roundIndex + 1]['combates'][$nextMatch])
+                    && empty($llaves[$roundIndex + 1]['combates'][$nextMatch][$nextSide])) {
                     $llaves[$roundIndex + 1]['combates'][$nextMatch][$nextSide] = $ganador;
                 }
             }
